@@ -3,6 +3,7 @@ package com.udsl.processor6502
 import javafx.event.{ActionEvent, EventHandler}
 import scalafx.Includes._
 import scalafx.application.JFXApp
+import scalafx.beans.property.StringProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.{Insets, Orientation, Pos}
 import scalafx.scene.Scene
@@ -11,6 +12,7 @@ import scalafx.scene.layout.{GridPane, _}
 
 
 object Main extends JFXApp {
+  val currentNumberFormat = new scalafx.beans.property.StringProperty( this, "")
 
   stage = new JFXApp.PrimaryStage {
     title = "6502 Processor"
@@ -18,7 +20,21 @@ object Main extends JFXApp {
     height = 800
     resizable = false
 
+    val pc: TextField = new TextField {
+      maxWidth = 200
+      text = "128"
+    }
+
+    def stringToNum(oldValue: String, text: String) : Int = {
+      if (oldValue == "Hex") Integer.parseInt(text, 16)
+      else if (oldValue == "Oct") Integer.parseInt(text, 8)
+      else if (oldValue == "Bin") Integer.parseInt(text, 2 )
+      else Integer.parseInt(text, 10) // default format is decimal
+    } : Int
+
     scene = new Scene {
+
+
       root = {
         // grid1 places the children by specifying the rows and columns in GridPane.setConstraints()
         val registersBox: VBox = new VBox {
@@ -33,12 +49,6 @@ object Main extends JFXApp {
           }
           GridPane.setConstraints(label1, 0, 0, 1, 1)
 
-          val pc: TextField = new TextField {
-//            promptText = "Hi! I am Scalafx TextField"
-            maxWidth = 200
-
-            override def onAction_=(v: EventHandler[ActionEvent]): Unit = super.onAction_=(v)
-          }
 
           GridPane.setConstraints(pc, 2, 0, 1, 1)
 
@@ -118,10 +128,23 @@ object Main extends JFXApp {
             )
         }
 
+        val subscription = currentNumberFormat.onChange {
+          (_, oldValue, newValue) =>
+            numFormatLabel.text = newValue
+            val n = stringToNum( oldValue, pc.text.value )
+            if (newValue == "Hex") pc.text = n.toHexString
+            if (newValue == "Dec") pc.text = n.toString
+            if (newValue == "Oct") pc.text = n.toOctalString
+            if (newValue == "Bin") pc.text = n.toBinaryString
+        }
+
+
         numericalFormatGroup.selectToggle(numericalFormatGroup.toggles(0))
         numericalFormatGroup.selectedToggle.onChange {
           val rb = numericalFormatGroup.selectedToggle.get.asInstanceOf[javafx.scene.control.ToggleButton]
-          if (rb != null) numFormatLabel.text = rb.id()
+          if (rb != null) {
+            currentNumberFormat.setValue(rb.id())
+          }
         }
 
         val centerLabel = Label( "Number format")
