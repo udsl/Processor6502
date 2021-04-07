@@ -2,7 +2,7 @@ package com.udsl.processor6502
 
 import javafx.event.{ActionEvent, EventHandler}
 import scalafx.Includes._
-import scalafx.application.JFXApp
+import scalafx.application.{JFXApp, Platform}
 import scalafx.beans.property.StringProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.{Insets, Orientation, Pos}
@@ -19,10 +19,6 @@ object Main extends JFXApp {
     height = 800
     resizable = false
 
-    val pc: TextField = new TextField {
-      maxWidth = 200
-      text = "128"
-    }
 
     def stringToNum(oldValue: String, text: String) : Int = {
       if (oldValue == "Hex") Integer.parseInt(text, 16)
@@ -30,6 +26,10 @@ object Main extends JFXApp {
       else if (oldValue == "Bin") Integer.parseInt(text, 2 )
       else Integer.parseInt(text, 10) // default format is decimal
     } : Int
+
+    val pc = new TextField {
+      text = "128"
+    }
 
     scene = new Scene {
       root = {
@@ -45,13 +45,6 @@ object Main extends JFXApp {
             alignmentInParent = Pos.BottomLeft
           }
           GridPane.setConstraints(label1, 0, 0, 1, 1)
-
-          val pc: TextField = new TextField {
-//            promptText = "Hi! I am Scalafx TextField"
-            maxWidth = 200
-
-            override def onAction_=(v: EventHandler[ActionEvent]): Unit = super.onAction_=(v)
-          }
 
           GridPane.setConstraints(pc, 2, 0, 1, 1)
 
@@ -95,12 +88,20 @@ object Main extends JFXApp {
 
         val subscription = numericFormat.numFormatText.onChange {
           (_, oldValue, newValue) =>
-            numFormatLabel.text = newValue
-            val n = stringToNum( oldValue, pc.text.value )
-            if (newValue == "Hex") pc.text = n.toHexString
-            if (newValue == "Dec") pc.text = n.toString
-            if (newValue == "Oct") pc.text = n.toOctalString
-            if (newValue == "Bin") pc.text = n.toBinaryString
+            Platform.runLater(() -> {
+              val n = stringToNum( oldValue, pc.text.value )
+              if (newValue == "Hex") {
+                pc.setText(n.toHexString)
+              }
+              else if (newValue == "Dec") {
+                pc.setText(n.toString)
+              }
+              else if (newValue == "Oct") {
+                pc.setText(n.toOctalString)
+              }
+              else if (newValue == "Bin") pc.text.setValue(n.toBinaryString)
+              println(pc.text.value)
+            })
         }
 
 
