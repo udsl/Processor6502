@@ -3,6 +3,7 @@ package com.udsl.processor6502
 import javafx.event.{ActionEvent, EventHandler}
 import scalafx.Includes._
 import scalafx.application.JFXApp
+import scalafx.beans.property.StringProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.{Insets, Orientation, Pos}
 import scalafx.scene.Scene
@@ -17,6 +18,18 @@ object Main extends JFXApp {
     width = 600
     height = 800
     resizable = false
+
+    val pc: TextField = new TextField {
+      maxWidth = 200
+      text = "128"
+    }
+
+    def stringToNum(oldValue: String, text: String) : Int = {
+      if (oldValue == "Hex") Integer.parseInt(text, 16)
+      else if (oldValue == "Oct") Integer.parseInt(text, 8)
+      else if (oldValue == "Bin") Integer.parseInt(text, 2 )
+      else Integer.parseInt(text, 10) // default format is decimal
+    } : Int
 
     scene = new Scene {
       root = {
@@ -34,6 +47,7 @@ object Main extends JFXApp {
           GridPane.setConstraints(label1, 0, 0, 1, 1)
 
           val pc: TextField = new TextField {
+//            promptText = "Hi! I am Scalafx TextField"
             maxWidth = 200
 
             override def onAction_=(v: EventHandler[ActionEvent]): Unit = super.onAction_=(v)
@@ -77,6 +91,16 @@ object Main extends JFXApp {
         val numericFormat = new NumericFormatSelector()
         val numFormatLabel = new Label {
           text <== numericFormat.numFormatText
+        }
+
+        val subscription = numericFormat.numFormatText.onChange {
+          (_, oldValue, newValue) =>
+            numFormatLabel.text = newValue
+            val n = stringToNum( oldValue, pc.text.value )
+            if (newValue == "Hex") pc.text = n.toHexString
+            if (newValue == "Dec") pc.text = n.toString
+            if (newValue == "Oct") pc.text = n.toOctalString
+            if (newValue == "Bin") pc.text = n.toBinaryString
         }
 
 
