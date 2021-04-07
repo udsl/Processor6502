@@ -34,7 +34,6 @@ object Main extends JFXApp {
           GridPane.setConstraints(label1, 0, 0, 1, 1)
 
           val pc: TextField = new TextField {
-//            promptText = "Hi! I am Scalafx TextField"
             maxWidth = 200
 
             override def onAction_=(v: EventHandler[ActionEvent]): Unit = super.onAction_=(v)
@@ -75,73 +74,22 @@ object Main extends JFXApp {
           children = List(memeoryBoxCaption, st)
         }
 
-        val numericalFormatGroup = new ToggleGroup()
-
-        val numFormatLabel = new Label()
-
-        val checks: HBox =  new HBox {
-            //Radio Button Toggle Group
-            children = List(
-              new RadioButton {
-                minWidth = 100
-                maxWidth = 200
-                maxHeight = 50
-                text = "Dec"
-                id = text.value
-                toggleGroup = numericalFormatGroup
-                selected = true
-              },
-              new RadioButton {
-                minWidth = 100
-                maxWidth = 200
-                maxHeight = 50
-                text = "Hex"
-                id = text.value
-                toggleGroup = numericalFormatGroup
-              },
-              new RadioButton {
-                minWidth = 100
-                maxWidth = 200
-                maxHeight = 50
-                text = "Oct"
-                id = text.value
-                toggleGroup = numericalFormatGroup
-              },
-              new RadioButton {
-                minWidth = 100
-                maxWidth = 200
-                maxHeight = 50
-                text = "Bin"
-                id = text.value
-                toggleGroup = numericalFormatGroup
-              }
-            )
+        val numericFormat = new NumericFormatSelector()
+        val numFormatLabel = new Label {
+          text <== numericFormat.numFormatText
         }
 
-        numericalFormatGroup.selectToggle(numericalFormatGroup.toggles(0))
-        numericalFormatGroup.selectedToggle.onChange {
-          val rb = numericalFormatGroup.selectedToggle.get.asInstanceOf[javafx.scene.control.ToggleButton]
-          if (rb != null) numFormatLabel.text = rb.id()
-        }
-
-        val centerLabel = Label( "Number format")
 
         new BorderPane {
           maxWidth = 400
           maxHeight = 300
           padding = Insets(20)
-          top = new VBox{
-            padding = Insets(20)
-            children = List(Label("Number formats"), checks)
-          }
+          top = numericFormat
           left = registersBox
           center = numFormatLabel
           right = memoryBox
-//          bottom = bottomLabel
         }
-
       }
-
     }
   }
 }
