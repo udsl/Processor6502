@@ -16,8 +16,8 @@ class NumericFormatSelector extends VBox {
         minWidth = 100
         maxWidth = 200
         maxHeight = 50
-        text = "Dec"
-        id = text.value
+        text = NumericFormatType.Decimal.toString
+        id = NumericFormatType.Decimal.toString
         toggleGroup = numericalFormatGroup
         selected = true
       },
@@ -25,24 +25,24 @@ class NumericFormatSelector extends VBox {
         minWidth = 100
         maxWidth = 200
         maxHeight = 50
-        text = "Hex"
-        id = text.value
+        text = NumericFormatType.HexDecimal.toString
+        id = NumericFormatType.HexDecimal.toString
         toggleGroup = numericalFormatGroup
       },
       new RadioButton {
         minWidth = 100
         maxWidth = 200
         maxHeight = 50
-        text = "Oct"
-        id = text.value
+        text = NumericFormatType.Octal.toString
+        id = NumericFormatType.Octal.toString
         toggleGroup = numericalFormatGroup
       },
       new RadioButton {
         minWidth = 100
         maxWidth = 200
         maxHeight = 50
-        text = "Bin"
-        id = text.value
+        text = NumericFormatType.Binary.toString
+        id = NumericFormatType.Binary.toString
         toggleGroup = numericalFormatGroup
       }
     )
@@ -54,8 +54,6 @@ class NumericFormatSelector extends VBox {
     if (rb != null) numFormatText.value = rb.getId
   }
 
-
   padding = Insets(20)
   children = List(Label("Number formats"), checks)
-
 }

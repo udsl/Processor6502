@@ -1,16 +1,10 @@
 package com.udsl.processor6502;
 
-import javafx.animation.Animation.Status
-import javafx.event.EventHandler
-import javafx.scene.input.KeyEvent
 import scalafx.application.Platform
-import scalafx.beans.property.ObjectProperty
 import scalafx.event.subscriptions.Subscription
 import scalafx.scene.layout.{HBox, VBox}
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control.{Label, TextField}
-import scalafx.scene.input.KeyCode
-
 import scala.annotation.switch
 
 
@@ -82,10 +76,10 @@ class RegistersBox(val numericFormat: NumericFormatSelector) extends VBox {
         })
      }
 
-    def formatListemer = { (o: javafx.beans.value.ObservableValue[_ <: String], oldVal: String, newVal: String) =>
-        currentFormat = newVal
-        println("formatListemer: '" + currentFormat + "'")
-    }
+//    def formatListemer = { (o: javafx.beans.value.ObservableValue[_ <: String], oldVal: String, newVal: String) =>
+//        currentFormat = newVal
+//        println("formatListemer: '" + currentFormat + "'")
+//    }
 
     private def updateDisplayedValues(): Unit ={
         Platform.runLater(() -> {
