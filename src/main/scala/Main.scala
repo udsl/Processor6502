@@ -20,44 +20,8 @@ object Main extends JFXApp {
     resizable = false
 
 
-    def stringToNum(oldValue: String, text: String) : Int = {
-      if (oldValue == "Hex") Integer.parseInt(text, 16)
-      else if (oldValue == "Oct") Integer.parseInt(text, 8)
-      else if (oldValue == "Bin") Integer.parseInt(text, 2 )
-      else Integer.parseInt(text, 10) // default format is decimal
-    } : Int
-
-    val pc = new TextField {
-      text = "128"
-    }
-
     scene = new Scene {
       root = {
-        // grid1 places the children by specifying the rows and columns in GridPane.setConstraints()
-        val registersBox: VBox = new VBox {
-          val registersCaption: Label = new Label {
-            text = "Processor Registers"
-            padding = Insets(0,0,0,80)
-          }
-
-          val label1: Label = new Label("PC:") {
-            style = "-fx-font-weight:bold"
-            alignmentInParent = Pos.BottomLeft
-          }
-          GridPane.setConstraints(label1, 0, 0, 1, 1)
-
-          GridPane.setConstraints(pc, 2, 0, 1, 1)
-
-          val registersGrid = new GridPane {
-            hgap = 4
-            vgap = 6
-            margin = Insets(18)
-            children ++= Seq(label1, pc)
-          }
-
-          children ++= Seq(registersCaption, registersGrid)
-        }
-
         val memoryBox: VBox = new VBox {
            val memeoryBoxCaption = new Label {
             text = "Memory View"
@@ -82,28 +46,8 @@ object Main extends JFXApp {
         }
 
         val numericFormat = new NumericFormatSelector()
-        val numFormatLabel = new Label {
-          text <== numericFormat.numFormatText
-        }
 
-        val subscription = numericFormat.numFormatText.onChange {
-          (_, oldValue, newValue) =>
-            Platform.runLater(() -> {
-              val n = stringToNum( oldValue, pc.text.value )
-              if (newValue == "Hex") {
-                pc.setText(n.toHexString)
-              }
-              else if (newValue == "Dec") {
-                pc.setText(n.toString)
-              }
-              else if (newValue == "Oct") {
-                pc.setText(n.toOctalString)
-              }
-              else if (newValue == "Bin") pc.text.setValue(n.toBinaryString)
-              println(pc.text.value)
-            })
-        }
-
+        val registersBox = new RegistersBox(numericFormat)
 
         new BorderPane {
           maxWidth = 400
@@ -111,7 +55,7 @@ object Main extends JFXApp {
           padding = Insets(20)
           top = numericFormat
           left = registersBox
-          center = numFormatLabel
+//          center = numFormatLabel
           right = memoryBox
         }
       }
