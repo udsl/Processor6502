@@ -9,11 +9,11 @@ import scalafx.scene.layout.{StackPane, VBox}
 import scala.annotation.switch
 
 class MemoryBox(val numericFormat: NumericFormatSelector) extends VBox {
-  private var currentMemoryFormat = NumericFormatType.HexDecimal
+  private var currentMemoryFormat = NumericFormatType.Decimal
 
-  val subscription: Subscription = numericFormat.numFormatText.onChange {
+  val subscription: Subscription = numericFormat.numericFormatProperty.onChange {
     (_, oldValue, newValue) =>
-      currentMemoryFormat = NumericFormatType.withName(newValue)
+      currentMemoryFormat = newValue
       memoryView.refresh()
   }
 

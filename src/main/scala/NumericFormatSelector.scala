@@ -1,13 +1,12 @@
 package com.udsl.processor6502
 
-import scalafx.beans.property.StringProperty
 import scalafx.geometry.Insets
 import scalafx.scene.control.{Label, RadioButton, ToggleGroup}
 import scalafx.scene.layout.{HBox, VBox}
 
 class NumericFormatSelector extends VBox {
   val numericalFormatGroup = new ToggleGroup()
-  val numFormatText = new StringProperty()
+  val numericFormatProperty = new NumericFormatProperty()
 
   val checks: HBox =  new HBox {
     //Radio Button Toggle Group
@@ -48,10 +47,15 @@ class NumericFormatSelector extends VBox {
     )
   }
 
+  def update(n: String): Unit = {
+      println("for test")
+      numericFormatProperty.value = NumericFormatType.withName(n)
+  }
+
   numericalFormatGroup.selectToggle(numericalFormatGroup.toggles(0))
   numericalFormatGroup.selectedToggle.onChange {
     val rb = numericalFormatGroup.selectedToggle.get.asInstanceOf[javafx.scene.control.ToggleButton]
-    if (rb != null) numFormatText.value = rb.getId
+    if (rb != null) update(rb.getId)
   }
 
   padding = Insets(20)
