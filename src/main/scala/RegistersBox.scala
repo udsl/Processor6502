@@ -212,7 +212,9 @@ Negative Flag
 The negative flag is set if the result of the last operation had bit 7 set to a one.
 */
 
+    val status = new StatusRegister
+
     padding = Insets(20)
     spacing = 8
-    children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY)
+    children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status)
 }

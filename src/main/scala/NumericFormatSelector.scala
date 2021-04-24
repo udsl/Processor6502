@@ -61,6 +61,6 @@ class NumericFormatSelector extends VBox {
   padding = Insets(20)
   children = List( new Label( text = "Number formats" ){
       style = "-fx-font: 14 arial;-fx-font-weight:bold"
-      padding = Insets(8, 0, 0, 0)
+      padding = Insets(8, 8, 8, 0)
   }, checks)
 }
