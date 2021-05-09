@@ -8,7 +8,7 @@ import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control.{Label, TextField}
 import scalafx.scene.layout.{HBox, VBox}
 
-class RegistersBox(val numericFormat: NumericFormatSelector) extends VBox {
+class RegistersBox extends VBox {
     private var currentValue: Int = _
     private var currentFormat = NumericFormatType.Decimal
 
@@ -109,7 +109,7 @@ class RegistersBox(val numericFormat: NumericFormatSelector) extends VBox {
         })
     }
 
-    val subscription: Subscription = numericFormat.numericFormatProperty.onChange {
+    val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
         (_, oldValue, newValue) =>
             currentFormat = newValue
             updateDisplayedValues()
@@ -214,7 +214,9 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
 
     val status = new StatusRegister
 
+    val vectors = new Vectors
+
     padding = Insets(20)
     spacing = 8
-    children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status)
+    children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status, vectors)
 }

@@ -6,12 +6,12 @@ import scalafx.geometry.{Insets, Orientation}
 import scalafx.scene.control.{Label, ListView}
 import scalafx.scene.layout.{StackPane, VBox}
 
-import scala.annotation.switch
-
-class MemoryBox(val numericFormat: NumericFormatSelector) extends VBox {
+class MemoryBox extends VBox {
     private var currentMemoryFormat = NumericFormatType.Decimal
 
-    val subscription: Subscription = numericFormat.numericFormatProperty.onChange {
+    implicit def toShort(x: Int): Short = x.toShort
+
+    val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
         (_, oldValue, newValue) =>
             currentMemoryFormat = newValue
             memoryView.refresh()
@@ -23,14 +23,15 @@ class MemoryBox(val numericFormat: NumericFormatSelector) extends VBox {
         padding = Insets(0, 0, 0, 80)
     }
 
-    var indexer: Int = -1
+    var indexer: Int = 0
 
-    def getIndex: Int = {
+    def getAndIncIndex: Int = {
+        val res = indexer
         indexer += 1
-        indexer
+        res
     }
 
-    val memory: IndexedSeq[MemoryCell] = IndexedSeq.fill[MemoryCell](65536)(new MemoryCell(getIndex))
+    val memory: IndexedSeq[MemoryCell] = IndexedSeq.fill[MemoryCell](65536)(new MemoryCell(getAndIncIndex))
 
     val memoryView: ListView[MemoryCell] = new ListView[MemoryCell] {
         items = ObservableBuffer(memory)
@@ -47,22 +48,14 @@ class MemoryBox(val numericFormat: NumericFormatSelector) extends VBox {
     children = List(memoryBoxCaption, st)
 
     class MemoryCell(index: Int) {
-        var value: Byte = _
-        val location: Int = index
-
-        def numToString(address: Int): String = {
-            (currentMemoryFormat: @switch) match {
-                case NumericFormatType.HexDecimal => address.toHexString.toUpperCase
-                case NumericFormatType.Octal => address.toOctalString
-                case NumericFormatType.Binary => address.toBinaryString
-                case NumericFormatType.Decimal => address.toString
-            }
-        }
+        var value: ProcByte = ProcByte( 0 )
+        val location: ProcAddress = ProcAddress(index)
 
         override def toString: String = {
-            s"[${numToString(location)}] $value"
+            s"[${ location.asAddressString}] ${value.asNumString}"
         }
     }
+
 
 }
 

@@ -16,11 +16,11 @@ object Main extends JFXApp {
 
         scene = new Scene {
              root = {
-                val numericFormat = new NumericFormatSelector()
+                val numericFormat = NumericFormatSelector
 
-                val registersBox = new RegistersBox(numericFormat)
+                val registersBox = new RegistersBox()
 
-                val memoryBox = new MemoryBox(numericFormat)
+                val memoryBox = new MemoryBox()
 
                 new BorderPane {
                     maxWidth = 400
