@@ -1,4 +1,6 @@
 package com.udsl.processor6502
+package UI
+
 
 class ProcAddress (private var _address: Int = 0) {
     def address: Int = _address

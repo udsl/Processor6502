@@ -1,4 +1,5 @@
 package com.udsl.processor6502
+package UI
 
 class ProcByte {
     var byte : Byte = 0

@@ -1,5 +1,6 @@
 package com.udsl.processor6502
 
+import com.udsl.processor6502.UI.{MemoryBox, RegistersBox}
 import scalafx.application.JFXApp
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
@@ -16,11 +17,12 @@ object Main extends JFXApp {
 
         scene = new Scene {
              root = {
-                val numericFormat = NumericFormatSelector
+                val numericFormat = NumericFormatSelector.apply
 
                 val registersBox = new RegistersBox()
 
                 val memoryBox = new MemoryBox()
+
 
                 new BorderPane {
                     maxWidth = 400

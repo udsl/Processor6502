@@ -1,6 +1,8 @@
 package com.udsl.processor6502
+package UI
 
-import scalafx.collections.ObservableBuffer
+import CPU.{MemoryCell, Processor}
+
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.{Insets, Orientation}
 import scalafx.scene.control.{Label, ListView}
@@ -23,18 +25,8 @@ class MemoryBox extends VBox {
         padding = Insets(0, 0, 0, 80)
     }
 
-    var indexer: Int = 0
-
-    def getAndIncIndex: Int = {
-        val res = indexer
-        indexer += 1
-        res
-    }
-
-    val memory: IndexedSeq[MemoryCell] = IndexedSeq.fill[MemoryCell](65536)(new MemoryCell(getAndIncIndex))
-
     val memoryView: ListView[MemoryCell] = new ListView[MemoryCell] {
-        items = ObservableBuffer(memory)
+        items = Processor.getMemory
         orientation = Orientation.Vertical
     }
 
@@ -46,16 +38,5 @@ class MemoryBox extends VBox {
     padding = Insets(20)
     spacing = 8
     children = List(memoryBoxCaption, st)
-
-    class MemoryCell(index: Int) {
-        var value: ProcByte = ProcByte( 0 )
-        val location: ProcAddress = ProcAddress(index)
-
-        override def toString: String = {
-            s"[${ location.asAddressString}] ${value.asNumString}"
-        }
-    }
-
-
 }
 

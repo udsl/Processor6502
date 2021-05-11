@@ -1,4 +1,5 @@
 package com.udsl.processor6502
+package UI
 
 import scalafx.beans.property.ObjectProperty
 

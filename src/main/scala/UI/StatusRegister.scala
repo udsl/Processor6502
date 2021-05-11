@@ -1,4 +1,5 @@
 package com.udsl.processor6502
+package UI
 
 import scalafx.geometry.Insets
 import scalafx.scene.control.Label

@@ -1,16 +1,16 @@
 package com.udsl.processor6502
+package UI
 
 import scalafx.geometry.Insets
 import scalafx.scene.control.{Label, RadioButton, ToggleGroup}
 import scalafx.scene.layout.{HBox, VBox}
 
 
-object NumericFormatSelector extends VBox{
+object NumericFormatSelector {
     val numericFormatProperty = new NumericFormatProperty()
     numericFormatProperty.value = NumericFormatType.Decimal
 
     def apply : NumericFormatSelector = {
-
         val v = new NumericFormatSelector
         v.numericFormatProperty = numericFormatProperty
         v

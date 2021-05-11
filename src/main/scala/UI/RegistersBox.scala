@@ -1,11 +1,12 @@
 package com.udsl.processor6502
+package UI
 
 ;
 
 import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.{Insets, Pos}
-import scalafx.scene.control.{Label, TextField}
+import scalafx.scene.control.{Button, Label, TextField}
 import scalafx.scene.layout.{HBox, VBox}
 
 class RegistersBox extends VBox {
@@ -216,7 +217,33 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
 
     val vectors = new Vectors
 
+    val buttonBox: HBox = new HBox {
+        spacing = 20
+        val resetButton: Button = new Button {
+            text = "Reset"
+            onAction = _ => {
+                println("Resetting!")
+            }
+        }
+
+        val nmiButton: Button = new Button {
+            text = "NMI"
+            onAction = _ => {
+                println("NMI!")
+            }
+        }
+
+        val irqButton: Button = new Button {
+            text = "IRQ"
+            onAction = _ => {
+                println("IRQ!")
+            }
+        }
+
+        children = List(resetButton, nmiButton, irqButton)
+    }
+
     padding = Insets(20)
     spacing = 8
-    children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status, vectors)
+    children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status, vectors, buttonBox)
 }
