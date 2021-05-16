@@ -1,6 +1,6 @@
 package com.udsl.processor6502
 
-import com.udsl.processor6502.UI.{MemoryBox, RegistersBox}
+import com.udsl.processor6502.UI.{MemoryBox, NumericFormatSelector, RegistersBox}
 import scalafx.application.JFXApp
 import scalafx.geometry.Insets
 import scalafx.scene.Scene

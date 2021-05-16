@@ -3,14 +3,15 @@ package UI
 
 ;
 
+import CPU.Processor
+
 import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.{Insets, Pos}
-import scalafx.scene.control.{Button, Label, TextField}
+import scalafx.scene.control.{Button, Label, TextField, TextInputDialog}
 import scalafx.scene.layout.{HBox, VBox}
 
 class RegistersBox extends VBox {
-    private var currentValue: Int = _
     private var currentFormat = NumericFormatType.Decimal
 
     def stringToNum(text: String): Int = {
@@ -24,96 +25,25 @@ class RegistersBox extends VBox {
     }
 
     val pc: TextField = new TextField {
-        var lastChange = ""
-        var lastFormat: NumericFormatType.Value = currentFormat
-        var lastKeyValid = false
-        var lastKeyCode = 8
-        text = currentValue.toString
-
-        onKeyPressed = e => {
-            val et = e.getEventType
-            et.getName
-            val k = e.getCode
-            lastKeyCode = k.getCode
-            lastKeyValid = (currentFormat match {
-                case NumericFormatType.HexDecimal => "ABCDEF0123456789".contains(k.getChar)
-                case NumericFormatType.Octal => "01234567".contains(k.getChar)
-                case NumericFormatType.Binary => "10".contains(k.getChar)
-                case NumericFormatType.Decimal => "0123456789".contains(k.getChar)
-                case _ => false
-            }) || (k.getCode == 8) || (k.getCode == 127) // TODO add other key codes for valid keys
-            println(s"${et.getName} occurred on pc ${e.getCode} which is ${if (lastKeyValid) "VALID" else "INVALID"}")
-        }
-
-        text.onChange({
-            (_, oldValue, newValue) =>
-                println(s"${oldValue} => ${newValue} last keyCode: ${lastKeyCode}")
-                if (!oldValue.equals(newValue)) {
-                    if (!lastKeyValid) {
-                        Platform.runLater(new Runnable() {
-                            override def run(): Unit = {
-                                //TODO deal with repositioning the cursor!
-                                text = lastChange
-                            }
-                        })
-                    }
-                    else if (!lastChange.equals(newValue)) { // Only the is a change in the text
-                        println(s"$oldValue => $newValue")
-                        if (lastFormat.equals(currentFormat)) { // not due to changing format
-                            if (newValue.length > oldValue.length) { // if text is longer then user has types a char
-                                // That char could be at the end or inserted anywhere
-                                val change = newValue.toUpperCase
-                                val k = change diff oldValue
-                                if (currentFormat match {
-                                    case NumericFormatType.HexDecimal => "ABCDEF0123456789".contains(k) && change.length <= 4
-                                    case NumericFormatType.Octal => "01234567".contains(k) && change.length <= 6
-                                    case NumericFormatType.Binary => "10".contains(k) && change.length <= 16
-                                    case NumericFormatType.Decimal => "0123456789".contains(k) && change.length <= 5 && stringToNum(change) <= 65535
-                                    case _ => false
-                                }) {
-                                    text.value = change
-                                    lastChange = change
-                                    currentValue = stringToNum(change)
-                                }
-                                else {
-                                    text = oldValue
-                                }
-                            }
-                            else { // they have deleted one
-                                lastChange = newValue.toUpperCase
-                                if (lastChange.isEmpty) {
-                                    currentValue = -1
-                                }
-                                else {
-                                    currentValue = stringToNum(lastChange)
-                                }
-                            }
-                        }
-                        else { // format has changed
-                            lastFormat = currentFormat
-                            lastChange = newValue.toUpperCase
-                        }
-                    }
-                }
-        })
+        text = Processor.pc.toString
+        disable = true
     }
 
+    val pcSubscription: Subscription = Processor.pc._addr.onChange {
+        (_, oldValue, newValue) =>
+            updateDisplayedValues
+    }
 
-    private def updateDisplayedValues(): Unit = {
+    private def updateDisplayedValues: Unit = {
         Platform.runLater(() -> {
-            currentFormat match {
-                case NumericFormatType.HexDecimal => pc.setText(currentValue.toHexString.toUpperCase)
-                case NumericFormatType.Octal => pc.setText(currentValue.toOctalString)
-                case NumericFormatType.Binary => pc.text.setValue(currentValue.toBinaryString)
-                case NumericFormatType.Decimal => pc.setText(currentValue.toString)
-            }
+            pc.setText(Processor.pc.toString)
         })
     }
 
     val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
         (_, oldValue, newValue) =>
             currentFormat = newValue
-            updateDisplayedValues()
+            updateDisplayedValues
     }
 
     val registersCaption: Label = new Label {
@@ -129,7 +59,20 @@ class RegistersBox extends VBox {
             padding = Insets(10, 0, 0, 0)
         }
         label.setPrefWidth(90)
-        children = List(label, pc)
+        val setButton: Button = new Button {
+            text = "set"
+            onAction = _ => {
+                println("Setting PC!")
+                val dialog: TextInputDialog = getPcSetDialogue
+
+                val result = dialog.showAndWait()
+                result match {
+                    case Some(value) => Processor.pc.addr = stringToNum(value)
+                    case None       => println("Dialog was canceled.")
+                }
+            }
+        }
+        children = List(label, pc, setButton)
     }
 
     val sp: TextField = new TextField{
@@ -246,4 +189,78 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
     padding = Insets(20)
     spacing = 8
     children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status, vectors, buttonBox)
+
+    def getPcSetDialogue: TextInputDialog = {
+        var lastChange = ""
+        var lastFormat: NumericFormatType.Value = currentFormat
+        var lastKeyValid = false
+        var lastKeyCode = 8
+
+        new TextInputDialog(defaultValue = s"${Processor.pc.toString}") {
+            initOwner(Main.stage)
+            title = "New Program Counter"
+            headerText = s"Current format is: ${currentFormat}"
+            contentText = "New value:"
+
+            editor.onKeyPressed = e => {
+                val et = e.getEventType
+                et.getName
+                val k = e.getCode
+                lastKeyCode = k.getCode
+                lastKeyValid = (currentFormat match {
+                    case NumericFormatType.HexDecimal => "ABCDEF0123456789".contains(k.getChar)
+                    case NumericFormatType.Octal => "01234567".contains(k.getChar)
+                    case NumericFormatType.Binary => "10".contains(k.getChar)
+                    case NumericFormatType.Decimal => "0123456789".contains(k.getChar)
+                    case _ => false
+                }) || (k.getCode == 8) || (k.getCode == 127) // TODO add other key codes for valid keys
+                println(s"${et.getName} occurred on pc ${e.getCode} which is ${if (lastKeyValid) "VALID" else "INVALID"}")
+            }
+
+            editor.text.onChange({
+                (_, oldValue, newValue) =>
+                    println(s"${oldValue} => ${newValue} last keyCode: ${lastKeyCode}")
+                    if (!oldValue.equals(newValue)) {
+                        if (!lastKeyValid) {
+                            Platform.runLater(new Runnable() {
+                                override def run(): Unit = {
+                                    //TODO deal with repositioning the cursor!
+                                    editor.text = lastChange
+                                }
+                            })
+                        }
+                        else if (!lastChange.equals(newValue)) { // Only the is a change in the text
+                            println(s"$oldValue => $newValue")
+                            if (lastFormat.equals(currentFormat)) { // not due to changing format
+                                if (newValue.length > oldValue.length) { // if text is longer then user has types a char
+                                    // That char could be at the end or inserted anywhere
+                                    val change = newValue.toUpperCase
+                                    val k = change diff oldValue
+                                    if (currentFormat match {
+                                        case NumericFormatType.HexDecimal => "ABCDEF0123456789".contains(k) && change.length <= 4
+                                        case NumericFormatType.Octal => "01234567".contains(k) && change.length <= 6
+                                        case NumericFormatType.Binary => "10".contains(k) && change.length <= 16
+                                        case NumericFormatType.Decimal => "0123456789".contains(k) && change.length <= 5 && stringToNum(change) <= 65535
+                                        case _ => false
+                                    }) {
+                                        editor.text.value = change
+                                        lastChange = change
+                                    }
+                                    else {
+                                        editor.text = oldValue
+                                    }
+                                }
+                                else { // they have deleted one
+                                    lastChange = newValue.toUpperCase
+                                }
+                            }
+                            else { // format has changed
+                                lastFormat = currentFormat
+                                lastChange = newValue.toUpperCase
+                            }
+                        }
+                    }
+            })
+        }
+    }
 }

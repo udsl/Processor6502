@@ -16,21 +16,19 @@ object NumericFormatSelector {
         v
     }
 
-    def addressToString(value: ProcAddress): String = {
-        val theAddress = value.address.abs
-        (numericFormatProperty.value) match {
-            case NumericFormatType.HexDecimal => theAddress.toHexString.toUpperCase
-            case NumericFormatType.Octal => theAddress.toOctalString
-            case NumericFormatType.Binary => theAddress.toBinaryString
-            case NumericFormatType.Decimal => theAddress.toString
-        }
-    }
+//    def addressToString(value: Address): String = {
+//        val theAddress = value.addr
+//        (numericFormatProperty.value) match {
+//            case NumericFormatType.HexDecimal => theAddress.toHexString.toUpperCase
+//            case NumericFormatType.Octal => theAddress.toOctalString
+//            case NumericFormatType.Binary => theAddress.toBinaryString
+//            case NumericFormatType.Decimal => theAddress.toString
+//        }
+//    }
+//
 
-    def addressLittleEndianString(value: ProcAddress): String = {
-        value.getLo.asNumString + value.getHi.asNumString
-    }
-
-    def numToString(value: Byte): String = {
+    def numToString(num: Short): String = {
+        val value = num.abs
         (numericFormatProperty.value) match {
             case NumericFormatType.HexDecimal => value.toHexString.toUpperCase
             case NumericFormatType.Octal => value.toOctalString

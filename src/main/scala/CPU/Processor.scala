@@ -1,8 +1,6 @@
 package com.udsl.processor6502
 package CPU
 
-import UI.{ProcAddress, ProcByte}
-
 import scalafx.collections.ObservableBuffer
 
 
@@ -11,7 +9,7 @@ object Processor {
 
     private var indexer: Int = 0
 
-    var pc: Address = Address(0)
+    val pc: Address = Address(0)
 
     var resetVector: Address = Address(0)
     var nmiVector: Address = Address(0)
@@ -31,14 +29,19 @@ object Processor {
     def reset = {
         pc.addr = resetVector.addr
     }
+
+    def setPC(address: Int): Unit ={
+        pc.addr = address
+    }
+
 }
 
 class MemoryCell(index: Int) {
-    var value: ProcByte = ProcByte( 0 )
-    val location: ProcAddress = ProcAddress(index)
+    var value: ByteValue = ByteValue.apply
+    val location: Address = Address(index)
 
     override def toString: String = {
-        s"[${ location.asAddressString}] ${value.asNumString}"
+        s"[${ location.toString}] ${value}"
     }
 }
 
