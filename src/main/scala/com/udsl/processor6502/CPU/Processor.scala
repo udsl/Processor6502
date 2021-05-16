@@ -1,5 +1,4 @@
-package com.udsl.processor6502
-package CPU
+package com.udsl.processor6502.CPU
 
 import scalafx.collections.ObservableBuffer
 

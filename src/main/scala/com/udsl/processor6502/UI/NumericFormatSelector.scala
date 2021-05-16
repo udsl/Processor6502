@@ -1,10 +1,9 @@
-package com.udsl.processor6502
-package UI
+package com.udsl.processor6502.UI
 
+import com.udsl.processor6502.{NumericFormatProperty, NumericFormatType}
 import scalafx.geometry.Insets
 import scalafx.scene.control.{Label, RadioButton, ToggleGroup}
 import scalafx.scene.layout.{HBox, VBox}
-
 
 object NumericFormatSelector {
     val numericFormatProperty = new NumericFormatProperty()

@@ -1,8 +1,6 @@
-package com.udsl.processor6502
-package CPU
+package com.udsl.processor6502.CPU
 
-import UI.NumericFormatType
-
+import com.udsl.processor6502.NumericFormatType
 import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
 import scalafx.beans.property.{IntegerProperty, ObjectProperty}
 

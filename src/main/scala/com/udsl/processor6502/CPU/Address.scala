@@ -1,7 +1,7 @@
 package com.udsl.processor6502.CPU
 
+import com.udsl.processor6502.NumericFormatType
 import com.udsl.processor6502.UI.NumericFormatSelector.{numToString, numericFormatProperty}
-import com.udsl.processor6502.UI.NumericFormatType
 import scalafx.beans.property.{IntegerProperty, ObjectProperty}
 import scalafx.event.subscriptions.Subscription
 

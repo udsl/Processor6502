@@ -1,8 +1,9 @@
-package com.udsl.processor6502
-package UI
+package com.udsl.processor6502.UI
 
+import com.udsl.processor6502.CPU.Processor
+import com.udsl.processor6502.Utilities.{getAddressSettingDialogue, stringToNum}
 import scalafx.geometry.Insets
-import scalafx.scene.control.{Label, TextField, Tooltip}
+import scalafx.scene.control.{Button, Label, TextField, TextInputDialog, Tooltip}
 import scalafx.scene.layout.{HBox, StackPane, VBox}
 
 class Vectors extends VBox {
@@ -84,8 +85,22 @@ class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit = 
 
     }
 
+    val setButton: Button = new Button {
+        text = "set"
+        onAction = _ => {
+            println("Setting PC!")
+            val dialog: TextInputDialog = getAddressSettingDialogue("New Reset Vector")
+
+            val result = dialog.showAndWait()
+            result match {
+                case Some(value) => Processor.pc.addr = stringToNum(value)
+                case None       => println("Dialog was canceled.")
+            }
+        }
+    }
+
 
     value.setTooltip(tooltip)
 
-    children = List(label, value)
+    children = List(label, value, setButton)
 }

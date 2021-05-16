@@ -4,8 +4,6 @@ version := "0.1"
 
 scalaVersion := "2.13.5"
 
-idePackagePrefix := Some("com.udsl.processor6502")
-
 // https://mvnrepository.com/artifact/org.scalafx/scalafx
 libraryDependencies += "org.scalafx" %% "scalafx" % "15.0.1-R21"
 
