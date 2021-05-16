@@ -21,8 +21,6 @@ object Utilities {
     def getAddressSettingDialogue(dialogueTitle: String): TextInputDialog = {
         var lastChange = ""
         var lastFormat: NumericFormatType.Value = currentFormat
-        var lastKeyValid = false
-        var lastKeyCode = 8
 
         new TextInputDialog(defaultValue = s"${Processor.pc.toString}") {
             initOwner(Main.stage)
@@ -30,19 +28,22 @@ object Utilities {
             headerText = s"Current format is: ${currentFormat}"
             contentText = "New value:"
 
+            var lastKeyValid = false
+            var lastKeyCode = 8
+
             editor.onKeyPressed = e => {
                 val et = e.getEventType
                 et.getName
                 val k = e.getCode
                 lastKeyCode = k.getCode
                 lastKeyValid = (currentFormat match {
-                    case NumericFormatType.HexDecimal => "ABCDEF0123456789".contains(k.getChar)
+                    case NumericFormatType.HexDecimal => "0123456789ABCDEF".contains(k.getChar.toUpperCase)
                     case NumericFormatType.Octal => "01234567".contains(k.getChar)
                     case NumericFormatType.Binary => "10".contains(k.getChar)
                     case NumericFormatType.Decimal => "0123456789".contains(k.getChar)
                     case _ => false
                 }) || (k.getCode == 8) || (k.getCode == 127) // TODO add other key codes for valid keys
-                println(s"${et.getName} occurred on pc ${e.getCode} which is ${if (lastKeyValid) "VALID" else "INVALID"}")
+                println(s"${et.getName} occurred ${e.getCode} which is ${if (lastKeyValid) "VALID" else "INVALID"}")
             }
 
             editor.text.onChange({
@@ -60,7 +61,7 @@ object Utilities {
                         else if (!lastChange.equals(newValue)) { // Only the is a change in the text
                             println(s"$oldValue => $newValue")
                             if (lastFormat.equals(currentFormat)) { // not due to changing format
-                                if (newValue.length > oldValue.length) { // if text is longer then user has types a char
+                                if (newValue.length > oldValue.length) { // if text is longer then user has typed a char
                                     // That char could be at the end or inserted anywhere
                                     val change = newValue.toUpperCase
                                     val k = change diff oldValue
@@ -78,8 +79,9 @@ object Utilities {
                                         editor.text = oldValue
                                     }
                                 }
-                                else { // they have deleted one
+                                else { // they have over typed or deleted one and that could be a case change
                                     lastChange = newValue.toUpperCase
+                                    editor.text.value = lastChange // make sure the case is correct
                                 }
                             }
                             else { // format has changed

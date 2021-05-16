@@ -1,17 +1,17 @@
 package com.udsl.processor6502.CPU
 
+import com.udsl.processor6502.CPU.Address.validate
 import com.udsl.processor6502.NumericFormatType
 import com.udsl.processor6502.UI.NumericFormatSelector.{numToString, numericFormatProperty}
-import scalafx.beans.property.{IntegerProperty, ObjectProperty}
-import scalafx.event.subscriptions.Subscription
+import scalafx.beans.property.IntegerProperty
 
-class Address extends ObjectProperty[NumericFormatType.Value]{
-    val MAX_ADDRESS: Int = 65535
+class Address {
+
 
     val _addr: IntegerProperty = IntegerProperty(0)
 
     def addr_= (a: Int): Unit = {
-        if (a < 0 || a > MAX_ADDRESS) throw new Exception("Address out of range.")
+        validate( a )
         _addr.value = a
     }
 
@@ -55,18 +55,18 @@ class Address extends ObjectProperty[NumericFormatType.Value]{
     def getHi: Short = {
         ((_addr.value.abs / 256) % 256).toShort
     }
-
-    def addOnchange( callback: () => Unit ): Unit ={
-        val subscription: Subscription =_addr.onChange {
-
-        }
-    }
 }
 
 object Address {
+    val MAX_ADDRESS: Int = 65535
+
     def apply(a: Int): Address ={
         val a_ = new Address
         a_.addr = a
         a_
+    }
+
+    def validate( a: Int) = {
+        if (a < 0 || a > MAX_ADDRESS) throw new Exception("Address out of range.")
     }
 }

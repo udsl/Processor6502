@@ -4,7 +4,7 @@ import scalafx.geometry.Insets
 import scalafx.scene.control.Label
 import scalafx.scene.layout.{HBox, StackPane, VBox}
 
-class StatusRegister extends VBox {
+class StatusRegisterView extends VBox {
     val display = new StackPane {
         val titleBox = new HBox {
             val title: Label = new Label {

@@ -16,8 +16,10 @@ class RegistersBox extends VBox {
     }
 
     val pcSubscription: Subscription = Processor.pc._addr.onChange {
-        (_, oldValue, newValue) =>
+        (_, oldValue, newValue) => {
+            println(s"PC subscription fired - ${oldValue}, ${newValue}")
             updateDisplayedValues
+        }
     }
 
     private def updateDisplayedValues: Unit = {
@@ -27,9 +29,11 @@ class RegistersBox extends VBox {
     }
 
     val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
-        (_, oldValue, newValue) =>
+        (_, oldValue, newValue) => {
+            println("Num format subscription fired")
             currentFormat = newValue
             updateDisplayedValues
+        }
     }
 
     val registersCaption: Label = new Label {
@@ -45,6 +49,7 @@ class RegistersBox extends VBox {
             padding = Insets(10, 0, 0, 0)
         }
         label.setPrefWidth(90)
+        pc.setPrefWidth(120)
         val setButton: Button = new Button {
             text = "set"
             onAction = _ => {
@@ -63,6 +68,7 @@ class RegistersBox extends VBox {
 
     val sp: TextField = new TextField{
         prefColumnCount = 8
+        disable = true
     }
 
     val stackPointer: HBox = new HBox {
@@ -77,6 +83,7 @@ class RegistersBox extends VBox {
 
     val acc: TextField = new TextField{
         prefColumnCount = 8
+        disable = true
     }
 
     val accumulator: HBox = new HBox {
@@ -91,6 +98,7 @@ class RegistersBox extends VBox {
 
     val inx: TextField = new TextField{
         prefColumnCount = 8
+        disable = true
     }
 
     val indexX: HBox = new HBox {
@@ -105,6 +113,7 @@ class RegistersBox extends VBox {
 
     val iny: TextField = new TextField{
         prefColumnCount = 8
+        disable = true
     }
 
     val indexY: HBox = new HBox {
@@ -142,7 +151,7 @@ Negative Flag
 The negative flag is set if the result of the last operation had bit 7 set to a one.
 */
 
-    val status = new StatusRegister
+    val status = new StatusRegisterView
 
     val vectors = new Vectors
 
@@ -152,6 +161,7 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
             text = "Reset"
             onAction = _ => {
                 println("Resetting!")
+                Processor.reset
             }
         }
 
