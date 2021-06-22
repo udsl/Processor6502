@@ -1,6 +1,6 @@
 package com.udsl.processor6502
 
-import com.udsl.processor6502.UI.{MemoryBox, NumericFormatSelector, RegistersBox}
+import com.udsl.processor6502.UI.{FooterBox, MemoryBox, NumericFormatSelector, RegistersBox}
 import scalafx.application.JFXApp
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
@@ -8,6 +8,11 @@ import scalafx.scene.layout._
 
 
 object Main extends JFXApp {
+
+  def getData(): Unit = {
+    println("getData called on Main")
+  }
+    val registersBox = new RegistersBox()
 
     stage = new JFXApp.PrimaryStage {
         title = "6502 Processor"
@@ -19,10 +24,11 @@ object Main extends JFXApp {
              root = {
                 val numericFormat = NumericFormatSelector.apply
 
-                val registersBox = new RegistersBox()
+//               val registersBox = new RegistersBox()
 
                 val memoryBox = new MemoryBox()
 
+                val footer = new FooterBox()
 
                 new BorderPane {
                     maxWidth = 400
@@ -31,6 +37,7 @@ object Main extends JFXApp {
                     top = numericFormat
                     left = registersBox
                     right = memoryBox
+                    bottom = footer
                 }
             }
         }

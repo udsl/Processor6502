@@ -26,15 +26,15 @@ object NumericFormatSelector {
 //    }
 //
 
-    def numToString(num: Short): String = {
-        val value = num.abs
-        (numericFormatProperty.value) match {
-            case NumericFormatType.HexDecimal => value.toHexString.toUpperCase
-            case NumericFormatType.Octal => value.toOctalString
-            case NumericFormatType.Binary => value.toBinaryString
-            case NumericFormatType.Decimal => value.toString
-        }
-    }
+//    def numToString(num: Int): String = {
+//        val value = num.abs
+//        (numericFormatProperty.value) match {
+//            case NumericFormatType.HexDecimal => value.toHexString.toUpperCase
+//            case NumericFormatType.Octal => value.toOctalString
+//            case NumericFormatType.Binary => value.toBinaryString
+//            case NumericFormatType.Decimal => value.toString
+//        }
+//    }
 
 }
 

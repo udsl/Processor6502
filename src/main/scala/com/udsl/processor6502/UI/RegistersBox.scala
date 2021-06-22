@@ -7,8 +7,17 @@ import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control.{Button, Label, TextField, TextInputDialog}
 import scalafx.scene.layout.{HBox, VBox}
 import com.udsl.processor6502.Utilities.{currentFormat, getAddressSettingDialogue, stringToNum}
+import com.udsl.processor6502.config.{DataCollector, DataSource}
 
-class RegistersBox extends VBox {
+import scala.collection.mutable.ArrayBuffer
+
+class RegistersBox extends VBox with DataSource {
+
+    DataCollector.registerDataSource( this)
+
+    def getData(): Unit ={
+        println("getData called on RegistersBox")
+    }
 
     val pc: TextField = new TextField {
         text = Processor.pc.toString
@@ -54,7 +63,7 @@ class RegistersBox extends VBox {
             text = "set"
             onAction = _ => {
                 println("Setting PC!")
-                val dialog: TextInputDialog = getAddressSettingDialogue("New Program Counter")
+                val dialog: TextInputDialog = getAddressSettingDialogue("New Program Counter", Processor.pc.addr)
 
                 val result = dialog.showAndWait()
                 result match {
@@ -186,4 +195,7 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
     spacing = 8
     children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status, vectors, buttonBox)
 
+    override def getData(collector: ArrayBuffer[String]): Unit = {
+        println("Collecting from RegisterBox")
+    }
 }

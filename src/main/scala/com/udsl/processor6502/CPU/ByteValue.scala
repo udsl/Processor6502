@@ -3,6 +3,7 @@ package com.udsl.processor6502.CPU
 import com.udsl.processor6502.CPU.ByteValue.validate
 import com.udsl.processor6502.NumericFormatType
 import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
+import com.udsl.processor6502.Utilities.numToString
 import scalafx.beans.property.IntegerProperty
 
 class ByteValue {
@@ -17,13 +18,14 @@ class ByteValue {
     def byte: Int = _byte.value
 
     override def toString: String = {
-        val value = _byte.value
-        (numericFormatProperty.value) match {
-            case NumericFormatType.HexDecimal => value.toHexString.toUpperCase
-            case NumericFormatType.Octal => value.toOctalString
-            case NumericFormatType.Binary => value.toBinaryString
-            case NumericFormatType.Decimal => value.toString
-        }
+        numToString( _byte.value)
+//        val value = _byte.value
+//        (numericFormatProperty.value) match {
+//            case NumericFormatType.HexDecimal => value.toHexString.toUpperCase
+//            case NumericFormatType.Octal => value.toOctalString
+//            case NumericFormatType.Binary => value.toBinaryString
+//            case NumericFormatType.Decimal => value.toString
+//        }
     }
 
 }

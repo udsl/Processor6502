@@ -2,11 +2,11 @@ package com.udsl.processor6502.CPU
 
 import com.udsl.processor6502.CPU.Address.validate
 import com.udsl.processor6502.NumericFormatType
-import com.udsl.processor6502.UI.NumericFormatSelector.{numToString, numericFormatProperty}
+import com.udsl.processor6502.UI.NumericFormatSelector.{numericFormatProperty}
+import com.udsl.processor6502.Utilities.numToString
 import scalafx.beans.property.IntegerProperty
 
 class Address {
-
 
     val _addr: IntegerProperty = IntegerProperty(0)
 
@@ -18,13 +18,7 @@ class Address {
     def addr: Int = _addr.value
 
     override def toString: String = {
-        val value = _addr.value
-        (numericFormatProperty.value) match {
-            case NumericFormatType.HexDecimal => value.toHexString.toUpperCase
-            case NumericFormatType.Octal => value.toOctalString
-            case NumericFormatType.Binary => value.toBinaryString
-            case NumericFormatType.Decimal => value.toString
-        }
+        numToString(_addr.value)
     }
 
     /**
@@ -66,7 +60,7 @@ object Address {
         a_
     }
 
-    def validate( a: Int) = {
+    def validate( a: Int): Unit = {
         if (a < 0 || a > MAX_ADDRESS) throw new Exception("Address out of range.")
     }
 }

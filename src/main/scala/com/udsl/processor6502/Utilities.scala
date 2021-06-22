@@ -1,8 +1,11 @@
 package com.udsl.processor6502
 
 import com.udsl.processor6502.CPU.Processor
+import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
 import scalafx.application.Platform
 import scalafx.scene.control.TextInputDialog
+
+import java.io._
 
 object Utilities {
     var currentFormat: NumericFormatType.Value = NumericFormatType.Decimal
@@ -17,8 +20,17 @@ object Utilities {
         }
     }
 
+    def numToString( value: Int): String = {
+        (numericFormatProperty.value) match {
+            case NumericFormatType.HexDecimal => value.toHexString.toUpperCase
+            case NumericFormatType.Octal => value.toOctalString
+            case NumericFormatType.Binary => value.toBinaryString
+            case NumericFormatType.Decimal => value.toString
+        }
 
-    def getAddressSettingDialogue(dialogueTitle: String): TextInputDialog = {
+    }
+
+    def getAddressSettingDialogue(dialogueTitle: String, currentValue: Int): TextInputDialog = {
         var lastChange = ""
         var lastFormat: NumericFormatType.Value = currentFormat
 
@@ -30,6 +42,7 @@ object Utilities {
 
             var lastKeyValid = false
             var lastKeyCode = 8
+            editor.text = numToString(currentValue)
 
             editor.onKeyPressed = e => {
                 val et = e.getEventType
@@ -94,4 +107,16 @@ object Utilities {
         }
     }
 
+    /**
+     * write a `Seq[String]` to the `filename` with a terminating CR
+     */
+    def writeFile(filename: String, lines: Seq[String]): Unit = {
+        val file = new File(filename)
+        val bw = new BufferedWriter(new FileWriter(file))
+        for (line <- lines) {
+            bw.write(line)
+            bw.write("\n")
+        }
+        bw.close()
+    }
 }
