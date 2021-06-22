@@ -38,6 +38,22 @@ object Processor {
         memory
     }
 
+    def nmi = {
+        pushPc
+        //        Push SR.
+        //        Set IRQ disable in status.
+        //        PC is loaded
+        pc.addr = nmiVector.addr
+    }
+
+    def irq = {
+        pushPc
+        //        Push SR.
+        //        PC is loaded
+        pc.addr = irqVector.addr
+    }
+
+
     def reset = {
         pushPc
 //        Push SR.

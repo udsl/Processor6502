@@ -4,7 +4,7 @@ import com.udsl.processor6502.CPU.Processor
 import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.{Insets, Pos}
-import scalafx.scene.control.{Button, Label, TextField, TextInputDialog}
+import scalafx.scene.control.{Button, Label, TextField, TextInputDialog, Tooltip}
 import scalafx.scene.layout.{HBox, VBox}
 import com.udsl.processor6502.Utilities.{currentFormat, getAddressSettingDialogue, stringToNum}
 import com.udsl.processor6502.config.{DataCollector, DataSource}
@@ -173,13 +173,16 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
                 Processor.reset
             }
         }
+        resetButton.setTooltip(new Tooltip("Perform the reset operation"))
 
         val nmiButton: Button = new Button {
             text = "NMI"
             onAction = _ => {
                 println("NMI!")
+                Processor.nmi
             }
         }
+        nmiButton.setTooltip(new Tooltip("Perform the NMI operation"))
 
         val irqButton: Button = new Button {
             text = "IRQ"
@@ -187,6 +190,7 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
                 println("IRQ!")
             }
         }
+        irqButton.setTooltip(new Tooltip("Perform the IRQ operation"))
 
         children = List(resetButton, nmiButton, irqButton)
     }

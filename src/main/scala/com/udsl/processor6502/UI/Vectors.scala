@@ -117,6 +117,8 @@ class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, i
         prefWidth = 120
     }
 
+
+
     def updated( str: String): Unit ={
         currentValue = stringToNum(str)
         changeHandler(currentValue)
@@ -136,8 +138,7 @@ class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, i
         }
     }
 
-
-    value.setTooltip(tooltip)
+    setButton.setTooltip(tooltip)
 
     children = List(label, value, setButton)
 
