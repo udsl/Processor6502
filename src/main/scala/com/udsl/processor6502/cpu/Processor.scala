@@ -1,5 +1,6 @@
-package com.udsl.processor6502.CPU
+package com.udsl.processor6502.cpu
 
+import com.udsl.processor6502.cpu.execution.Instruction
 import scalafx.collections.ObservableBuffer
 
 
@@ -71,11 +72,28 @@ object Processor {
         memory(address) = MemoryCell(address, value)
     }
 
+    def getMemoryByte(address: Int): Int = {
+        memory(address).getValue()
+    }
+
+    def getNextInstruction(): Instruction = {
+        Instruction(memory(pc.addr).getValue())
+    }
+
     private def pushPc = {
         // Push MSB
         sp.pushByte(pc.getHi)
         // Push LSB
         sp.pushByte(pc.getLo)
+    }
+
+    private def popPc = {
+        // Pop MSB
+        val msb = sp.popByte()
+        // Pop LSB
+        val lsb = sp.popByte()
+        val poped = (msb * 256) + lsb
+        pc.addr = poped
     }
 
     private def pushSr = {
@@ -90,6 +108,10 @@ class MemoryCell( private val location: Address, private var value: ByteValue = 
 
     override def toString: String = {
         s"[${ location.toString}] ${value}"
+    }
+
+    def getValue(): Int ={
+        value._byte.value
     }
 }
 

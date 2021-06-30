@@ -1,7 +1,7 @@
 package com.udsl.processor6502.UI
 
-import com.udsl.processor6502.CPU.Processor
-import com.udsl.processor6502.CPU.Processor.{IRQ_VECTOR_HI_ADDRESS_BYTE, IRQ_VECTOR_LO_ADDRESS_BYTE, NMI_VECTOR_HI_ADDRESS_BYTE, NMI_VECTOR_LO_ADDRESS_BYTE, RESET_VECTOR_HI_ADDRESS_BYTE, RESET_VECTOR_LO_ADDRESS_BYTE}
+import com.udsl.processor6502.cpu.Processor
+import com.udsl.processor6502.cpu.Processor.{IRQ_VECTOR_HI_ADDRESS_BYTE, IRQ_VECTOR_LO_ADDRESS_BYTE, NMI_VECTOR_HI_ADDRESS_BYTE, NMI_VECTOR_LO_ADDRESS_BYTE, RESET_VECTOR_HI_ADDRESS_BYTE, RESET_VECTOR_LO_ADDRESS_BYTE}
 import com.udsl.processor6502.Utilities.{getAddressSettingDialogue, stringToNum}
 import com.udsl.processor6502.config.{DataCollector, DataSource}
 import scalafx.application.Platform

@@ -1,6 +1,6 @@
 package com.udsl.processor6502
 
-import com.udsl.processor6502.CPU.Processor
+import com.udsl.processor6502.cpu.Processor
 import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
 import scalafx.application.Platform
 import scalafx.scene.control.TextInputDialog

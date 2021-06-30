@@ -1,6 +1,6 @@
-package com.udsl.processor6502.CPU
+package com.udsl.processor6502.cpu
 
-import com.udsl.processor6502.CPU.ByteValue.validate
+import com.udsl.processor6502.cpu.ByteValue.validate
 import com.udsl.processor6502.NumericFormatType
 import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.Utilities.numToString

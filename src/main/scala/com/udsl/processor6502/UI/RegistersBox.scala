@@ -1,6 +1,6 @@
 package com.udsl.processor6502.UI
 
-import com.udsl.processor6502.CPU.Processor
+import com.udsl.processor6502.cpu.Processor
 import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.{Insets, Pos}

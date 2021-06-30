@@ -1,6 +1,6 @@
 package com.udsl.processor6502.UI
 
-import com.udsl.processor6502.CPU.{MemoryCell, Processor}
+import com.udsl.processor6502.cpu.{MemoryCell, Processor}
 import com.udsl.processor6502.NumericFormatType
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.{Insets, Orientation}

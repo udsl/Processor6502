@@ -9,8 +9,8 @@ libraryDependencies += "org.scalafx" %% "scalafx" % "15.0.1-R21"
 
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.1" % "test"
 
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.5"
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.5" % "test"
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.9"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % "test"
 
 // Add OS specific JavaFX dependencies
 val javafxModules = Seq("base", "controls", "fxml", "graphics", "media", "swing", "web")
