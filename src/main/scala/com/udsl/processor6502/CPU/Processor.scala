@@ -18,6 +18,7 @@ object Processor {
     val IRQ_VECTOR_HI_ADDRESS_BYTE = 0xFFFF
 
     val pc: Address = Address(0)
+    val sp: StackPointer = StackPointer.apply()
 //    val ix: IxRegister
 //    val iy: IyRegister
 //    val ac: Accumulator
@@ -72,7 +73,9 @@ object Processor {
 
     private def pushPc = {
         // Push MSB
+        sp.pushByte(pc.getHi)
         // Push LSB
+        sp.pushByte(pc.getLo)
     }
 
     private def pushSr = {

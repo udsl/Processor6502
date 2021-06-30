@@ -34,6 +34,7 @@ class RegistersBox extends VBox with DataSource {
     private def updateDisplayedValues: Unit = {
         Platform.runLater(() -> {
             pc.setText(Processor.pc.toString)
+            sp.setText(Processor.sp.toString)
         })
     }
 
@@ -76,6 +77,7 @@ class RegistersBox extends VBox with DataSource {
     }
 
     val sp: TextField = new TextField{
+        text = Processor.sp.toString
         prefColumnCount = 8
         disable = true
     }
@@ -88,6 +90,13 @@ class RegistersBox extends VBox with DataSource {
         }
         label.setPrefWidth(90)
         children = List(label, sp)
+    }
+
+    val spSubscription: Subscription = Processor.sp._ebr.onChange {
+        (_, oldValue, newValue) => {
+            println(s"SP subscription fired - ${oldValue}, ${newValue}")
+            updateDisplayedValues
+        }
     }
 
     val acc: TextField = new TextField{
@@ -188,6 +197,7 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
             text = "IRQ"
             onAction = _ => {
                 println("IRQ!")
+                Processor.irq
             }
         }
         irqButton.setTooltip(new Tooltip("Perform the IRQ operation"))
