@@ -9,6 +9,7 @@ class Instruction( private val byt: Int, private val op: Opcode, private val mod
   // Addressing mode
   def addMode: AddressMode = { mode }
 
+  def insLen: Int = {mode.value.bytes}
   // Instruction type
   def opcode: Opcode = { op }
 
@@ -30,12 +31,15 @@ object Instruction{
   val aaaMask = Integer.parseInt("11100000", 2)
   val bbbMask = Integer.parseInt("00011100", 2)
   val ccMask = Integer.parseInt("00000011", 2)
+  val groupMask = Integer.parseInt("00010000", 2)
 
   def apply(i: Int): Instruction = {
+    println(s"i ${i.toHexString}")
     val a = aaa(i)
     val b = bbb(i)
     val c = cc(i)
-    val ins_ = new Instruction(i, Opcode(c, b, a), AddressMode(c, b))
+    println(s"i ${i.toBinaryString}, a: ${a.toBinaryString} - $a, b: ${b.toBinaryString} - $b, c: ${c.toBinaryString} - $c")
+    val ins_ = new Instruction(i, Opcode(c, b, a), AddressMode(c, b, a))
     ins_
   }
 
@@ -50,4 +54,5 @@ object Instruction{
   def aaa(i: Int): Int = {
     (i & aaaMask) >> 5
   }
+
 }

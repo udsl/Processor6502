@@ -1,6 +1,14 @@
-import com.udsl.processor6502.cpu.execution.Instruction
+import com.udsl.processor6502.cpu.execution.{Immediate, Instruction, Invalid}
 
-val x = Instruction(117)
+val aaa = 3
 
-println(x.addMode.value)
-println(x.opcode.v)
+
+if (0 to 3 contains aaa) println("hello")
+
+
+ match {
+  case i if 0 to 3 contains aaa => Immediate
+  case _ => Invalid
+}
+
+println((aaa))

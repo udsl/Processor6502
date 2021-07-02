@@ -2,7 +2,7 @@ package com.udsl.processor6502.cpu.execution
 
 class Opcode( private val code: OpcodeValue) {
   def v: OpcodeValue = { code }
-
+  override def toString: String = code.toString
 }
 
 object Opcode{
@@ -111,8 +111,6 @@ case object CMP extends OpcodeValue {
 case object SBC extends OpcodeValue {
   override def toString: String = "SBC"
 }
-
-
 
 case object ASL extends OpcodeValue {
   override def toString: String = "ASL"
