@@ -1,13 +1,16 @@
 package com.udsl.processor6502.UI
 
+import com.udsl.processor6502.Main.stage
+import com.udsl.processor6502.UI.popups.Executor
 import com.udsl.processor6502.cpu.Processor
-import scalafx.application.Platform
+import scalafx.application.{JFXApp, Platform}
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control.{Button, Label, TextField, TextInputDialog, Tooltip}
 import scalafx.scene.layout.{HBox, VBox}
 import com.udsl.processor6502.Utilities.{currentFormat, getAddressSettingDialogue, stringToNum}
 import com.udsl.processor6502.config.{DataCollector, DataSource}
+import scalafx.stage.{Modality, Stage}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -230,6 +233,8 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
             text = "Exe"
             onAction = _ => {
                 println("EXE!")
+                val Executor = new Executor()
+                Executor.showAndWait()
             }
         }
         exeButton.setTooltip(new Tooltip("Execute a single instruction"))

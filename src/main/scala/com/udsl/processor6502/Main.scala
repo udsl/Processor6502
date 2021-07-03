@@ -8,10 +8,6 @@ import scalafx.scene.layout._
 
 
 object Main extends JFXApp {
-
-  def getData(): Unit = {
-    println("getData called on Main")
-  }
     val registersBox = new RegistersBox()
 
     stage = new JFXApp.PrimaryStage {

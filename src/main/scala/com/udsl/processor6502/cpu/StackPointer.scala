@@ -7,7 +7,7 @@ class StackPointer(name: String) extends EightBitRegister(name: String) {
   def pushByte(byt: Int): Unit ={
     println(s"Pushing byte $byt")
     // write byte to memory offset by sp value
-    val addr = 255 + ebr
+    val addr = 256 + ebr
     Processor.setMemoryByte(addr, byt)
     decrement()
   }
