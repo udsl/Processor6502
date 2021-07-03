@@ -6,7 +6,7 @@ import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.Utilities.numToString
 import scalafx.beans.property.IntegerProperty
 
-class EightBitRegister {
+class EightBitRegister(private val name: String) {
   val _ebr: IntegerProperty = IntegerProperty(0)
 
   def ebr_= (ebr: Int): Unit = {
@@ -36,9 +36,9 @@ object EightBitRegister {
   val MAX_VALUE: Int = 255
   val MIN_VALUE: Int = 0
 
-  def apply(init: Int): EightBitRegister ={
+  def apply(init: Int, name: String): EightBitRegister ={
     validate(init)
-    val ebr_ = new EightBitRegister
+    val ebr_ = new EightBitRegister(name)
     ebr_.ebr = init
     ebr_
   }

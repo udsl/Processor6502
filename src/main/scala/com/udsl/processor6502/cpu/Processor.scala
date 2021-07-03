@@ -20,9 +20,9 @@ object Processor {
 
     val pc: Address = Address(0)
     val sp: StackPointer = StackPointer.apply()
-//    val ix: IxRegister
-//    val iy: IyRegister
-//    val ac: Accumulator
+    val ix: IndexX = IndexX.apply()
+    val iy: IndexY = IndexY.apply()
+    val ac: Accumulator = Accumulator.apply()
 //    val sr: StatusRegister
 
     val resetVector: Address = Address(0)

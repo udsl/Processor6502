@@ -32,9 +32,13 @@ class RegistersBox extends VBox with DataSource {
     }
 
     private def updateDisplayedValues: Unit = {
+        println("updateDisplayedValues")
         Platform.runLater(() -> {
             pc.setText(Processor.pc.toString)
             sp.setText(Processor.sp.toString)
+            acc.setText(Processor.ac.toString)
+            inx.setText(Processor.ix.toString)
+            iny.setText(Processor.iy.toString)
         })
     }
 
@@ -99,7 +103,29 @@ class RegistersBox extends VBox with DataSource {
         }
     }
 
+    val accSubscription: Subscription = Processor.ac._ebr.onChange {
+        (_, oldValue, newValue) => {
+            println(s"Acc subscription fired - ${oldValue}, ${newValue}")
+            updateDisplayedValues
+        }
+    }
+
+    val inxSubscription: Subscription = Processor.ix._ebr.onChange {
+        (_, oldValue, newValue) => {
+            println(s"Index X subscription fired - ${oldValue}, ${newValue}")
+            updateDisplayedValues
+        }
+    }
+
+    val inySubscription: Subscription = Processor.iy._ebr.onChange {
+        (_, oldValue, newValue) => {
+            println(s"Index Y subscription fired - ${oldValue}, ${newValue}")
+            updateDisplayedValues
+        }
+    }
+
     val acc: TextField = new TextField{
+        text = Processor.ac.toString()
         prefColumnCount = 8
         disable = true
     }
@@ -115,6 +141,7 @@ class RegistersBox extends VBox with DataSource {
     }
 
     val inx: TextField = new TextField{
+        text = Processor.ix.toString()
         prefColumnCount = 8
         disable = true
     }
@@ -130,6 +157,7 @@ class RegistersBox extends VBox with DataSource {
     }
 
     val iny: TextField = new TextField{
+        text = Processor.iy.toString()
         prefColumnCount = 8
         disable = true
     }
@@ -202,7 +230,16 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
         }
         irqButton.setTooltip(new Tooltip("Perform the IRQ operation"))
 
-        children = List(resetButton, nmiButton, irqButton)
+        val exeButton: Button = new Button {
+            text = "Exe"
+            onAction = _ => {
+                println("EXE!")
+            }
+        }
+        exeButton.setTooltip(new Tooltip("Execute a single instruction"))
+
+
+        children = List(resetButton, nmiButton, irqButton, exeButton)
     }
 
     padding = Insets(20)

@@ -3,7 +3,7 @@ package com.udsl.processor6502.cpu
 import com.udsl.processor6502.cpu.EightBitRegister.MAX_VALUE
 
 
-class StackPointer extends EightBitRegister {
+class StackPointer(name: String) extends EightBitRegister(name: String) {
   def pushByte(byt: Int): Unit ={
     println(s"Pushing byte $byt")
     // write byte to memory offset by sp value
@@ -27,12 +27,12 @@ class StackPointer extends EightBitRegister {
   def increment(): Unit ={
     ebr += 1
   }
-
 }
+
 
 object StackPointer {
   def apply(): StackPointer ={
-    val s_ = new StackPointer
+    val s_ = new StackPointer("Stack pointer")
     s_.ebr = MAX_VALUE
     s_
   }
