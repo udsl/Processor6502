@@ -23,7 +23,7 @@ object Processor {
     val ix: IndexX = IndexX.apply()
     val iy: IndexY = IndexY.apply()
     val ac: Accumulator = Accumulator.apply()
-//    val sr: StatusRegister
+    val sr: StatusRegister = StatusRegister.apply()
 
     val resetVector: Address = Address(0)
     val nmiVector: Address = Address(0)
