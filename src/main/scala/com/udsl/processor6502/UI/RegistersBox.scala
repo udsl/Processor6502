@@ -15,10 +15,6 @@ class RegistersBox extends VBox with DataSource {
 
     DataCollector.registerDataSource( this)
 
-    def getData(): Unit ={
-        println("getData called on RegistersBox")
-    }
-
     val pc: TextField = new TextField {
         text = Processor.pc.toString
         disable = true
@@ -27,11 +23,11 @@ class RegistersBox extends VBox with DataSource {
     val pcSubscription: Subscription = Processor.pc._addr.onChange {
         (_, oldValue, newValue) => {
             println(s"PC subscription fired - ${oldValue}, ${newValue}")
-            updateDisplayedValues
+            updateDisplayedValues()
         }
     }
 
-    private def updateDisplayedValues: Unit = {
+    private def updateDisplayedValues(): Unit = {
         println("updateDisplayedValues")
         Platform.runLater(() -> {
             pc.setText(Processor.pc.toString)
@@ -46,7 +42,7 @@ class RegistersBox extends VBox with DataSource {
         (_, oldValue, newValue) => {
             println("Num format subscription fired")
             currentFormat = newValue
-            updateDisplayedValues
+            updateDisplayedValues()
         }
     }
 
@@ -99,28 +95,28 @@ class RegistersBox extends VBox with DataSource {
     val spSubscription: Subscription = Processor.sp._ebr.onChange {
         (_, oldValue, newValue) => {
             println(s"SP subscription fired - ${oldValue}, ${newValue}")
-            updateDisplayedValues
+            updateDisplayedValues()
         }
     }
 
     val accSubscription: Subscription = Processor.ac._ebr.onChange {
         (_, oldValue, newValue) => {
             println(s"Acc subscription fired - ${oldValue}, ${newValue}")
-            updateDisplayedValues
+            updateDisplayedValues()
         }
     }
 
     val inxSubscription: Subscription = Processor.ix._ebr.onChange {
         (_, oldValue, newValue) => {
             println(s"Index X subscription fired - ${oldValue}, ${newValue}")
-            updateDisplayedValues
+            updateDisplayedValues()
         }
     }
 
     val inySubscription: Subscription = Processor.iy._ebr.onChange {
         (_, oldValue, newValue) => {
             println(s"Index Y subscription fired - ${oldValue}, ${newValue}")
-            updateDisplayedValues
+            updateDisplayedValues()
         }
     }
 
