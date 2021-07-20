@@ -3,14 +3,15 @@ package com.udsl.processor6502.UI
 import com.udsl.processor6502.cpu.Processor
 import com.udsl.processor6502.cpu.Processor.{IRQ_VECTOR_HI_ADDRESS_BYTE, IRQ_VECTOR_LO_ADDRESS_BYTE, NMI_VECTOR_HI_ADDRESS_BYTE, NMI_VECTOR_LO_ADDRESS_BYTE, RESET_VECTOR_HI_ADDRESS_BYTE, RESET_VECTOR_LO_ADDRESS_BYTE}
 import com.udsl.processor6502.Utilities.{getAddressSettingDialogue, stringToNum}
-import com.udsl.processor6502.config.{DataCollector, DataSource}
+import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
+import com.udsl.processor6502.config.{ConfigDatum, DataCollector, DataConsumer, DataProvider}
 import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.Insets
 import scalafx.scene.control._
 import scalafx.scene.layout.{HBox, StackPane, VBox}
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 class Vectors extends VBox {
     def nmiChanges( newVectorDest: Int): Unit ={
@@ -96,9 +97,9 @@ class Vectors extends VBox {
     children = List(display)
 }
 
-class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, initalValue: Int = 0) extends HBox with DataSource{
+class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, initalValue: Int = 0) extends HBox with DataProvider with DataConsumer{
 
-    DataCollector.registerDataSource(this)
+    registerDataSource(this)
 
     println(s"Creating vector '$vectorName' location '$vectorAddress")
     val changeHandler: (Int) => Unit = onChange
@@ -142,8 +143,13 @@ class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, i
 
     children = List(label, value, setButton)
 
-    override def getData(collector: ArrayBuffer[String]): Unit = {
+    override def getData(collector: ListBuffer[ConfigDatum]): Unit = {
         println(s"Collecting for vector $vectorName $currentValue")
-        collector += s"$vectorName: $currentValue"
+        collector += ConfigDatum.apply(vectorName, currentValue.toString)
     }
+
+    override def setData( provider: List[ConfigDatum]): Unit = {
+        println("Providing to RegisterBox")
+    }
+
 }

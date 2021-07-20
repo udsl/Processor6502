@@ -9,14 +9,15 @@ import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control.{Button, Label, TextField, TextInputDialog, Tooltip}
 import scalafx.scene.layout.{HBox, VBox}
 import com.udsl.processor6502.Utilities.{currentFormat, getAddressSettingDialogue, stringToNum}
-import com.udsl.processor6502.config.{DataCollector, DataSource}
+import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
+import com.udsl.processor6502.config.{ConfigDatum, DataCollector, DataConsumer, DataProvider}
 import scalafx.stage.{Modality, Stage}
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
-class RegistersBox extends VBox with DataSource {
+class RegistersBox extends VBox with DataProvider with DataConsumer {
 
-    DataCollector.registerDataSource( this)
+    registerDataSource( this)
 
     val pc: TextField = new TextField {
         text = Processor.pc.toString
@@ -171,30 +172,30 @@ class RegistersBox extends VBox with DataSource {
         children = List(label, iny)
     }
 
-/*
-Status Register
+    /*
+    Status Register
 
-Carry Flag
-The carry flag is set if the last operation caused an overflow from bit 7 of the result or an underflow from bit 0. This condition is set during arithmetic, comparison and during logical shifts. It can be explicitly set using the 'Set Carry Flag' (SEC) instruction and cleared with 'Clear Carry Flag' (CLC).
+    Carry Flag
+    The carry flag is set if the last operation caused an overflow from bit 7 of the result or an underflow from bit 0. This condition is set during arithmetic, comparison and during logical shifts. It can be explicitly set using the 'Set Carry Flag' (SEC) instruction and cleared with 'Clear Carry Flag' (CLC).
 
-Zero Flag
-The zero flag is set if the result of the last operation as was zero.
+    Zero Flag
+    The zero flag is set if the result of the last operation as was zero.
 
-Interrupt Disable
-The interrupt disable flag is set if the program has executed a 'Set Interrupt Disable' (SEI) instruction. While this flag is set the processor will not respond to interrupts from devices until it is cleared by a 'Clear Interrupt Disable' (CLI) instruction.
+    Interrupt Disable
+    The interrupt disable flag is set if the program has executed a 'Set Interrupt Disable' (SEI) instruction. While this flag is set the processor will not respond to interrupts from devices until it is cleared by a 'Clear Interrupt Disable' (CLI) instruction.
 
-Decimal Mode
-While the decimal mode flag is set the processor will obey the rules of Binary Coded Decimal (BCD) arithmetic during addition and subtraction. The flag can be explicitly set using 'Set Decimal Flag' (SED) and cleared with 'Clear Decimal Flag' (CLD).
+    Decimal Mode
+    While the decimal mode flag is set the processor will obey the rules of Binary Coded Decimal (BCD) arithmetic during addition and subtraction. The flag can be explicitly set using 'Set Decimal Flag' (SED) and cleared with 'Clear Decimal Flag' (CLD).
 
-Break Command
-The break command bit is set when a BRK instruction has been executed and an interrupt has been generated to process it.
+    Break Command
+    The break command bit is set when a BRK instruction has been executed and an interrupt has been generated to process it.
 
-Overflow Flag
-The overflow flag is set during arithmetic operations if the result has yielded an invalid 2's complement result (e.g. adding to positive numbers and ending up with a negative result: 64 + 64 => -128). It is determined by looking at the carry between bits 6 and 7 and between bit 7 and the carry flag.
+    Overflow Flag
+    The overflow flag is set during arithmetic operations if the result has yielded an invalid 2's complement result (e.g. adding to positive numbers and ending up with a negative result: 64 + 64 => -128). It is determined by looking at the carry between bits 6 and 7 and between bit 7 and the carry flag.
 
-Negative Flag
-The negative flag is set if the result of the last operation had bit 7 set to a one.
-*/
+    Negative Flag
+    The negative flag is set if the result of the last operation had bit 7 set to a one.
+    */
 
     val status = new StatusRegisterView
 
@@ -247,7 +248,11 @@ The negative flag is set if the result of the last operation had bit 7 set to a 
     spacing = 8
     children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status, vectors, buttonBox)
 
-    override def getData(collector: ArrayBuffer[String]): Unit = {
+    override def getData(collector: ListBuffer[ConfigDatum]): Unit = {
         println("Collecting from RegisterBox")
+    }
+
+    override def setData( provider: List[ConfigDatum]): Unit = {
+        println("Providing to RegisterBox")
     }
 }

@@ -2,10 +2,13 @@ package com.udsl.processor6502
 
 import com.udsl.processor6502.cpu.Processor
 import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
+import com.udsl.processor6502.config.ConfigDatum
 import scalafx.application.Platform
 import scalafx.scene.control.TextInputDialog
 
 import java.io._
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.io.Source
 
 object Utilities {
     var currentFormat: NumericFormatType.Value = NumericFormatType.Decimal
@@ -110,7 +113,8 @@ object Utilities {
     /**
      * write a `Seq[String]` to the `filename` with a terminating CR
      */
-    def writeFile(filename: String, lines: Seq[String]): Unit = {
+    def writeFile(filename: String, data: List[ConfigDatum]): Unit = {
+        val lines = data.map(f => f.toString())
         val file = new File(filename)
         val bw = new BufferedWriter(new FileWriter(file))
         for (line <- lines) {
@@ -118,5 +122,23 @@ object Utilities {
             bw.write("\n")
         }
         bw.close()
+    }
+
+    /**
+     * read a file returning a seq of strings
+     * @param filename the name of the file to read.
+     */
+    def readFile(filename: String): List[ConfigDatum] ={
+        var r: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
+        val bufferedSource = Source.fromFile(filename)
+        for (line <- bufferedSource.getLines) {
+            val colonIndex = line.indexOf(':')
+            val key = line.substring(0, colonIndex)
+            val value = line.substring(colonIndex+1)
+            r += ConfigDatum.apply(key, value)
+        }
+
+        bufferedSource.close
+        r.toList
     }
 }

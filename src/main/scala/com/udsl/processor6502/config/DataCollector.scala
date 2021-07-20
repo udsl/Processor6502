@@ -1,19 +1,16 @@
 package com.udsl.processor6502.config
 
-import scala.collection.mutable.ArrayBuffer
+import com.udsl.processor6502.config.DataAgentRegistration.getRegisteredProviders
+
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 object DataCollector {
-  val registeredSources = ArrayBuffer[DataSource]()
 
-  def registerDataSource( registrant: DataSource): Unit = {
-    registeredSources += registrant
-  }
-
-  def collectData(): ArrayBuffer[String] = {
-    val data = ArrayBuffer[String]()
-    for( source <- registeredSources){
+  def collectData(): List[ConfigDatum] = {
+    val data: ListBuffer[ConfigDatum] = ListBuffer()
+    for( source <- getRegisteredProviders){
       source.getData(data)
     }
-    data
+    data.toList
   }
 }

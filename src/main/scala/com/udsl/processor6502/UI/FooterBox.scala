@@ -1,13 +1,13 @@
 package com.udsl.processor6502.UI
 
-import com.udsl.processor6502.Utilities.{currentFormat, writeFile}
-import com.udsl.processor6502.config.DataCollector
+import com.udsl.processor6502.Utilities.{currentFormat, readFile, writeFile}
+import com.udsl.processor6502.config.{ConfigDatum, DataCollector}
 import scalafx.geometry.Insets
 import scalafx.print.PaperSource.Main
 import scalafx.scene.control.Button
 import scalafx.scene.layout.{GridPane, HBox}
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 class FooterBox extends GridPane{
 
@@ -16,14 +16,15 @@ class FooterBox extends GridPane{
     onAction = _ => {
       println(s"Save Button pressed")
 
-      var out = DataCollector.collectData()
+      var out: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
+      out ++= DataCollector.collectData()
 
       val formatStr = currentFormat.toString
-      out += s"format: $formatStr"
+      out += ConfigDatum.apply("format", formatStr)
 
-      out += "first line"
-      out += "last line"
-      writeFile("processor6502.save", out.toSeq)
+//      out += "first line"
+//      out += "last line"
+      writeFile("processor6502.save", out.toList)
     }
   }
   GridPane.setConstraints(saveButton, 13, 0, 2, 1)
@@ -32,6 +33,9 @@ class FooterBox extends GridPane{
     text = "Load"
     onAction = _ => {
       println(s"Load Button pressed")
+      val lines = readFile("processor6502.save")
+      lines
+      println(lines)
     }
   }
   GridPane.setConstraints(loadButton, 33, 0, 2, 1)
