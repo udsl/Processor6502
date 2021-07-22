@@ -2,7 +2,7 @@ package com.udsl.processor6502.cpu
 
 import com.udsl.processor6502.cpu.Address.validate
 import com.udsl.processor6502.NumericFormatType
-import com.udsl.processor6502.UI.NumericFormatSelector.{numericFormatProperty}
+import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.Utilities.numToString
 import scalafx.beans.property.IntegerProperty
 

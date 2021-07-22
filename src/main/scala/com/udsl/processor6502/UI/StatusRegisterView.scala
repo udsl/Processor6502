@@ -1,11 +1,16 @@
 package com.udsl.processor6502.UI
 
+import com.udsl.processor6502.Utilities.getConfigValue
+import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
+import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}
 import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
 import com.udsl.processor6502.cpu.StatusRegister.{BREAK_FLAG_MASK, CARRY_FLAG_MASK, DECIMAL_FLAG_MASK, INTERRUPT_FLAG_MASK, NEGATIVE_FLAG_MASK, OVERFLOW_FLAG_MASK, ZERO_FLAG_MASK}
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.Insets
 import scalafx.scene.control.Label
 import scalafx.scene.layout.{HBox, StackPane, VBox}
+
+import scala.collection.mutable.ListBuffer
 
 class StatusRegisterView extends VBox {
 
@@ -72,7 +77,9 @@ class StatusRegisterView extends VBox {
     }
 }
 
-class StatusFlag( statusName: String, initalValue: Boolean = false, readOnly: Boolean = false) extends HBox {
+class StatusFlag( statusName: String, initalValue: Boolean = false, readOnly: Boolean = false) extends HBox with DataProvider with DataConsumer {
+
+    registerDataSource( this)
 
     println(s"Creating StatusFlag '$statusName'")
     var currentValue: Boolean = initalValue
@@ -92,5 +99,22 @@ class StatusFlag( statusName: String, initalValue: Boolean = false, readOnly: Bo
             }
         }
     }
+
+    override def getData(collector: ListBuffer[ConfigDatum]): Unit = {
+        println("Collecting from RegisterBox")
+        collector += ConfigDatum.apply(statusName, currentValue.toString)
+    }
+
+    override def setData( provider: List[ConfigDatum]): Unit = {
+        println("Providing to StatusFlag")
+        update(
+            getConfigValue(provider, statusName, currentValue.toString) match {
+                case "true" => true
+                case "false" => false
+                case _ => false
+            }
+        )
+    }
+
 }
 

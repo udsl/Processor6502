@@ -8,10 +8,24 @@ object DataAgentRegistration {
 
   def registerDataSource( registrant: DataAgent): Unit = {
     registrant match {
+      case b: DataAgent with DataProvider with DataConsumer => {
+        registeredProviders += b
+        registeredConsumers += b
+      }
       case c: DataAgent with DataProvider => registeredProviders += c
       case d: DataAgent with DataConsumer => registeredConsumers += d
-      case _ => println("Just a DataAgent")
+      case _ => println("Not a DataProvider")
     }
+
+
+//    registrant match {
+//      case c: DataAgent with DataProvider => registeredProviders += c
+//      case _ => println("Not a DataProvider")
+//    }
+//    registrant match {
+//      case d: DataAgent with DataConsumer => registeredConsumers += d
+//      case _ => println("Not a DataConsumer")
+//    }
   }
 
   def getRegisteredConsumers : Seq[DataConsumer] = {

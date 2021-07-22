@@ -1,6 +1,6 @@
 package com.udsl.processor6502.config
 
-class ConfigDatum( private val key: String, private val value: String){
+class ConfigDatum( val key: String, val value: String){
   override def toString() : String = {
     s"$key:$value"
   }

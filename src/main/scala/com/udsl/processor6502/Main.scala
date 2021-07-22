@@ -9,6 +9,7 @@ import scalafx.scene.layout._
 
 object Main extends JFXApp {
     val registersBox = new RegistersBox()
+    val numericFormat: NumericFormatSelector = NumericFormatSelector.apply
 
     stage = new JFXApp.PrimaryStage {
         title = "6502 Processor"
@@ -18,10 +19,6 @@ object Main extends JFXApp {
 
         scene = new Scene {
              root = {
-                val numericFormat = NumericFormatSelector.apply
-
-//               val registersBox = new RegistersBox()
-
                 val memoryBox = new MemoryBox()
 
                 val footer = new FooterBox()

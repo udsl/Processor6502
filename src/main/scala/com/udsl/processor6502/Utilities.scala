@@ -1,5 +1,6 @@
 package com.udsl.processor6502
 
+import com.udsl.processor6502.Main.numericFormat
 import com.udsl.processor6502.cpu.Processor
 import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.config.ConfigDatum
@@ -140,5 +141,14 @@ object Utilities {
 
         bufferedSource.close
         r.toList
+    }
+
+    def getConfigValue(lines: List[ConfigDatum], configKey: String, default: String): String = {
+        val datum = lines.find(_.key == configKey)
+
+        datum match {
+            case Some(datum) => datum.value
+            case None  => default
+        }
     }
 }

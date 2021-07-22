@@ -8,7 +8,7 @@ import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control.{Button, Label, TextField, TextInputDialog, Tooltip}
 import scalafx.scene.layout.{HBox, VBox}
-import com.udsl.processor6502.Utilities.{currentFormat, getAddressSettingDialogue, stringToNum}
+import com.udsl.processor6502.Utilities.{currentFormat, getAddressSettingDialogue, getConfigValue, stringToNum}
 import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
 import com.udsl.processor6502.config.{ConfigDatum, DataCollector, DataConsumer, DataProvider}
 import scalafx.stage.{Modality, Stage}
@@ -250,9 +250,19 @@ class RegistersBox extends VBox with DataProvider with DataConsumer {
 
     override def getData(collector: ListBuffer[ConfigDatum]): Unit = {
         println("Collecting from RegisterBox")
+        collector += ConfigDatum.apply("pc", Processor.pc.addr.toString)
+        collector += ConfigDatum.apply("sp", Processor.sp.toValueString)
+        collector += ConfigDatum.apply("ac", Processor.ac.toValueString)
+        collector += ConfigDatum.apply("ix", Processor.ix.toValueString)
+        collector += ConfigDatum.apply("iy", Processor.iy.toValueString)
     }
 
     override def setData( provider: List[ConfigDatum]): Unit = {
         println("Providing to RegisterBox")
+        Processor.pc.addr = stringToNum(getConfigValue(provider, "pc", Processor.pc.addr.toString))
+        Processor.sp.ebr = stringToNum(getConfigValue(provider, "sp", Processor.sp.toString))
+        Processor.ac.ebr = stringToNum(getConfigValue(provider, "ac", Processor.ac.toString))
+        Processor.ix.ebr = stringToNum(getConfigValue(provider, "ix", Processor.ix.toString))
+        Processor.iy.ebr = stringToNum(getConfigValue(provider, "iy", Processor.iy.toString))
     }
 }

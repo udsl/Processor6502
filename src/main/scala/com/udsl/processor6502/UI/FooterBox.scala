@@ -1,6 +1,10 @@
 package com.udsl.processor6502.UI
 
-import com.udsl.processor6502.Utilities.{currentFormat, readFile, writeFile}
+import com.udsl.processor6502.Main.numericFormat
+import com.udsl.processor6502.Main.numericFormat.numericalFormatGroup
+import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
+import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, readFile, writeFile}
+import com.udsl.processor6502.config.DataSupplier.provideData
 import com.udsl.processor6502.config.{ConfigDatum, DataCollector}
 import scalafx.geometry.Insets
 import scalafx.print.PaperSource.Main
@@ -22,8 +26,6 @@ class FooterBox extends GridPane{
       val formatStr = currentFormat.toString
       out += ConfigDatum.apply("format", formatStr)
 
-//      out += "first line"
-//      out += "last line"
       writeFile("processor6502.save", out.toList)
     }
   }
@@ -34,8 +36,10 @@ class FooterBox extends GridPane{
     onAction = _ => {
       println(s"Load Button pressed")
       val lines = readFile("processor6502.save")
-      lines
-      println(lines)
+
+      numericFormat.updateDisplay(getConfigValue(lines, "format", "Dec"))
+
+      provideData(lines)
     }
   }
   GridPane.setConstraints(loadButton, 33, 0, 2, 1)

@@ -2,16 +2,17 @@ package com.udsl.processor6502.UI
 
 import com.udsl.processor6502.cpu.Processor
 import com.udsl.processor6502.cpu.Processor.{IRQ_VECTOR_HI_ADDRESS_BYTE, IRQ_VECTOR_LO_ADDRESS_BYTE, NMI_VECTOR_HI_ADDRESS_BYTE, NMI_VECTOR_LO_ADDRESS_BYTE, RESET_VECTOR_HI_ADDRESS_BYTE, RESET_VECTOR_LO_ADDRESS_BYTE}
-import com.udsl.processor6502.Utilities.{getAddressSettingDialogue, stringToNum}
+import com.udsl.processor6502.Utilities.{getAddressSettingDialogue, getConfigValue, stringToNum}
 import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
-import com.udsl.processor6502.config.{ConfigDatum, DataCollector, DataConsumer, DataProvider}
+import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}
 import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.Insets
 import scalafx.scene.control._
 import scalafx.scene.layout.{HBox, StackPane, VBox}
 
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.IterableOnce.iterableOnceExtensionMethods
+import scala.collection.mutable.ListBuffer
 
 class Vectors extends VBox {
     def nmiChanges( newVectorDest: Int): Unit ={
@@ -118,8 +119,6 @@ class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, i
         prefWidth = 120
     }
 
-
-
     def updated( str: String): Unit ={
         currentValue = stringToNum(str)
         changeHandler(currentValue)
@@ -149,7 +148,8 @@ class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, i
     }
 
     override def setData( provider: List[ConfigDatum]): Unit = {
-        println("Providing to RegisterBox")
+        println(s"Providing to Vector: $vectorName")
+        updated(getConfigValue(provider, vectorName, currentValue.toString))
     }
 
 }

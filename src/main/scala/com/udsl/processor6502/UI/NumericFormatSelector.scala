@@ -2,7 +2,7 @@ package com.udsl.processor6502.UI
 
 import com.udsl.processor6502.{NumericFormatProperty, NumericFormatType}
 import scalafx.geometry.Insets
-import scalafx.scene.control.{Label, RadioButton, ToggleGroup}
+import scalafx.scene.control.{Label, RadioButton, Toggle, ToggleGroup}
 import scalafx.scene.layout.{HBox, VBox}
 
 object NumericFormatSelector {
@@ -82,8 +82,15 @@ class NumericFormatSelector extends VBox {
     }
 
     def update(n: String): Unit = {
-        println("for test")
         numericFormatProperty.value = NumericFormatType.withName(n)
+    }
+
+    def updateDisplay(n: String): Unit = {
+        numericFormatProperty.value = NumericFormatType.withName(n)
+        val tog = numericalFormatGroup.getToggles.filtered( { s => s.asInstanceOf[javafx.scene.control.ToggleButton].getId == n } )
+        if (tog.size() > 0) {
+            numericalFormatGroup.selectToggle(tog.get(0))
+        }
     }
 
     numericalFormatGroup.selectToggle(numericalFormatGroup.toggles(0))
