@@ -2,7 +2,7 @@ package com.udsl.processor6502.UI
 
 import com.udsl.processor6502.cpu.Processor
 import com.udsl.processor6502.cpu.Processor.{IRQ_VECTOR_HI_ADDRESS_BYTE, IRQ_VECTOR_LO_ADDRESS_BYTE, NMI_VECTOR_HI_ADDRESS_BYTE, NMI_VECTOR_LO_ADDRESS_BYTE, RESET_VECTOR_HI_ADDRESS_BYTE, RESET_VECTOR_LO_ADDRESS_BYTE}
-import com.udsl.processor6502.Utilities.{getAddressSettingDialogue, getConfigValue, stringToNum}
+import com.udsl.processor6502.Utilities.{currentFormat, getAddressSettingDialogue, getConfigValue, numToString, stringToNum}
 import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
 import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}
 import scalafx.application.Platform
@@ -42,7 +42,7 @@ class Vectors extends VBox {
         Processor.setMemoryByte(RESET_VECTOR_HI_ADDRESS_BYTE, hi)
     }
 
-    val display = new StackPane {
+     val display = new StackPane {
         val titleBox = new HBox {
             val title: Label = new Label {
                 text = "  Vectors  "
@@ -120,9 +120,10 @@ class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, i
     }
 
     def updated( str: String): Unit ={
-        currentValue = stringToNum(str)
+        currentValue = Integer.parseInt(str)
         changeHandler(currentValue)
     }
+
 
     val setButton: Button = new Button {
         text = "set"
@@ -150,6 +151,13 @@ class Vector( vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, i
     override def setData( provider: List[ConfigDatum]): Unit = {
         println(s"Providing to Vector: $vectorName")
         updated(getConfigValue(provider, vectorName, currentValue.toString))
+    }
+
+    val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
+        (_, oldValue, newValue) => {
+            println(s"Num format subscription fired: $newValue")
+            value.text = numToString(currentValue)
+        }
     }
 
 }

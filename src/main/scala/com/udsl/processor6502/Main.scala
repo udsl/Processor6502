@@ -5,6 +5,9 @@ import scalafx.application.JFXApp
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
 import scalafx.scene.layout._
+import scalafx.stage.FileChooser
+
+import java.io.File
 
 
 object Main extends JFXApp {
@@ -35,4 +38,15 @@ object Main extends JFXApp {
             }
         }
     }
+
+  def selectConfigFile: File = {
+    val chooser = new FileChooser
+    chooser.showOpenDialog(stage)
+  }
+
+  def getSaveFile: File = {
+    val chooser = new FileChooser
+    chooser.showSaveDialog(stage)
+  }
+
 }

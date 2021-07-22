@@ -114,24 +114,27 @@ object Utilities {
     /**
      * write a `Seq[String]` to the `filename` with a terminating CR
      */
-    def writeFile(filename: String, data: List[ConfigDatum]): Unit = {
-        val lines = data.map(f => f.toString())
-        val file = new File(filename)
-        val bw = new BufferedWriter(new FileWriter(file))
-        for (line <- lines) {
-            bw.write(line)
-            bw.write("\n")
+    def writeConfigFile(data: List[ConfigDatum]): Unit = {
+        val saveFile = Main.getSaveFile
+        if (saveFile != null) {
+            val lines = data.map(f => f.toString())
+            val bw = new BufferedWriter(new FileWriter(saveFile))
+            for (line <- lines) {
+                bw.write(line)
+                bw.write("\n")
+            }
+            bw.close()
         }
-        bw.close()
     }
 
     /**
      * read a file returning a seq of strings
      * @param filename the name of the file to read.
      */
-    def readFile(filename: String): List[ConfigDatum] ={
+    def readConfigFile: List[ConfigDatum] ={
         var r: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
-        val bufferedSource = Source.fromFile(filename)
+        val configFile = Main.selectConfigFile
+        val bufferedSource = Source.fromFile(configFile)
         for (line <- bufferedSource.getLines) {
             val colonIndex = line.indexOf(':')
             val key = line.substring(0, colonIndex)

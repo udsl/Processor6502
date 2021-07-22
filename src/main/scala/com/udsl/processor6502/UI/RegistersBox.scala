@@ -259,10 +259,10 @@ class RegistersBox extends VBox with DataProvider with DataConsumer {
 
     override def setData( provider: List[ConfigDatum]): Unit = {
         println("Providing to RegisterBox")
-        Processor.pc.addr = stringToNum(getConfigValue(provider, "pc", Processor.pc.addr.toString))
-        Processor.sp.ebr = stringToNum(getConfigValue(provider, "sp", Processor.sp.toString))
-        Processor.ac.ebr = stringToNum(getConfigValue(provider, "ac", Processor.ac.toString))
-        Processor.ix.ebr = stringToNum(getConfigValue(provider, "ix", Processor.ix.toString))
-        Processor.iy.ebr = stringToNum(getConfigValue(provider, "iy", Processor.iy.toString))
+        Processor.pc.addr = Integer.parseInt(getConfigValue(provider, "pc", Processor.pc.addr.toString))
+        Processor.sp.ebr = Integer.parseInt(getConfigValue(provider, "sp", Processor.sp.toString))
+        Processor.ac.ebr = Integer.parseInt(getConfigValue(provider, "ac", Processor.ac.toString))
+        Processor.ix.ebr = Integer.parseInt(getConfigValue(provider, "ix", Processor.ix.toString))
+        Processor.iy.ebr = Integer.parseInt(getConfigValue(provider, "iy", Processor.iy.toString))
     }
 }
