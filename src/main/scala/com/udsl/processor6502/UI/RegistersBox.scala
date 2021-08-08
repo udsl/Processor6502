@@ -234,8 +234,8 @@ class RegistersBox extends VBox with DataProvider with DataConsumer {
             text = "Exe"
             onAction = _ => {
                 println("EXE!")
-                val Executor = new Executor()
-                Executor.showAndWait()
+                val executor = new Executor()
+                executor.showAndWait()
             }
         }
         exeButton.setTooltip(new Tooltip("Execute a single instruction"))

@@ -113,6 +113,10 @@ class MemoryCell( private val location: Address, private var value: ByteValue = 
     def getValue(): Int ={
         value._byte.value
     }
+
+    def getLocation(): Int ={
+        location.addr
+    }
 }
 
 object MemoryCell {

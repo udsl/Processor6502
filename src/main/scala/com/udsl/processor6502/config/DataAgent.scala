@@ -10,5 +10,5 @@ trait DataProvider extends DataAgent {
 }
 
 trait DataConsumer extends DataAgent{
-  def setData( provider: List[ConfigDatum])
+  def setData( provider: List[ConfigDatum]):Unit
 }
