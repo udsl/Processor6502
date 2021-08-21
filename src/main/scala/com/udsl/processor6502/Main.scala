@@ -16,7 +16,7 @@ object Main extends JFXApp {
 
     stage = new JFXApp.PrimaryStage {
         title = "6502 Processor"
-        width = 600
+        width = 700
         height = 800
         resizable = false
 

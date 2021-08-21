@@ -1,4 +1,4 @@
-package com.udsl.processor6502.Assembler
+package com.udsl.processor6502.assembler
 
 class Token( val typeOfToken: AssemblerTokenType.Value, var tokenValue: String ) {
   def intValue : Int = {

@@ -1,11 +1,13 @@
 package com.udsl.processor6502
 
-import com.udsl.processor6502.Main.numericFormat
+import com.udsl.processor6502.Main.{numericFormat, stage}
 import com.udsl.processor6502.cpu.Processor
 import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.config.ConfigDatum
 import scalafx.application.Platform
-import scalafx.scene.control.TextInputDialog
+import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.{Alert, ButtonType, TextInputDialog}
+import scalafx.scene.input.{KeyEvent, MouseEvent}
 
 import java.io._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -152,6 +154,23 @@ object Utilities {
         datum match {
             case Some(datum) => datum.value
             case None  => default
+        }
+    }
+
+
+    def confirmation(header: String, content: String = "Are you ok with this?"): Boolean = {
+        val alert = new Alert(AlertType.Confirmation) {
+            initOwner(stage)
+            title = "Confirmation Dialog"
+            headerText = header
+            contentText = content
+        }
+
+        val result = alert.showAndWait()
+
+        result match {
+            case Some(ButtonType.OK) => println("OK") ; true
+            case _ => println("Cancel or closed") ; false
         }
     }
 }

@@ -1,6 +1,6 @@
-package com.udsl.processor6502.Assembler
+package com.udsl.processor6502.assembler
 
-import com.udsl.processor6502.Assembler.AssemblerTokenType.LabelToken
+import com.udsl.processor6502.assembler.AssemblerTokenType.LabelToken
 
 import scala.Console.println
 import scala.collection.mutable

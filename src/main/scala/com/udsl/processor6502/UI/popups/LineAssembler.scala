@@ -1,6 +1,6 @@
 package com.udsl.processor6502.UI.popups
 
-import com.udsl.processor6502.Assembler.Assemble6502.{assemble, printLabels, printTokenisedLines}
+import com.udsl.processor6502.assembler.Assemble6502.{assemble, printLabels, printTokenisedLines}
 import com.udsl.processor6502.Utilities.numToString
 import com.udsl.processor6502.cpu.Processor
 import scalafx.application.JFXApp

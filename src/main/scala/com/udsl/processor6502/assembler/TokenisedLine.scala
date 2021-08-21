@@ -1,4 +1,4 @@
-package com.udsl.processor6502.Assembler
+package com.udsl.processor6502.assembler
 
 import scala.collection.mutable.ListBuffer
 
