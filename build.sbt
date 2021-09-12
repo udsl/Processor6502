@@ -2,7 +2,7 @@ name := "Processor6502"
 
 version := "0.1"
 
-scalaVersion := "2.13.5"
+scalaVersion := "2.13.6"
 
 // https://mvnrepository.com/artifact/org.scalafx/scalafx
 libraryDependencies += "org.scalafx" %% "scalafx" % "15.0.1-R21"

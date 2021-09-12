@@ -1,34 +1,43 @@
 package com.udsl.processor6502.assembler
 
+import com.udsl.processor6502.assembler.Assemble6502.{tokeniseLine}
 import com.udsl.processor6502.assembler.AssemblerTokenType.LabelToken
 
 import scala.Console.println
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object Assemble6502 {
+class Assemble6502 {
   var currentLocation: Int = 0
   var labels = new mutable.HashMap[String, Int]()
   var tokenisedLines = new ListBuffer[TokenisedLine]()
 
+  def assemble(source: String): Unit = {
+    // Create a list of lines
+    val allLines = for ((str, index) <- source.split("\n").zipWithIndex)
+      yield new UntokenisedLine(index + 1, str)
+    for ( lineToTokenise <- allLines){
+      tokenisedLines.addOne(tokeniseLine(lineToTokenise))
+    }
+  }
+
   def assemble( source: String, location: Int): Unit ={
-    currentLocation = location
     println(s"Assembling to ${location}, Source:\n${source}")
     // split into lines, remove training spaces and any resulting blank lines
-//    val allLines = source.split("\n").toList.map( _.trim).filter( _ != "")
+    //    val allLines = source.split("\n").toList.map( _.trim).filter( _ != "")
     // Remove any comment lines
-//    val noneCommentLines = allLines.filter( _.take(1) != ";")
-//    println(s"Source has ${noneCommentLines.length} lines")
-//    println(s"noneCommentLines:\n${noneCommentLines.mkString("\n")}")
-//    // Remove any training comments from lines
-//    val commentsRemoved = noneCommentLines.map( s => { if (s.contains(";")) {s.take(s.indexOf(";")) } else { s } } )
-//    println(s"commentsRemoved:\n${noneCommentLines.mkString("\n")}")
-//    for (line <- commentsRemoved)
-//    {
-//      // Build tokenised list
-//      val tokenisedLine = LineTokens(1)
-//      tokeniseLine(line, tokenisedLine)
-//    }
+    //    val noneCommentLines = allLines.filter( _.take(1) != ";")
+    //    println(s"Source has ${noneCommentLines.length} lines")
+    //    println(s"noneCommentLines:\n${noneCommentLines.mkString("\n")}")
+    //    // Remove any training comments from lines
+    //    val commentsRemoved = noneCommentLines.map( s => { if (s.contains(";")) {s.take(s.indexOf(";")) } else { s } } )
+    //    println(s"commentsRemoved:\n${noneCommentLines.mkString("\n")}")
+    //    for (line <- commentsRemoved)
+    //    {
+    //      // Build tokenised list
+    //      val tokenisedLine = LineTokens(1)
+    //      tokeniseLine(line, tokenisedLine)
+    //    }
 
     // Create a list of lines
     val allLines = for ((str, index) <- source.split("\n").zipWithIndex)
@@ -37,6 +46,30 @@ object Assemble6502 {
     for ( lineToTokenise <- allLines){
       tokenisedLines.addOne(tokeniseLine(lineToTokenise))
     }
+  }
+
+  def printLabels = {
+    println
+    if (labels.isEmpty) println("No labels defined") else for ((label, address) <- labels) {
+      println(s"${label} address ${address}")
+    }
+  }
+
+  def printTokenisedLines = {
+    println("\nprintTokenisedLines")
+    if (tokenisedLines.isEmpty) println("No lines tokenised") else for (line <- tokenisedLines) {
+      println(line.toString)
+    }
+  }
+
+}
+
+
+object Assemble6502 {
+
+  def apply(): Assemble6502 ={
+    val asm = new Assemble6502()
+    asm
   }
 
   private def tokeniseLine(line: UntokenisedLine): TokenisedLine = {
@@ -75,18 +108,5 @@ object Assemble6502 {
 
   }
 
-  def printLabels = {
-    println
-    if (labels.isEmpty) println("No labels defined") else for ((label, address) <- labels) {
-      println(s"${label} address ${address}")
-    }
-  }
-
-  def printTokenisedLines = {
-    println("\nprintTokenisedLines")
-    if (tokenisedLines.isEmpty) println("No lines tokenised") else for (line <- tokenisedLines) {
-      println(line.toString)
-    }
-  }
 }
 

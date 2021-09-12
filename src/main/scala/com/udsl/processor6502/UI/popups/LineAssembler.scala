@@ -1,8 +1,7 @@
 package com.udsl.processor6502.UI.popups
 
-import com.udsl.processor6502.assembler.Assemble6502.{assemble, printLabels, printTokenisedLines}
 import com.udsl.processor6502.Utilities.numToString
-import com.udsl.processor6502.cpu.Processor
+import com.udsl.processor6502.assembler.Assemble6502
 import scalafx.application.JFXApp
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
@@ -42,8 +41,9 @@ class LineAssembler( val location: Int ) extends Stage{
         val assembleButton = new Button {
           text = "Assemble"
           onAction = _ => {
-            assemble(textBox.textArea.text.value, location)
-            printTokenisedLines
+            val assember = Assemble6502.apply()
+            assember.assemble(textBox.textArea.text.value, location)
+            assember.printTokenisedLines
           }
         }
         children = List(closeButton, assembleButton)

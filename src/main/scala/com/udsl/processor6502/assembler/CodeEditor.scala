@@ -6,8 +6,8 @@ import scalafx.application.JFXApp
 import scalafx.event.EventHandler
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
-import scalafx.scene.control.{Button, Label, TextArea}
-import scalafx.scene.layout.{BorderPane, HBox}
+import scalafx.scene.control.{Button, Label, MenuButton, MenuItem, TextArea}
+import scalafx.scene.layout.{BorderPane, GridPane, HBox, VBox}
 import scalafx.stage.{Modality, Stage}
 
 import java.io.{BufferedWriter, File, FileWriter}
@@ -48,41 +48,71 @@ class CodeEditor extends Stage {
         children = List(textArea)
       }
 
-      val buttons = new HBox {
-        padding = Insets(15, 12, 15, 12)
-        spacing = 10
-        style = "-fx-background-color: #336699;"
-
-        val closeButton = new Button {
-          text = "Close"
-          onAction = _ => {
-            close()
-          }
+      val closeButton = new Button {
+        text = "Close"
+        onAction = _ => {
+          close()
         }
+      }
 
-        val saveButton = new Button {
-          text = "Save"
-          onAction = _ => {
-            save()
-          }
-        }
+      val saveMenuItem = new MenuItem {
+        text = "Save"
 
-        val loadButton = new Button {
-          text = "" +
-            "Load"
-          onAction = _ => {
-            load()
-          }
+        onAction = _ => {
+          save()
         }
+      }
 
-        val reLoadButton = new Button {
-          text = "" +
-            "Reload"
-          onAction = _ => {
-            reLoad()
-          }
+      val saveAsMenuItem = new MenuItem {
+        text = "Save As"
+
+        onAction = _ => {
+          saveAs()
         }
-        children = List(saveButton, loadButton, reLoadButton, closeButton)
+      }
+
+      val saveButton = new MenuButton{
+        text = "Save"
+        items = List(saveMenuItem, saveAsMenuItem)
+      }
+
+      val loadButton = new Button {
+        text = "" +
+          "Load"
+        onAction = _ => {
+          load()
+        }
+      }
+
+      val reLoadButton = new Button {
+        text = "" +
+          "Reload"
+        onAction = _ => {
+          reLoad()
+        }
+      }
+
+      val assembleButton = new Button {
+        text = "" +
+          "Assemble"
+        onAction = _ => {
+          assemble()
+        }
+      }
+
+      val buttonBox = new VBox {
+        padding = Insets(4, 0, 4, 0)
+        val gridPane = new GridPane();
+        gridPane.setHgap(4)
+        gridPane.setVgap(4)
+
+        gridPane.add(saveButton, 0, 0, 1, 1);
+        gridPane.add(loadButton, 2, 0, 1, 1);
+        gridPane.add(reLoadButton, 4, 0, 1, 1);
+        gridPane.add(closeButton, 6, 0, 1, 1);
+        gridPane.add(assembleButton, 15, 0, 1, 1);
+
+        children = List(gridPane)
       }
 
       new BorderPane {
@@ -91,7 +121,7 @@ class CodeEditor extends Stage {
         padding = Insets(20)
         top = titleBox
         center = textBox
-        bottom = buttons
+        bottom = buttonBox
       }
     }
   }
@@ -137,6 +167,11 @@ class CodeEditor extends Stage {
       val bufferedSource = Source.fromFile(currentFile)
       textArea.text.value = bufferedSource.mkString
     }
+  }
+
+  def assemble(): Unit = {
+//    val editorText = textArea.text.value.split("\n").toList
+    Assemble6502.apply().assemble(textArea.text.value)
   }
 
   override def close(): Unit = {
