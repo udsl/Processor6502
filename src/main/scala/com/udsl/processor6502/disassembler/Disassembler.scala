@@ -33,7 +33,7 @@ class Disassembler( val loc: Int) extends Stage {
 }
 
 object Disassembler {
- def apply( loc: Int){
+ def apply( loc: Int) = {
    val disassembler = new Disassembler(loc)
    disassembler.showAndWait()
   }

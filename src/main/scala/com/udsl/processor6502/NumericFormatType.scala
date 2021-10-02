@@ -1,29 +1,36 @@
-package com.udsl.processor6502
+package com.udsl.processor6502:
 
-import scalafx.beans.property.ObjectProperty
-import scalafx.scene.input.KeyCode.Decimal
+  import scalafx.beans.property.ObjectProperty
+//  import scalafx.scene.input.KeyCode.Decimal
 
+  enum NumericFormatType:
+    case DEC, BIN, OCT, HEX
 
-object NumericFormatType extends Enumeration {
-  val Decimal: NumericFormatType.Value = Value("Dec")
-  val Binary: NumericFormatType.Value = Value("Bin")
-  val Octal: NumericFormatType.Value = Value("Oct")
-  val HexDecimal: NumericFormatType.Value = Value("Hex")
-}
+//  enum NumericFormatType(val str: String):
+//    case Decimal extends NumericFormatType("dec")
+//    case Binary extends NumericFormatType("bin")
+//    case Octal extends NumericFormatType("oct")
+//    case HexDecimal extends NumericFormatType("hex")
 
-class NumericFormatClass{
-  var value: NumericFormatType.Value = NumericFormatType.Decimal
-}
+  //object NumericFormatType extends Enumeration {
+  //  val Decimal: NumericFormatType.Value = Value("Dec")
+  //  val Binary: NumericFormatType.Value = Value("Bin")
+  //  val Octal: NumericFormatType.Value = Value("Oct")
+  //  val HexDecimal: NumericFormatType.Value = Value("Hex")
+  //}
 
-class NumericFormatProperty extends ObjectProperty[NumericFormatType.Value]{
-  def fromStr(str: String): Unit = {
-    str.toLowerCase match {
-      case "bin" => value = NumericFormatType.Binary
-      case "oct" => value = NumericFormatType.Octal
-      case "hex" => value = NumericFormatType.HexDecimal
-      case _ => value = NumericFormatType.Decimal
-    }
+  class NumericFormatClass{
+    var value: NumericFormatType = NumericFormatType.DEC
   }
 
-}
+  class NumericFormatProperty extends ObjectProperty[NumericFormatType]:
+    def fromStr(str: String): Unit = {
+      str.toLowerCase match {
+        case "bin" => value = NumericFormatType.BIN
+        case "oct" => value = NumericFormatType.OCT
+        case "hex" => value = NumericFormatType.HEX
+        case _ => value = NumericFormatType.DEC
+      }
+    }
+
 

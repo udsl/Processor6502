@@ -1,2 +1,6 @@
 /project/target/
 /.idea/
+/project/project
+/target
+/.vscode
+/processor6502.save

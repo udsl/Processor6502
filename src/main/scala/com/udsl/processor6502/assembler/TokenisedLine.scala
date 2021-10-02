@@ -27,7 +27,7 @@ object TokenisedLine{
 }
 
 class UntokenisedLine( val lineNumber: Int, val source: String){
-  override def toString: String = {
+  override def toString(): String = {
     s"lineNumber: ${lineNumber}, source: '${source}'"
   }
 }

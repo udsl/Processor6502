@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assembler
 
 import com.udsl.processor6502.Main
-import com.udsl.processor6502.Utilities.confirmation
+import com.udsl.processor6502.Utilities.{confirmation}
 import scalafx.application.JFXApp
 import scalafx.event.EventHandler
 import scalafx.geometry.Insets
@@ -12,6 +12,7 @@ import scalafx.stage.{Modality, Stage}
 
 import java.io.{BufferedWriter, File, FileWriter}
 import scala.io.Source
+
 
 class CodeEditor extends Stage {
   title = "Code Editor"
@@ -127,7 +128,7 @@ class CodeEditor extends Stage {
   }
 
   def saveAs(): Unit = {
-    val saveFile = Main.getSaveFile
+    val saveFile = Main.getSaveFile()
     if (saveFile != null) {
       currentFile = saveFile
     }
@@ -154,7 +155,7 @@ class CodeEditor extends Stage {
   }
 
   def load(): Unit = {
-    val sourceFile = Main.selectConfigFile
+    val sourceFile = Main.selectConfigFile()
     if (sourceFile != null) {
       currentFile = sourceFile
       label.setText(titleText)

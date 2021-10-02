@@ -40,7 +40,7 @@ class Assemble6502 {
     //    }
 
     // Create a list of lines
-    val allLines = for ((str, index) <- source.split("\n").zipWithIndex)
+    val allLines = for ((str: String, index: Int) <- source.split("\n").zipWithIndex)
       yield new UntokenisedLine(index + 1, str)
     // Create tokens from the line list
     for ( lineToTokenise <- allLines){
@@ -72,7 +72,7 @@ object Assemble6502 {
     asm
   }
 
-  private def tokeniseLine(line: UntokenisedLine): TokenisedLine = {
+  def tokeniseLine(line: UntokenisedLine) = {
     println(s"\ntokeniseLine: ${line}")
     val tokenisedLine = TokenisedLine(line)
     line.source.trim match {

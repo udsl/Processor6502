@@ -1,15 +1,14 @@
-package com.udsl.processor6502.UI
+package com.udsl.processor6502.ui
 
-import com.udsl.processor6502.Main.numericFormat
-import com.udsl.processor6502.Main.numericFormat.numericalFormatGroup
-import com.udsl.processor6502.UI.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, readConfigFile, writeConfigFile}
 import com.udsl.processor6502.config.DataSupplier.provideData
 import com.udsl.processor6502.config.{ConfigDatum, DataCollector}
+import com.udsl.processor6502.ui.NumericFormatSelector.updateDisplay
 import scalafx.geometry.Insets
 import scalafx.print.PaperSource.Main
 import scalafx.scene.control.Button
 import scalafx.scene.layout.{GridPane, HBox}
+
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 class FooterBox extends GridPane{
@@ -36,7 +35,7 @@ class FooterBox extends GridPane{
       println(s"Load Button pressed")
       val lines = readConfigFile
 
-      numericFormat.updateDisplay(getConfigValue(lines, "format", "Dec"))
+      updateDisplay(getConfigValue(lines, "format", "Dec"))
 
       provideData(lines)
     }

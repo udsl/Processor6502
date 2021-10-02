@@ -1,12 +1,12 @@
-package com.udsl.processor6502.cpu
+package com.udsl.processor6502.cpu:
 
-import com.udsl.processor6502.cpu.execution.Instruction
-import scalafx.collections.ObservableBuffer
+  import com.udsl.processor6502.cpu.execution.Instruction
+  import scalafx.collections.ObservableBuffer
 
 
-object Processor {
+  object Processor {
     private val memory = new ObservableBuffer[MemoryCell]()
-    memory.addAll( Array.fill[MemoryCell](65536)(MemoryCell(getAndIncIndex)) )
+    memory.addAll(Array.fill[MemoryCell](65536)(MemoryCell(getAndIncIndex)))
 
     private var indexer: Int = 0
 
@@ -31,106 +31,105 @@ object Processor {
 
 
     def getAndIncIndex: Int = {
-        val res = indexer
-        indexer += 1
-        res
+      val res = indexer
+      indexer += 1
+      res
     }
 
     def getMemory: ObservableBuffer[MemoryCell] = {
-        memory
+      memory
     }
 
     def nmi = {
-        pushPc
-        //        Push SR.
-        //        Set IRQ disable in status.
-        //        PC is loaded
-        pc.addr = nmiVector.addr
+      pushPc
+      //        Push SR.
+      //        Set IRQ disable in status.
+      //        PC is loaded
+      pc.addr = nmiVector.addr
     }
 
     def irq = {
-        pushPc
-        //        Push SR.
-        //        PC is loaded
-        pc.addr = irqVector.addr
+      pushPc
+      //        Push SR.
+      //        PC is loaded
+      pc.addr = irqVector.addr
     }
 
 
     def reset = {
-        pushPc
-//        Push SR.
-//        Set IRQ disable in status.
-//        PC is loaded
-        pc.addr = resetVector.addr
+      pushPc
+      //        Push SR.
+      //        Set IRQ disable in status.
+      //        PC is loaded
+      pc.addr = resetVector.addr
     }
 
-    def setPC(address: Int): Unit ={
-        pc.addr = address
+    def setPC(address: Int): Unit = {
+      pc.addr = address
     }
 
     def setMemoryByte(address: Int, value: Int): Unit = {
-        memory(address) = MemoryCell(address, value)
+      memory(address) = MemoryCell(address, value)
     }
 
     def getMemoryByte(address: Int): Int = {
-        memory(address).getValue()
+      memory(address).getValue()
     }
 
     def getNextInstruction(): Instruction = {
-        Instruction(memory(pc.addr).getValue())
+      Instruction(memory(pc.addr).getValue())
     }
 
     private def pushPc = {
-        // Push MSB
-        sp.pushByte(pc.getHi)
-        // Push LSB
-        sp.pushByte(pc.getLo)
+      // Push MSB
+      sp.pushByte(pc.getHi)
+      // Push LSB
+      sp.pushByte(pc.getLo)
     }
 
     private def popPc = {
-        // Pop MSB
-        val msb = sp.popByte()
-        // Pop LSB
-        val lsb = sp.popByte()
-        val poped = (msb * 256) + lsb
-        pc.addr = poped
+      // Pop MSB
+      val msb = sp.popByte()
+      // Pop LSB
+      val lsb = sp.popByte()
+      val poped = (msb * 256) + lsb
+      pc.addr = poped
     }
 
     private def pushSr = {
     }
 
-    private def pushByte( byt: Int) = {
+    private def pushByte(byt: Int) = {
 
     }
-}
+  }
 
-class MemoryCell( private val location: Address, private var value: ByteValue = ByteValue.apply) {
+  class MemoryCell(private val location: Address, private var value: ByteValue = ByteValue.apply) {
 
     override def toString: String = {
-        s"[${ location.toString}] ${value}"
+      s"[${location.toString}] ${value}"
     }
 
-    def getValue(): Int ={
-        value._byte.value
+    def getValue(): Int = {
+      value._byte.value
     }
 
-    def getLocation(): Int ={
-        location.addr
+    def getLocation(): Int = {
+      location.addr
     }
-}
+  }
 
-object MemoryCell {
+  object MemoryCell {
     def apply(index: Int): MemoryCell = {
-        Address.validate( index )
-        val m = new MemoryCell( Address(index) )
-        m
+      Address.validate(index)
+      val m = new MemoryCell(Address(index))
+      m
     }
 
     def apply(index: Int, byt: Int): MemoryCell = {
-        Address.validate( index )
-        ByteValue.validate(byt)
-        val m = new MemoryCell( Address(index), ByteValue(byt) )
-        m
+      Address.validate(index)
+      ByteValue.validate(byt)
+      val m = new MemoryCell(Address(index), ByteValue(byt))
+      m
     }
-}
-
+  }
