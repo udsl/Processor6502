@@ -21,7 +21,7 @@ class CodeEditor extends Stage {
   maxWidth = 600
   maxHeight = 800
 
-  initOwner(JFXApp.ActiveApp.stage)
+  initOwner(Main.stage)
   initModality(Modality.ApplicationModal)
 
   var currentFile: File = null
@@ -128,7 +128,7 @@ class CodeEditor extends Stage {
   }
 
   def saveAs(): Unit = {
-    val saveFile = Main.getSaveFile()
+    val saveFile = Main.selectSourceFileToSave
     if (saveFile != null) {
       currentFile = saveFile
     }
@@ -155,7 +155,7 @@ class CodeEditor extends Stage {
   }
 
   def load(): Unit = {
-    val sourceFile = Main.selectConfigFile()
+    val sourceFile = Main.selectSourceFileToLoad
     if (sourceFile != null) {
       currentFile = sourceFile
       label.setText(titleText)

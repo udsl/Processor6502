@@ -116,7 +116,7 @@ package com.udsl.processor6502:
      * write a `Seq[String]` to the `filename` with a terminating CR
      */
     def writeConfigFile(data: List[ConfigDatum]): Unit = {
-      val saveFile = Main.getSaveFile()
+      val saveFile = Main.selectConfigFileToSave
       if (saveFile != null) {
         val lines = data.map(f => f.toString())
         val bw = new BufferedWriter(new FileWriter(saveFile))
@@ -134,7 +134,7 @@ package com.udsl.processor6502:
      */
     def readConfigFile: List[ConfigDatum] ={
       var r: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
-      val configFile = Main.selectConfigFile()
+      val configFile = Main.selectConfigFileToLoad
       val bufferedSource = Source.fromFile(configFile)
       for (line <- bufferedSource.getLines) {
         val colonIndex = line.indexOf(':')

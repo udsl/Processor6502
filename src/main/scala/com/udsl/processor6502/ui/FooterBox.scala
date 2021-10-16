@@ -14,7 +14,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 class FooterBox extends GridPane{
 
   val saveButton: Button = new Button {
-    text = "Save"
+    text = "Save Config"
     onAction = _ => {
       println(s"Save Button pressed")
 
@@ -30,7 +30,7 @@ class FooterBox extends GridPane{
   GridPane.setConstraints(saveButton, 13, 0, 2, 1)
 
   val loadButton: Button = new Button {
-    text = "Load"
+    text = s"Load Config"
     onAction = _ => {
       println(s"Load Button pressed")
       val lines = readConfigFile

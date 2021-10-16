@@ -4,3 +4,5 @@
 /target
 /.vscode
 /processor6502.save
+/config2.save
+/test1.asm
