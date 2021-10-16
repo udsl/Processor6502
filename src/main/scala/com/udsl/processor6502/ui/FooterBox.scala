@@ -34,10 +34,9 @@ class FooterBox extends GridPane{
     onAction = _ => {
       println(s"Load Button pressed")
       val lines = readConfigFile
-
-      updateDisplay(getConfigValue(lines, "format", "Dec"))
-
-      provideData(lines)
+      if !lines.isEmpty then
+        updateDisplay(getConfigValue(lines, "format", "Dec"))
+        provideData(lines)
     }
   }
   GridPane.setConstraints(loadButton, 33, 0, 2, 1)

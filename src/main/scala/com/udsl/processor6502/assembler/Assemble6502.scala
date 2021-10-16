@@ -66,6 +66,7 @@ class Assemble6502 {
 
 
 object Assemble6502 {
+  val validInstructions = List("ORA","AND","EOR","ADC","STA","LDA","CMP","SBC","ASL","ROL","LSR","ROR","STX","LDX","DEC","INC","BIT","JMP","lue","JMP","STY","LDY","CPY","CPX")
 
   def apply(): Assemble6502 ={
     val asm = new Assemble6502()
@@ -75,37 +76,92 @@ object Assemble6502 {
   def tokeniseLine(line: UntokenisedLine) = {
     println(s"\ntokeniseLine: ${line}")
     val tokenisedLine = TokenisedLine(line)
-    line.source.trim match {
-      case "" => tokenisedLine + Token(AssemblerTokenType.BlankLineToken)
-      case a if a.charAt(0) == ';' => tokenisedLine + Token(AssemblerTokenType.CommentLineToken)
-      case _ => tokenisedLine + Token(AssemblerTokenType.NoneCommentLine)
+    val token = line.source.trim match {
+      case "" => Token(AssemblerTokenType.BlankLineToken)
+      case a if a.charAt(0) == ';' => Token(AssemblerTokenType.CommentLineToken)
+      case _ => Token(AssemblerTokenType.NoneCommentLine)
     }
-    // split the line on white space
-    val fields = line.source.split("\\s+")
-    val instruction = processLabel(fields, tokenisedLine)
-    processValue(instruction.tail, tokenisedLine)
-    processOpcode(instruction.head, tokenisedLine)
+
+    tokenisedLine + token
+    if token.typeOfToken == AssemblerTokenType.NoneCommentLine then
+      // Not a comment line but could have a comment in it, let get that
+      val commentSplit = line.source.split(";")
+
+      val fields =
+        if commentSplit.length > 1 then
+          // we have a comment
+          tokenisedLine + Token(AssemblerTokenType.LineComment, commentSplit.tail.mkString)
+          commentSplit.head.split("\\s+")
+        else
+          line.source.split("\\s+")
+
+      // [Label: | comand [val]] opcode value
+      val command = processLabel(fields, tokenisedLine)
+      val operation = processCommand(command, tokenisedLine)
+      val value = processInstruction(operation, tokenisedLine)
+      val endOfLineComment = processValue(value, tokenisedLine)
+
     tokenisedLine
   }
 
-  private def processLabel(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String] ={
+  private def processLabel(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String] =
     println(s"processLabel: ${text.mkString(" ")}")
     val head = text.head
-    if (head.takeRight(1) == ":"){
+    if head.takeRight(1) == ":" then
       val labelText = head.dropRight(1)
-      tokenisedLine + Token(AssemblerTokenType.LabelToken)
+      val token = Token(AssemblerTokenType.LabelToken)
+      tokenisedLine + token
+      println(s"token added: ${token}")
       text.tail
-    }
+    else
+      println(s"no token added")
+      text
+
+
+  private def processCommand(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String] ={
+    println(s"processCommand: ${text.mkString(" ")}")
+    if !text.isEmpty then
+      val head = text.head
+      head.toUpperCase match {
+        case "ORIG" => {
+          val rest = text.tail
+          val value = rest.head
+          // ORIG followed by a comment without a value
+          val token = if value.takeRight(1) == ";" then
+            Token(AssemblerTokenType.SyntaxErrorToken, "Value not given")
+          else
+            Token(AssemblerTokenType.CommandToken, value)
+          tokenisedLine + token
+          println(s"token added: ${token}")
+        }
+
+        case _ => {}
+      }
     text
   }
 
-  def processOpcode(text: String, tokenisedLine: TokenisedLine  ) ={
-    println(s"processOpcode: ${text}")
+
+  def processInstruction(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String]  ={
+    println(s"processInstruction: ${text.mkString(" ")}")
+    if !text.isEmpty then
+      val instruction = text.head.toUpperCase()
+      val token = if validInstructions.contains(instruction) then
+        Token(AssemblerTokenType.InstructionToken, instruction)
+      else
+        Token(AssemblerTokenType.SyntaxErrorToken, s"Invalid instruction: ${instruction}")
+      tokenisedLine + token
+      println(s"token added: ${token}")
+      text.tail
+    else
+      text
   }
 
-  def processValue(text: Array[String], tokenisedLine: TokenisedLine  ) = {
+  def processValue(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String]  = {
     println(s"processValue: ${text.mkString(" ")}")
-
+    if !text.isEmpty then
+      text.tail
+    else
+      text
   }
 
 }

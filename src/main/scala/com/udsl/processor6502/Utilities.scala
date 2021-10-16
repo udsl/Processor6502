@@ -117,15 +117,14 @@ package com.udsl.processor6502:
      */
     def writeConfigFile(data: List[ConfigDatum]): Unit = {
       val saveFile = Main.selectConfigFileToSave
-      if (saveFile != null) {
+      if saveFile != null then
         val lines = data.map(f => f.toString())
         val bw = new BufferedWriter(new FileWriter(saveFile))
-        for (line <- lines) {
+        for line <- lines do
           bw.write(line)
           bw.write("\n")
-        }
+
         bw.close()
-      }
     }
 
     /**
@@ -133,17 +132,18 @@ package com.udsl.processor6502:
      * @param filename the name of the file to read.
      */
     def readConfigFile: List[ConfigDatum] ={
-      var r: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
+      val r: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
       val configFile = Main.selectConfigFileToLoad
-      val bufferedSource = Source.fromFile(configFile)
-      for (line <- bufferedSource.getLines) {
-        val colonIndex = line.indexOf(':')
-        val key = line.substring(0, colonIndex)
-        val value = line.substring(colonIndex+1)
-        r += ConfigDatum.apply(key, value)
-      }
+      if configFile != null then
+        val bufferedSource = Source.fromFile(configFile)
+        for (line <- bufferedSource.getLines) {
+          val colonIndex = line.indexOf(':')
+          val key = line.substring(0, colonIndex)
+          val value = line.substring(colonIndex+1)
+          r += ConfigDatum.apply(key, value)
+        }
 
-      bufferedSource.close
+        bufferedSource.close
       r.toList
     }
 
