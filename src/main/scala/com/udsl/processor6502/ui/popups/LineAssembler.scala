@@ -66,7 +66,7 @@ package com.udsl.processor6502.ui.popups:
 
     def doAssemble() =
       val assember = Assemble6502.apply()
-      assember.assemble(textArea.text.value, location)
-      assember.printTokenisedLines
+ //     assember.assemble(textArea.text.value, location)
+ //     assember.printTokenisedLines
 
   }

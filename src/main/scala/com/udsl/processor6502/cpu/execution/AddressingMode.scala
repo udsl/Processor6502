@@ -32,7 +32,7 @@ package com.udsl.processor6502.cpu.execution:
                 case _ => Invalid
               }
             case 2 => Implied    // 000 -> Implied, 001 -> Implied, 010- > Implied, 011-> implied, 100 ->  Implied, 101 -> Implied, 110 -> Implied, 111 -> Implied
-            case 3 => Absolute   // 000 -> Invalid, 001 -> abs, 010- > abs, 011-> indirect, 100 ->  abs, 101 -> Implied, 110 -> abs, 111 -> abs
+            case 3 =>    // 000 -> Invalid, 001 -> abs, 010- > abs, 011-> indirect, 100 ->  abs, 101 -> Implied, 110 -> abs, 111 -> abs
               aaa match {
                 case 0 => Implied
                 case i if 2 until 7 contains i => Absolute
@@ -73,13 +73,13 @@ package com.udsl.processor6502.cpu.execution:
         }
         else if (cc == 2) { // 10
           bbb match {
-            case 0 => Immediate    // 000 -> Invalid, 001 -> Invalid, 010- > Invalid, 011-> Invalid, 100 ->  Invalid, 101 -> imeadiate, 110 -> Invalid, 111 -> Invalid
+            case 0 =>     // 000 -> Invalid, 001 -> Invalid, 010- > Invalid, 011-> Invalid, 100 ->  Invalid, 101 -> imeadiate, 110 -> Invalid, 111 -> Invalid
               aaa match {
                 case 5 => Immediate
                 case _ => Invalid
               }
             case 1 => ZeroPage     // 000 -> zp, 001 -> zp, 010- > zp, 011-> zp, 100 ->  zp, 101 -> zp, 110 -> zp, 111 -> zp
-            case 2 => Invalid      // 000 -> acc, 001 -> acc, 010- > acc, 011-> acc, 100 ->  impl, 101 -> impl, 110 -> impl, 111 -> impl
+            case 2 =>       // 000 -> acc, 001 -> acc, 010- > acc, 011-> acc, 100 ->  impl, 101 -> impl, 110 -> impl, 111 -> impl
               aaa match {
                 case i if 0 to 3 contains i => Accumulator
                 case i if 4 to 7 contains i => Implied

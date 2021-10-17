@@ -22,7 +22,7 @@ package com.udsl.processor6502:
         case NumericFormatType.OCT => Integer.parseInt(text, 8)
         case NumericFormatType.BIN => Integer.parseInt(text, 2)
         case NumericFormatType.DEC => Integer.parseInt(text, 10)
-        case _ => -1
+//        case _ => -1
       }
     }
 
@@ -59,7 +59,7 @@ package com.udsl.processor6502:
             case NumericFormatType.OCT => "01234567".contains(k.getChar)
             case NumericFormatType.BIN => "10".contains(k.getChar)
             case NumericFormatType.DEC => "0123456789".contains(k.getChar)
-            case _ => false
+//            case _ => false
           }) || (k.getCode == 8) || (k.getCode == 127) // TODO add other key codes for valid keys
           println(s"${et.getName} occurred ${e.getCode} which is ${if (lastKeyValid) "VALID" else "INVALID"}")
         }
@@ -88,7 +88,7 @@ package com.udsl.processor6502:
                       case NumericFormatType.OCT => "01234567".contains(k) && change.length <= 6
                       case NumericFormatType.BIN => "10".contains(k) && change.length <= 16
                       case NumericFormatType.DEC => "0123456789".contains(k) && change.length <= 5 && stringToNum(change) <= 65535
-                      case _ => false
+//                      case _ => false
                     }) {
                       editor.text.value = change
                       lastChange = change
@@ -157,7 +157,7 @@ package com.udsl.processor6502:
     }
 
 
-    def confirmation(header: String, content: String = "Are you ok with this?"): Boolean = 
+    def confirmation(header: String, content: String = "Are you ok with this?"): Boolean =
       val alert = new Alert(AlertType.Confirmation) {
         initOwner(Main.stage)
         title = "Confirmation Dialog"
@@ -167,8 +167,8 @@ package com.udsl.processor6502:
 
       val result = alert.showAndWait()
 
-      result match 
+      result match
         case Some(ButtonType.OK) => println("OK") ; true
         case _ => println("Cancel or closed") ; false
-    
+
   }

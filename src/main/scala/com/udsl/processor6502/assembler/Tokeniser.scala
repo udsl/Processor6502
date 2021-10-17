@@ -1,59 +1,27 @@
 package com.udsl.processor6502.assembler
 
-import com.udsl.processor6502.assembler.Assemble6502.tokeniseLine
-import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken, LabelToken}
-
-import scala.Console.println
-import scala.collection.mutable
+import com.typesafe.scalalogging.LazyLogging
+import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken}
+//import org.apache.log4j.Logger // Log4j 1
+//import org.apache.logging.log4j.LogManager // Log4j 2
+//import org.apache.logging.log4j.Logger // Log4j 2
 import scala.collection.mutable.ListBuffer
 
-class Assemble6502 {
-  var currentLocation: Int = 0
-  var labels = new mutable.HashMap[String, Int]()
-  var tokenisedLines: List[TokenisedLine] = List.empty
+object Tokeniser extends LazyLogging :
+//  private val logger = Logger.getLogger(getClass.getName) // Log4j 1
+//  private val logger: Logger = LogManager.getLogger(Tokeniser.getClass.getName) // Log4j 2
 
-  def assemble(source: String): Unit = {
-    // Create a list of lines
-    val allLines = for ((str, index) <- source.split("\n").zipWithIndex)
-      yield new UntokenisedLine(index + 1, str)
-
-    tokenisedLines = Tokeniser.Tokenise(allLines)
-
-    println
-    println
-
-    for line <- tokenisedLines do
-      println(line)
-
-  }
-
-  def printLabels = {
-    println
-    if (labels.isEmpty) println("No labels defined") else for ((label, address) <- labels) {
-      println(s"${label} address ${address}")
-    }
-  }
-
-  def printTokenisedLines = {
-    println("\nprintTokenisedLines")
-    if (tokenisedLines.isEmpty) println("No lines tokenised") else for (line <- tokenisedLines) {
-      println(line.toString)
-    }
-  }
-
-}
-
-
-object Assemble6502 {
   val validInstructions = List("ORA","AND","EOR","ADC","STA","LDA","CMP","SBC","ASL","ROL","LSR","ROR","STX","LDX","DEC","INC","BIT","JMP","lue","JMP","STY","LDY","CPY","CPX")
 
-  def apply(): Assemble6502 =
-    val asm = new Assemble6502()
-    asm
+  val tokenisedLines = new ListBuffer[TokenisedLine]()
 
+  def Tokenise(allLines: Array[UntokenisedLine]): List[TokenisedLine] =
+    for lineToTokenise <- allLines do
+      tokenisedLines.addOne(tokeniseLine(lineToTokenise))
+    tokenisedLines.toList
 
   def tokeniseLine(line: UntokenisedLine) =
-    println(s"\ntokeniseLine: ${line}")
+    logger.info(s"\ntokeniseLine: ${line}")
     // determine basic line type
     val tokenisedLine = TokenisedLine(line)
     val token = line.source.trim match {
@@ -93,20 +61,20 @@ object Assemble6502 {
 
 
   private def processLabel(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String] =
-    println(s"processLabel: ${text.mkString(" ")}")
+    logger.info(s"processLabel: ${text.mkString(" ")}")
     val head = text.head
     if head.takeRight(1) == ":" then
       val labelText = head.dropRight(1)
       val token = Token(AssemblerTokenType.LabelToken, labelText)
       tokenisedLine + token
-      println(s"token added: ${token}")
+      logger.info(s"token added: ${token}")
       text.tail
     else
       text
 
 
   private def processCommand(text: Array[String], tokenisedLine: TokenisedLine ) : Boolean =
-    println(s"processCommand: ${text.mkString(" ")}")
+    logger.info(s"processCommand: ${text.mkString(" ")}")
     if !text.isEmpty then
       val head = text.head.toUpperCase
       head match {
@@ -117,7 +85,7 @@ object Assemble6502 {
           else
             Token(AssemblerTokenType.CommandToken, head, TokenValue(value))
           tokenisedLine + token
-          println(s"token added: ${token}")
+          logger.info(s"token added: ${token}")
           return true
         }
 
@@ -128,7 +96,7 @@ object Assemble6502 {
 
 
   def processInstruction(text: Array[String], tokenisedLine: TokenisedLine ) : Token =
-    println(s"processInstruction: ${text.mkString(" ")}")
+    logger.info(s"processInstruction: ${text.mkString(" ")}")
     val instruction = text.head.toUpperCase()
     val token = if validInstructions.contains(instruction) then
       Token(AssemblerTokenType.InstructionToken, instruction)
@@ -138,9 +106,9 @@ object Assemble6502 {
     token
 
   def processValue(text: Array[String], tokenisedLine: TokenisedLine, token: Token ) =
-    println(s"processValue: ${text.mkString(" ")}")
+    logger.info(s"processValue: ${text.mkString(" ")}")
 
-    println(s"No operand for ${token.tokenStr}")
+    logger.info(s"No operand for ${token.tokenStr}")
     // Possible values and associated adressing mode:
     //      numeric - starts with a digit or $ for hex - absolute or zero page
     //      label - starts with an alph but not ( absolute mode to label
@@ -153,5 +121,5 @@ object Assemble6502 {
       token.tokenVal.pridictedMode = PredictedAddressingModes.Immediate
     else
       token.tokenVal.pridictedMode = PredictedAddressingModes.AbsoluteXOrZeroPageX
-}
+
 
