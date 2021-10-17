@@ -2,33 +2,27 @@ package com.udsl.processor6502.assembler
 
 import scala.collection.mutable.ListBuffer
 
-class TokenisedLine(val sourceLine: UntokenisedLine) {
-  var tokens = new ListBuffer[Token]()
+class TokenisedLine(val sourceLine: UntokenisedLine):
+  val tokens = new ListBuffer[Token]()
 
   def +(other: Token) = {
     tokens += other
   }
 
-  override def toString = {
-    var str: String = s"Line number: ${sourceLine.lineNumber}\n Source: '${sourceLine.source}', Token count: ${tokens.length}\nTokens: "
-    for( t <- tokens) {
-      str += s"${t.typeOfToken.toString} "
-    }
-    str += "\n"
+  override def toString =
+    var str: String = s"Line number: ${sourceLine.lineNumber} has ${tokens.length} tokens,  Source: '${sourceLine.source}', Tokens: \n"
+    for t <- tokens do
+      str += s"\t${t.typeOfToken.toString} - ${t.tokenVal.pridictedMode}\n"
     str
-  }
 
-}
-
-object TokenisedLine{
-  def apply(line: UntokenisedLine) : TokenisedLine = {
+object TokenisedLine:
+  def apply(line: UntokenisedLine) : TokenisedLine =
     new TokenisedLine(line)
-  }
-}
 
-class UntokenisedLine( val lineNumber: Int, val source: String){
-  override def toString(): String = {
+
+class UntokenisedLine( val lineNumber: Int, val source: String):
+  override def toString(): String =
     s"lineNumber: ${lineNumber}, source: '${source}'"
-  }
-}
+
+
 

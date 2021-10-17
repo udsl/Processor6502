@@ -157,7 +157,7 @@ package com.udsl.processor6502:
     }
 
 
-    def confirmation(header: String, content: String = "Are you ok with this?"): Boolean = {
+    def confirmation(header: String, content: String = "Are you ok with this?"): Boolean = 
       val alert = new Alert(AlertType.Confirmation) {
         initOwner(Main.stage)
         title = "Confirmation Dialog"
@@ -167,9 +167,8 @@ package com.udsl.processor6502:
 
       val result = alert.showAndWait()
 
-      result match {
+      result match 
         case Some(ButtonType.OK) => println("OK") ; true
         case _ => println("Cancel or closed") ; false
-      }
-    }
+    
   }
