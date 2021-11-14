@@ -1,24 +1,27 @@
 package com.udsl.processor6502.assembler
 
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.StrictLogging
+import com.udsl.processor6502.Utilities
+import com.udsl.processor6502.Utilities.writeToFile
 import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken}
-//import org.apache.log4j.Logger // Log4j 1
-//import org.apache.logging.log4j.LogManager // Log4j 2
-//import org.apache.logging.log4j.Logger // Log4j 2
+
 import scala.collection.mutable.ListBuffer
 
-object Tokeniser extends LazyLogging :
-//  private val logger = Logger.getLogger(getClass.getName) // Log4j 1
-//  private val logger: Logger = LogManager.getLogger(Tokeniser.getClass.getName) // Log4j 2
-
+object Tokeniser extends StrictLogging :
   val validInstructions = List("ORA","AND","EOR","ADC","STA","LDA","CMP","SBC","ASL","ROL","LSR","ROR","STX","LDX","DEC","INC","BIT","JMP","lue","JMP","STY","LDY","CPY","CPX")
 
-  val tokenisedLines = new ListBuffer[TokenisedLine]()
-
   def Tokenise(allLines: Array[UntokenisedLine]): List[TokenisedLine] =
+    val tokenisedLines = new ListBuffer[TokenisedLine]()
     for lineToTokenise <- allLines do
-      tokenisedLines.addOne(tokeniseLine(lineToTokenise))
+      try
+        tokenisedLines.addOne(tokeniseLine(lineToTokenise))
+      catch
+        case e: Exception => throw new Exception(s"${e.getMessage}\nOn line ${lineToTokenise.lineNumber}" )
+        case a => logger.error(s"Unknown exception! ${a}")
+    val f = java.io.File("code.tock")
+    writeToFile( f, tokenisedLines.toList)
     tokenisedLines.toList
+
 
   def tokeniseLine(line: UntokenisedLine) =
     logger.info(s"\ntokeniseLine: ${line}")
@@ -78,7 +81,7 @@ object Tokeniser extends LazyLogging :
     if !text.isEmpty then
       val head = text.head.toUpperCase
       head match {
-        case "ORIG" | "BYT" | "WRD" => {
+        case "ADDR" | "BYT" | "ORIG" | "WRD" => {
           val value = text.tail
           val token = if value.isEmpty then
             Token(AssemblerTokenType.SyntaxErrorToken, "Value not given")
@@ -88,6 +91,12 @@ object Tokeniser extends LazyLogging :
           logger.info(s"token added: ${token}")
           return true
         }
+
+        case "CLR" =>
+          val token = Token(AssemblerTokenType.ClearToken, head)
+          tokenisedLine + token
+          logger.info(s"token added: ${token}")
+          return true
 
         case _ => {
         }
@@ -105,11 +114,12 @@ object Tokeniser extends LazyLogging :
     tokenisedLine + token
     token
 
-  def processValue(text: Array[String], tokenisedLine: TokenisedLine, token: Token ) =
+  def processValue(text: Array[String], tokenisedLine: TokenisedLine, token: Token ) = {
     logger.info(s"processValue: ${text.mkString(" ")}")
 
     logger.info(s"No operand for ${token.tokenStr}")
     // Possible values and associated adressing mode:
+    //      missing - just the instruction them accumilator or implied
     //      numeric - starts with a digit or $ for hex - absolute or zero page
     //      label - starts with an alph but not ( absolute mode to label
     //      imeadiate address mode starts with #
@@ -118,8 +128,26 @@ object Tokeniser extends LazyLogging :
 
     // At this point we only need to tokenise the addressign mode not work out if its valid.
     if text.isEmpty then // applied addrtessing mode
-      token.tokenVal.pridictedMode = PredictedAddressingModes.Immediate
-    else
-      token.tokenVal.pridictedMode = PredictedAddressingModes.AbsoluteXOrZeroPageX
+      token.tokenVal.pridictedMode = PredictedAddressingModes.AccumulatorOrImplied
+    else if text.length == 1 then
+      text(0) match {
+        case a if a.charAt(0) == '#' => token.tokenVal.pridictedMode = getPredition(a.substring(1), 10)
+        case b if b.charAt(0) == '$' => token.tokenVal.pridictedMode = getPredition(b.substring(1), 16)
+        case c if c.charAt(0).isDigit => token.tokenVal.pridictedMode = getPredition(c.substring(1), 10)
+        case c if c.charAt(0).isLetter => token.tokenVal.pridictedMode = getPredition(c.substring(1), 16)
+        case d if d.charAt(0) == '(' => token.tokenVal.pridictedMode = PredictedAddressingModes.AbsoluteIndirect
+        case _ => token.tokenVal.pridictedMode = PredictedAddressingModes.NoPricitions
+      }
+  }
 
+  def getPredition(t: String, base: Int) : PredictedAddressingModes =
+    try {
+      val value = Integer.parseInt(t, base)
+      if (value > 256) then
+        return PredictedAddressingModes.Absolute
+      else
+        return PredictedAddressingModes.ZeroPage
+    } catch {
+      case _ => return PredictedAddressingModes.Absolute
+    }
 

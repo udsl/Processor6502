@@ -2,7 +2,7 @@ package com.udsl.processor6502.ui:
   
   import com.udsl.processor6502.cpu.{MemoryCell, Processor}
   import com.udsl.processor6502.NumericFormatType
-  import com.udsl.processor6502.ui.popups.{Executor, LineAssembler}
+  import com.udsl.processor6502.ui.popups.{Executor, LineAssemblerPopup}
   import com.udsl.processor6502.assembler.CodeEditor
   import com.udsl.processor6502.disassembler.Disassembler
   import javafx.collections.FXCollections
@@ -44,7 +44,7 @@ package com.udsl.processor6502.ui:
       val selected = memoryView.selectionModel.apply().getSelectedItems.get(0)
       println(s"menu action - '${selected}'")
       println(selected.getLocation())
-      val lineAssembler = new LineAssembler(selected.getLocation())
+      val lineAssembler = new LineAssemblerPopup(selected.getLocation())
       lineAssembler.showAndWait()
     }
   

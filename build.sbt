@@ -16,10 +16,6 @@ libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.10"
 // https://mvnrepository.com/artifact/org.scalatest/scalatest
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % Test
 
-//libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.11.0"
-//libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.11.0"
-//libraryDependencies += "log4j" % "log4j" % "1.2.14"
-
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
 

@@ -1,72 +1,68 @@
-package com.udsl.processor6502.ui.popups:
+package com.udsl.processor6502.ui.popups
 
-  import com.udsl.processor6502.Utilities.numToString
-  import com.udsl.processor6502.assembler.Assemble6502
-  import scalafx.application.JFXApp
-  import scalafx.geometry.Insets
-  import scalafx.scene.Scene
-  import scalafx.scene.control.{Button, Label, TextArea}
-  import scalafx.scene.layout.{BorderPane, HBox}
-  import scalafx.stage.{Modality, Stage}
+import com.udsl.processor6502.Utilities.numToString
+import com.udsl.processor6502.assembler.Assemble6502
+import scalafx.application.JFXApp
+import scalafx.geometry.Insets
+import scalafx.scene.Scene
+import scalafx.scene.control.{Button, Label, TextArea}
+import scalafx.scene.layout.{BorderPane, HBox}
+import scalafx.stage.{Modality, Stage}
 
-  class LineAssembler(val location: Int) extends Stage {
-    title = "Line Assembler - Popup"
-    width = 400
-    height = 200
-    resizable = false
+class LineAssemblerPopup(val location: Int) extends Stage {
+  title = "Line Assembler - Popup"
+  width = 400
+  height = 200
+  resizable = false
 
-    initOwner(JFXApp.ActiveApp.stage)
-    initModality(Modality.ApplicationModal)
+  initOwner(JFXApp.ActiveApp.stage)
+  initModality(Modality.ApplicationModal)
 
-    val textArea = new TextArea()
+  val textArea = new TextArea()
 
-    scene = new Scene {
-      root = {
-        val titleBox = new HBox {
-          val label: Label = new Label(s"Assembling for location: ${numToString(location)}")
+  scene = new Scene {
+    root = {
+      val titleBox = new HBox {
+        val label: Label = new Label(s"Assembling for location: ${numToString(location)}")
 
-          children = List(label)
-        }
+        children = List(label)
+      }
 
-        val textBox = new HBox {
-          children = List(textArea)
-        }
+      val textBox = new HBox {
+        children = List(textArea)
+      }
 
-        val buttons = new HBox {
-          val closeButton = new Button {
-            text = "Close"
-            onAction = _ => {
-              close()
-            }
+      val buttons = new HBox {
+        val closeButton = new Button {
+          text = "Close"
+          onAction = _ => {
+            close()
           }
+        }
 
-          val assembleButton = new Button {
-            text = "Assemble"
-            onAction = _ => {
-              doAssemble()
+        val assembleButton = new Button {
+          text = "Assemble"
+          onAction = _ => {
+//              doAssemble()
 //              val assember = Assemble6502.apply()
 //              assember.assemble(textArea.text.value, location)
 //              assember.printTokenisedLines
-            }
           }
-          children = List(closeButton, assembleButton)
         }
+        children = List(closeButton, assembleButton)
+      }
 
-        new BorderPane {
-          maxWidth = 400
-          maxHeight = 300
-          padding = Insets(20)
-          top = titleBox
-          center = textBox
-          bottom = buttons
-        }
+      new BorderPane {
+        maxWidth = 400
+        maxHeight = 300
+        padding = Insets(20)
+        top = titleBox
+        center = textBox
+        bottom = buttons
       }
     }
-
-
-    def doAssemble() =
-      val assember = Assemble6502.apply()
- //     assember.assemble(textArea.text.value, location)
- //     assember.printTokenisedLines
-
   }
+}
+
+object LineAssemblier:
+  val validInstructions = List("ORA","AND","EOR","ADC","STA","LDA","CMP","SBC","ASL","ROL","LSR","ROR","STX","LDX","DEC","INC","BIT","JMP","lue","JMP","STY","LDY","CPY","CPX")

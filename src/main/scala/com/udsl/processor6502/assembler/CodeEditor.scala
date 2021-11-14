@@ -172,7 +172,8 @@ class CodeEditor extends Stage {
 
   def assemble(): Unit = {
 //    val editorText = textArea.text.value.split("\n").toList
-    Assemble6502.apply().assemble(textArea.text.value)
+    var asm = Assemble6502.apply(textArea.text.value)
+    asm.assemble()
   }
 
   override def close(): Unit = {

@@ -1,5 +1,7 @@
-import com.udsl.processor6502.cpu.execution.{Immediate, Instruction, Invalid}
 
-val aaa = 55
+val aaa = 1000 % 256
 
-println( (aaa & 7) > 0 )
+println( aaa )
+
+
+

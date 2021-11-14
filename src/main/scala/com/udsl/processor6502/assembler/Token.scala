@@ -31,7 +31,7 @@ object Token {
 
 class TokenValue(var pridictedMode: PredictedAddressingModes, val strVal: String):
   def asIntValue: Int =
-    -1
+    Integer.parseInt(strVal)
 
 
 object TokenValue:
@@ -96,6 +96,8 @@ enum AddressingModes(val faceValue: String):
 enum PredictedAddressingModes( val modes: List[AddressingModes]):
   case AccumulatorOrImplied extends PredictedAddressingModes(List(AddressingModes.Accumulator, AddressingModes.Implied))
   case Immediate extends PredictedAddressingModes(List(AddressingModes.Immediate))
+  case Absolute extends PredictedAddressingModes(List(AddressingModes.Absolute))
+  case ZeroPage extends PredictedAddressingModes(List(AddressingModes.ZeroPage))
   case AbsoluteOrZeroPage extends PredictedAddressingModes(List(AddressingModes.Absolute, AddressingModes.ZeroPage))
   case AbsoluteXOrZeroPageX extends PredictedAddressingModes(List(AddressingModes.AbsoluteIndexedX, AddressingModes.ZeroPageX))
   case AbsoluteYOrZeroPageY extends PredictedAddressingModes(List(AddressingModes.AbsoluteIndexedY, AddressingModes.ZeroPageY))
@@ -115,4 +117,5 @@ enum AssemblerTokenType(val desc: String):
   case CommandToken extends AssemblerTokenType("CommandToken") 
   case InstructionToken extends AssemblerTokenType("InstructionToken")
   case SyntaxErrorToken extends AssemblerTokenType("SyntaxErrorToken")
+  case ClearToken extends AssemblerTokenType("ClearToken")
 

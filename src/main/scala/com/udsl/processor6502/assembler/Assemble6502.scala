@@ -1,157 +1,217 @@
 package com.udsl.processor6502.assembler
 
-import com.udsl.processor6502.assembler.Assemble6502.tokeniseLine
+import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken, LabelToken}
+import com.udsl.processor6502.cpu.Processor
 
-import scala.Console.println
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import com.typesafe.scalalogging.{LazyLogging, StrictLogging}
+import com.udsl.processor6502.Utilities.errorAlert
 
-class Assemble6502 {
+
+/**
+ * The class produced by the Assemble6502 apply(source: String) method.
+ * The apply takes the source string and tockenises it, notmally this would be the job of pass one but this is not
+ * an efficency excersise it a sue Scala and ScalaFx excersise so not woried about efficiency :)
+ *
+ * @param tokenisedLines the source lines tokenised.
+ */
+class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLogging {
+
+  def assemble(): Unit =
+    try {
+      Assemble6502FirstPass.apply(tokenisedLines)
+      printTokenisedLines()
+      Assemble6502.printLabels()
+    }catch {
+      case e: Exception => errorAlert(e.getMessage)
+      case _  => errorAlert("Unexpected error")
+    }
+
+  def printTokenisedLines(): Unit =
+    logger.info("\n\nTokenisedLines\n")
+    if (tokenisedLines.isEmpty) logger.info("No lines tokenised") else for (line <- tokenisedLines) {
+      logger.info(line.toString)
+    }
+    logger.info("\nend TokenisedLines\n\n")
+}
+
+/**
+ * This object hold and maintains the current location of the assmbly.
+ * As each assembly needs to know this it makes sence for it to be an object.
+ * That way any method can have access.
+ */
+object AssembleLocation extends StrictLogging :
+  // The point in memery we are assembling to.
   var currentLocation: Int = 0
-  var labels = new mutable.HashMap[String, Int]()
-  var tokenisedLines: List[TokenisedLine] = List.empty
 
-  def assemble(source: String): Unit = {
-    // Create a list of lines
+  def setAssembleLoc(l: Int):Unit =
+    if l > 65535 || l < 0 then
+      throw new Exception(s"Bad assmbler Location ${l} ")
+    else
+      currentLocation = l
+      logger.info(s" assmbler Location = ${l} ")
+
+  def setMemoryWord(v: Int): Unit =
+    if v > 65535 || v < 0 then
+      val errorMessage = s"Bad word value ${v}"
+      logger.debug(errorMessage)
+      throw new Exception(errorMessage)
+    Processor.setMemoryByte(currentLocation, v / 256)
+    currentLocation += 1
+    Processor.setMemoryByte(currentLocation, v % 256)
+    currentLocation += 1
+
+  def setMemoryAddress(adr: Int): Unit =
+    if adr > 65535 || adr < 0 then
+      val errorMessage = s"Bad address value ${adr}"
+      logger.debug(errorMessage)
+      throw new Exception(errorMessage)
+    Processor.setMemoryByte(currentLocation, adr % 256)
+    currentLocation += 1
+    Processor.setMemoryByte(currentLocation, adr / 256)
+    currentLocation += 1
+
+  def setMemoryByte(v: Int): Unit =
+    if v > 256 || v < 0 then
+      throw new Exception("Not a byt value")
+    Processor.setMemoryByte(currentLocation, v)
+    currentLocation += 1
+
+
+/**
+ * The assembler common parts.
+ */
+object Assemble6502 extends StrictLogging :
+  // lebel defined in the companion object so they common to each instance
+  // this enables multi file assembly
+  val labels = new mutable.HashMap[String, Int]()
+
+  def apply(source: String): Assemble6502 =
     val allLines = for ((str, index) <- source.split("\n").zipWithIndex)
       yield new UntokenisedLine(index + 1, str)
-
-    tokenisedLines = Tokeniser.Tokenise(allLines)
-
-    println
-    println
-
-    for line <- tokenisedLines do
-      println(line)
-
-  }
-
-  def printLabels = {
-    println
-    if (labels.isEmpty) println("No labels defined") else for ((label, address) <- labels) {
-      println(s"${label} address ${address}")
-    }
-  }
-
-  def printTokenisedLines = {
-    println("\nprintTokenisedLines")
-    if (tokenisedLines.isEmpty) println("No lines tokenised") else for (line <- tokenisedLines) {
-      println(line.toString)
-    }
-  }
-
-}
-
-
-object Assemble6502 {
-  val validInstructions = List("ORA","AND","EOR","ADC","STA","LDA","CMP","SBC","ASL","ROL","LSR","ROR","STX","LDX","DEC","INC","BIT","JMP","lue","JMP","STY","LDY","CPY","CPX")
-
-  def apply(): Assemble6502 =
-    val asm = new Assemble6502()
+    val asm = new Assemble6502(Tokeniser.Tokenise(allLines) )
     asm
 
-
-  def tokeniseLine(line: UntokenisedLine) =
-    println(s"\ntokeniseLine: ${line}")
-    // determine basic line type
-    val tokenisedLine = TokenisedLine(line)
-    val token = line.source.trim match {
-      case "" => Token(AssemblerTokenType.BlankLineToken)
-      case a if a.charAt(0) == ';' => Token(AssemblerTokenType.CommentLineToken, line.source.trim, TokenValue.apply)
-      case _ => Token(AssemblerTokenType.NoneCommentLine)
+  def printLabels(): Unit =
+    
+    if (labels.isEmpty) logger.info("No labels defined") else for ((label, address) <- labels) {
+      logger.info(s"${label} address ${address}")
     }
 
-    token.typeOfToken match
-      case BlankLineToken |  CommentLineToken =>
-        tokenisedLine + token
-      case _ =>
-        // if we have a NoneCommentLine then must be either
-        //           operation operant + optional comment
-        //       or a command
-        // lets deal with the potential comment first
-        val commentSplit = line.source.split(";")
-
-        // remove comment and split rest of line into fields
-        val fields =
-          if commentSplit.length > 1 then
-            // we have a comment
-            tokenisedLine + Token(AssemblerTokenType.LineComment, commentSplit.tail.mkString)
-            commentSplit.head.split("\\s+")
-          else
-            line.source.split("\\s+")
-
-        // command | Label |  Label instruction
-        if !processCommand(fields, tokenisedLine) then
-          val instruction = processLabel(fields, tokenisedLine)
-          if !instruction.isEmpty then
-            val tokenisedInstruction = processInstruction(instruction, tokenisedLine)
-            if tokenisedInstruction.typeOfToken == AssemblerTokenType.InstructionToken then
-              processValue(instruction.tail, tokenisedLine, tokenisedInstruction)
-
-    tokenisedLine
+  def addLabel(name: String): Unit =
+    if (labels.contains(name))
+      throw new Exception("Label already defined")
+    labels.addOne(name, currentLocation)
 
 
-  private def processLabel(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String] =
-    println(s"processLabel: ${text.mkString(" ")}")
-    val head = text.head
-    if head.takeRight(1) == ":" then
-      val labelText = head.dropRight(1)
-      val token = Token(AssemblerTokenType.LabelToken, labelText)
-      tokenisedLine + token
-      println(s"token added: ${token}")
-      text.tail
-    else
-      text
+/**
+ * Fisrt pass object - as one would expect does the first pass which resolves any forward references.
+ */
+object Assemble6502FirstPass extends StrictLogging :
 
+  def apply(tokenisedLines: List[TokenisedLine]): Unit =
+    for (tokenisedLine <- tokenisedLines)
+      try
+        assemble(tokenisedLine)
+      catch
+        case e: Exception => throw new Exception(s"${e.getMessage}\nOn line ${tokenisedLine.sourceLine.lineNumber}" )
+        case a => logger.error(s"Unknown exception! ${a}\nOn line ${tokenisedLine.sourceLine.lineNumber}")
 
-  private def processCommand(text: Array[String], tokenisedLine: TokenisedLine ) : Boolean =
-    println(s"processCommand: ${text.mkString(" ")}")
-    if !text.isEmpty then
-      val head = text.head.toUpperCase
-      head match {
-        case "ORIG" | "BYT" | "WRD" => {
-          val value = text.tail
-          val token = if value.isEmpty then
-            Token(AssemblerTokenType.SyntaxErrorToken, "Value not given")
-          else
-            Token(AssemblerTokenType.CommandToken, head, TokenValue(value))
-          tokenisedLine + token
-          println(s"token added: ${token}")
-          return true
-        }
-
-        case _ => {
-        }
+  def assemble(tokenisedLine: TokenisedLine) : Unit =
+    logger.info(s"line ${tokenisedLine.sourceLine.lineNumber} ")
+    for (token <- tokenisedLine.tokens)
+      token.typeOfToken match {
+        case AssemblerTokenType.BlankLineToken => // extends AssemblerTokenType("BlankLineToken")
+          logger.info("BlankLineToken ")
+        case AssemblerTokenType.CommentLineToken => // extends AssemblerTokenType("CommentLineToken")
+          AssembleCommentLineToken(token)
+        case AssemblerTokenType.LineComment => // extends AssemblerTokenType("LineComment")
+          logger.info("LineComment ")
+        case AssemblerTokenType.NoneCommentLine => // extends AssemblerTokenType("NoneCommentLine")
+          logger.info("NoneCommentLine ")
+        case AssemblerTokenType.LabelToken => // extends AssemblerTokenType("LabelToken")
+          procesLabel(token)
+        case AssemblerTokenType.CommandToken => // extends AssemblerTokenType("CommandToken")
+          AssembleCommandToken(token)
+        case AssemblerTokenType.InstructionToken => // extends AssemblerTokenType("InstructionToken")
+          AssembleInstructionToken(token)
+        case AssemblerTokenType.SyntaxErrorToken => // extends AssemblerTokenType("SyntaxErrorToken")
+          logger.info("SyntaxErrorToken ")
+        case AssemblerTokenType.ClearToken =>
+          logger.info("Clear Token")
+          processClear(token, tokenisedLine)
       }
-    return false
+    logger.info(tokenisedLine.sourceLine.source)
 
+  def AssembleCommentLineToken(t: Token) : Unit =
+    logger.info(s"CommentLineToken '${t.tokenVal.strVal}' - ")
 
-  def processInstruction(text: Array[String], tokenisedLine: TokenisedLine ) : Token =
-    println(s"processInstruction: ${text.mkString(" ")}")
-    val instruction = text.head.toUpperCase()
-    val token = if validInstructions.contains(instruction) then
-      Token(AssemblerTokenType.InstructionToken, instruction)
+  def AssembleCommandToken(t: Token) : Unit =
+    logger.info(s"CommandToken '${t.tokenVal.strVal}' - ")
+    t.tokenStr.toUpperCase() match
+      case "ORIG" => AssembleLocation.setAssembleLoc(t.intValue)
+      case "BYT" => setBytes(t.tokenVal.strVal)
+      case "WRD" => setWords(t.tokenVal.strVal)
+      case "ADDR" => setAddresses(t.tokenVal.strVal)
+      case _ => logger.info(s" Invalid command ${t.tokenStr} ")
+
+  def processClear(t: Token, tl: TokenisedLine) : Unit =
+    logger.info("Processing CLR command")
+    if (tl.sourceLine.lineNumber > 1) then
+      val errorText = "CLR command only valid on first line"
+      logger.error(errorText)
+      throw new Exception(errorText)
+
+  def AssembleInstructionToken(t: Token) : Unit =
+    logger.info(s"InstructionToken '${t.tokenVal.strVal}' - location: ${currentLocation}")
+
+  def procesLabel(t: Token) : Unit =
+    logger.info(s"Defining label ${t.tokenStr} with value ${currentLocation}")
+    Assemble6502.addLabel(t.tokenStr)
+
+  def setBytes(v: String): Unit =
+    logger.info("setBytes")
+    val values = v.split(",")
+    for (value <- values)
+      setMemoryByte(value.trim)
+
+  def setWords(v: String): Unit =
+    logger.info("setWords")
+    val values = v.split(",")
+    for (value <- values)
+      setMemoryWord(value.trim)
+
+  def setMemoryWord(v: String): Unit =
+    if v.charAt(0).isLetter then // a label
+      addFowardReference(v)
+      AssembleLocation.setMemoryWord(0x6363) // word value for 99, 99 decimal
     else
-      Token(AssemblerTokenType.SyntaxErrorToken, s"Invalid instruction: ${instruction}")
-    tokenisedLine + token
-    token
+      AssembleLocation.setMemoryWord(if v.charAt(0) == '$' then
+        Integer.parseInt(v.substring(1), 16)
+      else
+        Integer.parseInt(v))
 
-  def processValue(text: Array[String], tokenisedLine: TokenisedLine, token: Token ) =
-    println(s"processValue: ${text.mkString(" ")}")
+  def setAddresses(v: String): Unit =
+    logger.info("setAddresses")
+    val values = v.split(",")
+    for (value <- values)
+      setMemoryAddress(value.trim)
 
-    println(s"No operand for ${token.tokenStr}")
-    // Possible values and associated adressing mode:
-    //      numeric - starts with a digit or $ for hex - absolute or zero page
-    //      label - starts with an alph but not ( absolute mode to label
-    //      imeadiate address mode starts with #
-    //      indirect addresing mode starts with ( some for of indexed addressing
-    //      nothing implied addressing
-
-    // At this point we only need to tokenise the addressign mode not work out if its valid.
-    if text.isEmpty then // applied addrtessing mode
-      token.tokenVal.pridictedMode = PredictedAddressingModes.Immediate
+  def setMemoryAddress(v: String): Unit =
+    AssembleLocation.setMemoryAddress( if v.charAt(0) == '$' then
+      Integer.parseInt(v.substring(1), 16)
     else
-      token.tokenVal.pridictedMode = PredictedAddressingModes.AbsoluteXOrZeroPageX
-}
+      Integer.parseInt(v))
 
+  def setMemoryByte(v: String): Unit =
+    AssembleLocation.setMemoryByte(if v.charAt(0) == '$' then
+      Integer.parseInt(v.substring(1), 16)
+    else
+      Integer.parseInt(v))
+
+
+  //TODO
+  def addFowardReference(ref: String): Unit =
+    logger.info(s"addFowardReference to '${ref}' @ ${currentLocation}")
