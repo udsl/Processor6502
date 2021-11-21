@@ -1,6 +1,6 @@
 package com.udsl.processor6502.cpu:
 
-  import com.udsl.processor6502.cpu.execution.Instruction
+  import com.udsl.processor6502.cpu.execution.DecodedInstruction
   import scalafx.collections.ObservableBuffer
 
 
@@ -76,8 +76,8 @@ package com.udsl.processor6502.cpu:
       memory(address).getValue()
     }
 
-    def getNextInstruction(): Instruction = {
-      Instruction(memory(pc.addr).getValue())
+    def getNextInstruction(): DecodedInstruction = {
+      DecodedInstruction(memory(pc.addr).getValue())
     }
 
     private def pushPc = {

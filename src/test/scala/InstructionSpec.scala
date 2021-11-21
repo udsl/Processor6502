@@ -1,4 +1,4 @@
-import com.udsl.processor6502.cpu.execution.Instruction
+import com.udsl.processor6502.cpu.execution.DecodedInstruction
 
 import org.scalatest._
 import flatspec._

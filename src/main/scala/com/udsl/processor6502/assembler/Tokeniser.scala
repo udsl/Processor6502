@@ -4,11 +4,11 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.writeToFile
 import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken, ExceptionToken}
+import com.udsl.processor6502.cpu.CpuInstructions
 
 import scala.collection.mutable.ListBuffer
 
 object Tokeniser extends StrictLogging :
-  val validInstructions = List("ORA","AND","EOR","ADC","STA","LDA","CMP","SBC","ASL","ROL","LSR","ROR","STX","LDX","DEC","INC","BIT","JMP","lue","JMP","STY","LDY","CPY","CPX")
 
   def Tokenise(allLines: Array[UntokenisedLine]): List[TokenisedLine] =
     val tokenisedLines = new ListBuffer[TokenisedLine]()
@@ -115,7 +115,7 @@ object Tokeniser extends StrictLogging :
   def processInstruction(text: Array[String], tokenisedLine: TokenisedLine ) : Token =
     logger.info(s"processInstruction: ${text.mkString(" ")}")
     val instruction = text.head.toUpperCase()
-    val token = if validInstructions.contains(instruction) then
+    val token = if CpuInstructions.isValidInstruction(instruction) then
       Token(AssemblerTokenType.InstructionToken, instruction)
     else
       Token(AssemblerTokenType.SyntaxErrorToken, s"Invalid instruction: ${instruction}")

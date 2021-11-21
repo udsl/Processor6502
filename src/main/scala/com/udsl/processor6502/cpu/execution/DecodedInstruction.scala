@@ -1,8 +1,8 @@
 package com.udsl.processor6502.cpu.execution:
   
-  import com.udsl.processor6502.cpu.execution.Instruction.{aaaMask, bbbMask, ccMask}
+  import com.udsl.processor6502.cpu.execution.DecodedInstruction.{aaaMask, bbbMask, ccMask}
   
-  class Instruction(private val byt: Int, private val op: Opcode, private val mode: AddressMode) {
+  class DecodedInstruction(private val byt: Int, private val op: Opcode, private val mode: AddressMode) {
   
     def value: Int = {
       byt
@@ -36,19 +36,19 @@ package com.udsl.processor6502.cpu.execution:
   }
   
   
-  object Instruction {
+  object DecodedInstruction {
     val aaaMask = Integer.parseInt("11100000", 2)
     val bbbMask = Integer.parseInt("00011100", 2)
     val ccMask = Integer.parseInt("00000011", 2)
     val groupMask = Integer.parseInt("00010000", 2)
 
-    def apply(i: Int): Instruction = {
+    def apply(i: Int): DecodedInstruction = {
       println(s"i ${i.toHexString}")
       val a = aaa(i)
       val b = bbb(i)
       val c = cc(i)
       println(s"i ${i.toBinaryString}, a: ${a.toBinaryString} - $a, b: ${b.toBinaryString} - $b, c: ${c.toBinaryString} - $c")
-      val ins_ = new Instruction(i, Opcode(c, b, a), AddressMode(c, b, a))
+      val ins_ = new DecodedInstruction(i, Opcode(c, b, a), AddressMode(c, b, a))
       ins_
     }
 
