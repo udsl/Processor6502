@@ -3,7 +3,7 @@ package com.udsl.processor6502.assembler
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.writeToFile
-import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken}
+import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken, ExceptionToken}
 
 import scala.collection.mutable.ListBuffer
 
@@ -16,12 +16,16 @@ object Tokeniser extends StrictLogging :
       try
         tokenisedLines.addOne(tokeniseLine(lineToTokenise))
       catch
-        case e: Exception => throw new Exception(s"${e.getMessage}\nOn line ${lineToTokenise.lineNumber}" )
-        case a => logger.error(s"Unknown exception! ${a}")
+        case e: Exception =>  addExceptionToken(tokenisedLines, lineToTokenise, s"${e.getMessage}\nOn line ${lineToTokenise.lineNumber}")
+        case a => addExceptionToken(tokenisedLines, lineToTokenise, s"${a.getMessage}\nOn line ${lineToTokenise.lineNumber}")
     val f = java.io.File("code.tock")
     writeToFile( f, tokenisedLines.toList)
     tokenisedLines.toList
 
+  private def addExceptionToken(tokenisedLines: ListBuffer[TokenisedLine], source: UntokenisedLine, exceptionMessage: String): Unit =
+    val tokenisedLine = TokenisedLine(source)
+    tokenisedLine.tokens.addOne(Token(ExceptionToken, exceptionMessage))
+    tokenisedLines.addOne(tokenisedLine)
 
   def tokeniseLine(line: UntokenisedLine) =
     logger.info(s"\ntokeniseLine: ${line}")
@@ -92,9 +96,13 @@ object Tokeniser extends StrictLogging :
           return true
         }
 
+        // clr only valid on the first line
         case "CLR" =>
           val token = Token(AssemblerTokenType.ClearToken, head)
           tokenisedLine + token
+          if tokenisedLine.sourceLine.lineNumber > 1 then
+            tokenisedLine + Token(AssemblerTokenType.SyntaxErrorToken, head)
+          
           logger.info(s"token added: ${token}")
           return true
 

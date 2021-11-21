@@ -64,5 +64,3 @@ class LineAssemblerPopup(val location: Int) extends Stage {
   }
 }
 
-object LineAssemblier:
-  val validInstructions = List("ORA","AND","EOR","ADC","STA","LDA","CMP","SBC","ASL","ROL","LSR","ROR","STX","LDX","DEC","INC","BIT","JMP","lue","JMP","STY","LDY","CPY","CPX")

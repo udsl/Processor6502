@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assembler
 
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
-import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken, LabelToken}
+import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken, LabelToken, ExceptionToken, SyntaxErrorToken}
 import com.udsl.processor6502.cpu.Processor
 
 import scala.collection.mutable
@@ -20,14 +20,48 @@ import com.udsl.processor6502.Utilities.errorAlert
 class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLogging {
 
   def assemble(): Unit =
-    try {
+    if hasSyntaxError() || hasException() then
+      errorAlert("Assemly Error", "Syntax or exceptions encontered")
+      listExceptions()
+      listSyntaxErrors()
+    else
       Assemble6502FirstPass.apply(tokenisedLines)
+      Assemble6502SecondPass.apply(tokenisedLines)
       printTokenisedLines()
       Assemble6502.printLabels()
-    }catch {
-      case e: Exception => errorAlert(e.getMessage)
-      case _  => errorAlert("Unexpected error")
-    }
+
+  def listExceptions(): Unit =
+    val exceptions = tokenisedLines.filter(x => x.tokens.exists(p = y => y.typeOfToken == ExceptionToken))
+    logger.info(
+      """
+        |*****************
+        |*               *
+        |*   EXCEPTIONS  *
+        |*               *
+        |*****************
+        |
+        |""".stripMargin )
+    logger.info(s"  exceptions found: ${if exceptions.length == 0 then "ZERO" else exceptions.length}!")
+
+  def listSyntaxErrors(): Unit =
+    val syntax = tokenisedLines.filter(x => x.tokens.exists(p = y => y.typeOfToken == SyntaxErrorToken))
+    logger.info(
+      """
+        |*****************
+        |*               *
+        |*   SYNTAX ERR  *
+        |*               *
+        |*****************
+        |
+        |""".stripMargin )
+    logger.info(s"  syntax errors found ${if syntax.length == 0 then "ZERO" else syntax.length}!")
+
+
+  def hasException() : Boolean =
+    tokenisedLines.exists(x => x.tokens.exists(p = y => y.typeOfToken == ExceptionToken))
+
+  def hasSyntaxError() : Boolean =
+    tokenisedLines.exists(x => x.tokens.exists(p = y => y.typeOfToken == SyntaxErrorToken))
 
   def printTokenisedLines(): Unit =
     logger.info("\n\nTokenisedLines\n")
@@ -80,9 +114,7 @@ object AssembleLocation extends StrictLogging :
     currentLocation += 1
 
 
-/**
- * The assembler common parts.
- */
+
 object Assemble6502 extends StrictLogging :
   // lebel defined in the companion object so they common to each instance
   // this enables multi file assembly
@@ -95,7 +127,6 @@ object Assemble6502 extends StrictLogging :
     asm
 
   def printLabels(): Unit =
-    
     if (labels.isEmpty) logger.info("No labels defined") else for ((label, address) <- labels) {
       logger.info(s"${label} address ${address}")
     }
@@ -107,9 +138,28 @@ object Assemble6502 extends StrictLogging :
 
 
 /**
+ * The assembler common parts.
+ */
+trait Assemble6502PassBase extends StrictLogging :
+  logger.info("Base definition for pass objects")
+
+  def setMemoryAddress(v: String): Unit =
+    AssembleLocation.setMemoryAddress( if v.charAt(0) == '$' then
+      Integer.parseInt(v.substring(1), 16)
+    else
+      Integer.parseInt(v))
+
+  def setMemoryByte(v: String): Unit =
+    AssembleLocation.setMemoryByte(if v.charAt(0) == '$' then
+      Integer.parseInt(v.substring(1), 16)
+    else
+      Integer.parseInt(v))
+
+
+/**
  * Fisrt pass object - as one would expect does the first pass which resolves any forward references.
  */
-object Assemble6502FirstPass extends StrictLogging :
+object Assemble6502FirstPass extends Assemble6502PassBase :
 
   def apply(tokenisedLines: List[TokenisedLine]): Unit =
     for (tokenisedLine <- tokenisedLines)
@@ -120,7 +170,7 @@ object Assemble6502FirstPass extends StrictLogging :
         case a => logger.error(s"Unknown exception! ${a}\nOn line ${tokenisedLine.sourceLine.lineNumber}")
 
   def assemble(tokenisedLine: TokenisedLine) : Unit =
-    logger.info(s"line ${tokenisedLine.sourceLine.lineNumber} ")
+    logger.info(s"\nParsing line ${tokenisedLine.sourceLine.lineNumber} ")
     for (token <- tokenisedLine.tokens)
       token.typeOfToken match {
         case AssemblerTokenType.BlankLineToken => // extends AssemblerTokenType("BlankLineToken")
@@ -144,6 +194,9 @@ object Assemble6502FirstPass extends StrictLogging :
           processClear(token, tokenisedLine)
       }
     logger.info(tokenisedLine.sourceLine.source)
+
+  def NoneCommentLine(t: Token) : Unit =
+    logger.info(s"NoneCommentLine '${t.tokenVal.strVal}' - ")
 
   def AssembleCommentLineToken(t: Token) : Unit =
     logger.info(s"CommentLineToken '${t.tokenVal.strVal}' - ")
@@ -199,19 +252,25 @@ object Assemble6502FirstPass extends StrictLogging :
     for (value <- values)
       setMemoryAddress(value.trim)
 
-  def setMemoryAddress(v: String): Unit =
-    AssembleLocation.setMemoryAddress( if v.charAt(0) == '$' then
-      Integer.parseInt(v.substring(1), 16)
-    else
-      Integer.parseInt(v))
-
-  def setMemoryByte(v: String): Unit =
-    AssembleLocation.setMemoryByte(if v.charAt(0) == '$' then
-      Integer.parseInt(v.substring(1), 16)
-    else
-      Integer.parseInt(v))
-
-
   //TODO
   def addFowardReference(ref: String): Unit =
     logger.info(s"addFowardReference to '${ref}' @ ${currentLocation}")
+
+
+
+/**
+ * Second pass object - Using the the data generated by the first pass does the actual assembly.
+ */
+object Assemble6502SecondPass extends Assemble6502PassBase :
+  val validInstructions = List("ORA","AND","EOR","ADC","STA","LDA","CMP","SBC","ASL","ROL","LSR","ROR","STX","LDX","DEC","INC","BIT","JMP","lue","JMP","STY","LDY","CPY","CPX")
+
+  def apply(tokenisedLines: List[TokenisedLine]): Unit =
+    for (tokenisedLine <- tokenisedLines)
+      try
+        assemble(tokenisedLine)
+      catch
+        case e: Exception => throw new Exception(s"${e.getMessage}\nOn line ${tokenisedLine.sourceLine.lineNumber}" )
+        case a => logger.error(s"Unknown exception! ${a}\nOn line ${tokenisedLine.sourceLine.lineNumber}")
+
+  def assemble(tokenisedLine: TokenisedLine) : Unit =
+    logger.info(s"\nAssembling ${tokenisedLine.sourceLine.lineNumber} ")

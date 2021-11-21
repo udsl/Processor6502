@@ -117,5 +117,6 @@ enum AssemblerTokenType(val desc: String):
   case CommandToken extends AssemblerTokenType("CommandToken") 
   case InstructionToken extends AssemblerTokenType("InstructionToken")
   case SyntaxErrorToken extends AssemblerTokenType("SyntaxErrorToken")
+  case ExceptionToken extends AssemblerTokenType("ExceptionToken")
   case ClearToken extends AssemblerTokenType("ClearToken")
 
