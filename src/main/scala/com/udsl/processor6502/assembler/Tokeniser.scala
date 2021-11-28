@@ -11,6 +11,15 @@ import scala.collection.mutable.ListBuffer
 object Tokeniser extends StrictLogging :
 
   def Tokenise(allLines: Array[UntokenisedLine]): List[TokenisedLine] =
+    logger.info(
+      """
+        |**************************
+        |*                        *
+        |*   Start Tokenisation   *
+        |*                        *
+        |**************************
+        |
+        |""".stripMargin)
     val tokenisedLines = new ListBuffer[TokenisedLine]()
     for lineToTokenise <- allLines do
       try
@@ -27,8 +36,8 @@ object Tokeniser extends StrictLogging :
     tokenisedLine.tokens.addOne(Token(ExceptionToken, exceptionMessage))
     tokenisedLines.addOne(tokenisedLine)
 
-  def tokeniseLine(line: UntokenisedLine) =
-    logger.info(s"\ntokeniseLine: ${line}")
+  def tokeniseLine(line: UntokenisedLine): TokenisedLine =
+    logger.debug(s"\ntokeniseLine: $line")
     // determine basic line type
     val tokenisedLine = TokenisedLine(line)
     val token = line.source.trim match {
@@ -68,33 +77,32 @@ object Tokeniser extends StrictLogging :
 
 
   private def processLabel(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String] =
-    logger.info(s"processLabel: ${text.mkString(" ")}")
+    logger.debug(s"processLabel: ${text.mkString(" ")}")
     val head = text.head
     if head.takeRight(1) == ":" then
       val labelText = head.dropRight(1)
       val token = Token(AssemblerTokenType.LabelToken, labelText)
       tokenisedLine + token
-      logger.info(s"token added: ${token}")
+      logger.debug(s"token added: $token")
       text.tail
     else
       text
 
 
   private def processCommand(text: Array[String], tokenisedLine: TokenisedLine ) : Boolean =
-    logger.info(s"processCommand: ${text.mkString(" ")}")
+    logger.debug(s"processCommand: ${text.mkString(" ")}")
     if !text.isEmpty then
       val head = text.head.toUpperCase
       head match {
-        case "ADDR" | "BYT" | "ORIG" | "WRD" => {
+        case "ADDR" | "BYT" | "ORIG" | "WRD" =>
           val value = text.tail
           val token = if value.isEmpty then
             Token(AssemblerTokenType.SyntaxErrorToken, "Value not given")
           else
             Token(AssemblerTokenType.CommandToken, head, TokenValue(value))
           tokenisedLine + token
-          logger.info(s"token added: ${token}")
+          logger.debug(s"token added: $token")
           return true
-        }
 
         // clr only valid on the first line
         case "CLR" =>
@@ -103,29 +111,28 @@ object Tokeniser extends StrictLogging :
           if tokenisedLine.sourceLine.lineNumber > 1 then
             tokenisedLine + Token(AssemblerTokenType.SyntaxErrorToken, head)
           
-          logger.info(s"token added: ${token}")
+          logger.debug(s"token added: $token")
           return true
 
-        case _ => {
-        }
+        case _ =>
       }
-    return false
+    false
 
 
   def processInstruction(text: Array[String], tokenisedLine: TokenisedLine ) : Token =
-    logger.info(s"processInstruction: ${text.mkString(" ")}")
+    logger.debug(s"processInstruction: ${text.mkString(" ")}")
     val instruction = text.head.toUpperCase()
     val token = if CpuInstructions.isValidInstruction(instruction) then
       Token(AssemblerTokenType.InstructionToken, instruction)
     else
-      Token(AssemblerTokenType.SyntaxErrorToken, s"Invalid instruction: ${instruction}")
+      Token(AssemblerTokenType.SyntaxErrorToken, s"Invalid instruction: $instruction")
     tokenisedLine + token
     token
 
-  def processValue(text: Array[String], tokenisedLine: TokenisedLine, token: Token ) = {
-    logger.info(s"processValue: ${text.mkString(" ")}")
+  def processValue(text: Array[String], tokenisedLine: TokenisedLine, token: Token ): Unit = {
+    logger.debug(s"processValue: ${text.mkString(" ")}")
 
-    logger.info(s"No operand for ${token.tokenStr}")
+    logger.debug(s"No operand for ${token.tokenStr}")
     // Possible values and associated adressing mode:
     //      missing - just the instruction them accumilator or implied
     //      numeric - starts with a digit or $ for hex - absolute or zero page
@@ -151,11 +158,11 @@ object Tokeniser extends StrictLogging :
   def getPredition(t: String, base: Int) : PredictedAddressingModes =
     try {
       val value = Integer.parseInt(t, base)
-      if (value > 256) then
-        return PredictedAddressingModes.Absolute
+      if value > 256 then
+        PredictedAddressingModes.Absolute
       else
-        return PredictedAddressingModes.ZeroPage
+        PredictedAddressingModes.ZeroPage
     } catch {
-      case _ => return PredictedAddressingModes.Absolute
+      case _: Throwable => PredictedAddressingModes.Absolute
     }
 

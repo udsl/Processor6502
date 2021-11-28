@@ -2,19 +2,19 @@ package com.udsl.processor6502.assembler
 
 class Token( val typeOfToken: AssemblerTokenType, val tokenStr: String, var tokenVal: TokenValue) {
   def intValue : Int =
-      return tokenVal.asIntValue
+      tokenVal.asIntValue
 
-  def setValue(v: String) =
+  def setValue(v: String): Unit =
     tokenVal = TokenValue(v)
 
-  def setValue(v: TokenValue) =
+  def setValue(v: TokenValue): Unit =
     tokenVal = v
 
   def str : String =
     tokenStr
 
   override def toString =
-    s"TokenType: ${typeOfToken}, Value: ${tokenStr} "
+    s"TokenType: $typeOfToken, Value: $tokenStr "
 
 }
 
