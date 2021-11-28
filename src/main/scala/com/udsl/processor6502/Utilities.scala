@@ -13,6 +13,7 @@ import scalafx.scene.input.{KeyEvent, MouseEvent}
 import java.io.*
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
+import scala.util.matching.Regex
 
 object Utilities {
   var currentFormat: NumericFormatType = NumericFormatType.DEC
@@ -27,12 +28,39 @@ object Utilities {
     }
 
   def numToString(value: Int): String =
-    (numericFormatProperty.value) match {
+    numericFormatProperty.value match {
       case NumericFormatType.HEX => value.toHexString.toUpperCase
       case NumericFormatType.OCT => value.toOctalString
       case NumericFormatType.BIN => value.toBinaryString
       case NumericFormatType.DEC => value.toString
     }
+
+  /**
+   * Only positive HEX or DEC numbers accepted
+   * @param str the string value
+   */
+  def isNumeric( str: String): Boolean =
+    val numericPattern: Regex = "^[0-9]+$".r
+    val hexPattern: Regex = "^\\$[0-9a-fA-F]+$".r
+    numericPattern.findFirstMatchIn(str) match {
+      case Some(_) =>
+        true
+      case None =>
+        hexPattern.findFirstMatchIn(str) match {
+          case Some(_) =>
+            true
+          case None =>
+            false
+      }
+    }
+
+  def isAlpha( str: String): Boolean =
+    val alphaPattern: Regex = "^[A-Za-z]+$".r
+    alphaPattern.findFirstMatchIn(str) match {
+      case Some(_) => true
+      case None => false
+    }
+    
 
   def getAddressSettingDialogue(dialogueTitle: String, currentValue: Int): TextInputDialog = {
     var lastChange = ""
@@ -41,7 +69,7 @@ object Utilities {
     new TextInputDialog(defaultValue = s"${Processor.pc.toString}") {
       initOwner(Main.stage)
       title = dialogueTitle
-      headerText = s"Current format is: ${currentFormat}"
+      headerText = s"Current format is: $currentFormat"
       contentText = "New value:"
 
       var lastKeyValid = false
@@ -65,7 +93,7 @@ object Utilities {
 
       editor.text.onChange({
         (_, oldValue, newValue) =>
-          println(s"${oldValue} => ${newValue} last keyCode: ${lastKeyCode}")
+          println(s"$oldValue => $newValue last keyCode: $lastKeyCode")
           if (!oldValue.equals(newValue)) {
             if (!lastKeyValid) {
               Platform.runLater(new Runnable() {
@@ -126,9 +154,8 @@ object Utilities {
   }
 
   /**
-   * read a file returning a seq of strings
+   * read the selected config file returning a seq of strings
    *
-   * @param filename the name of the file to read.
    */
   def readConfigFile: List[ConfigDatum] = {
     val r: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()

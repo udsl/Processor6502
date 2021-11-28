@@ -1,6 +1,6 @@
 package com.udsl.processor6502.assembler
 
-class Token( val typeOfToken: AssemblerTokenType, val tokenStr: String, var tokenVal: TokenValue) {
+class Token( val typeOfToken: AssemblerTokenType, val tokenStr: String, var tokenVal: TokenValue):
   def intValue : Int =
       tokenVal.asIntValue
 
@@ -16,9 +16,9 @@ class Token( val typeOfToken: AssemblerTokenType, val tokenStr: String, var toke
   override def toString =
     s"TokenType: $typeOfToken, Value: $tokenStr "
 
-}
 
-object Token {
+
+object Token:
   def apply(typeOfToken: AssemblerTokenType) : Token =
     new Token(typeOfToken, "", TokenValue(""))
 
@@ -27,7 +27,7 @@ object Token {
 
   def apply(typeOfToken: AssemblerTokenType, tokenStr: String, tokenVal: TokenValue) : Token =
     new Token(typeOfToken, tokenStr, tokenVal)
-}
+
 
 class TokenValue(var pridictedMode: PredictedAddressingModes, val strVal: String):
   def asIntValue: Int =
@@ -44,8 +44,8 @@ object TokenValue:
   def apply(strVal: String) =
     new TokenValue(PredictedAddressingModes.NoPricitions, strVal)
 
-  def apply(pridictedMode: PredictedAddressingModes, strVal: Array[String]) =
-    new TokenValue(pridictedMode, strVal.mkString(" "))
+  def apply(predictedMode: PredictedAddressingModes, strVal: Array[String]) =
+    new TokenValue(predictedMode, strVal.mkString(" "))
 
   def apply(pridictedMode: PredictedAddressingModes, strVal: String) =
     new TokenValue(pridictedMode, strVal)
@@ -119,4 +119,6 @@ enum AssemblerTokenType(val desc: String):
   case SyntaxErrorToken extends AssemblerTokenType("SyntaxErrorToken")
   case ExceptionToken extends AssemblerTokenType("ExceptionToken")
   case ClearToken extends AssemblerTokenType("ClearToken")
+  case ReferenceToken extends AssemblerTokenType("ReferenceToken")
+  case ValueToken extends AssemblerTokenType("ValueToken")
 

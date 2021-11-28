@@ -73,7 +73,8 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
         |
         |""".stripMargin )
     logger.info(s"  syntax errors found ${if syntax.isEmpty then "ZERO" else syntax.length}!")
-
+    for syn <- syntax do
+      logger.info(s"${syn.tokens}")
 
   def hasException: Boolean =
     tokenisedLines.exists(x => x.tokens.exists(p = y => y.typeOfToken == ExceptionToken))
@@ -147,14 +148,34 @@ object Assemble6502 extends AssembleBase, StrictLogging :
     asm
 
   def printLabels(): Unit =
+    logger.info(
+      """
+        |*****************
+        |*               *
+        |*     Labels    *
+        |*               *
+        |*****************
+        |
+        |""".stripMargin )
     if (labels.isEmpty) logger.info("No labels defined") else for ((label, address) <- labels) {
-      logger.info(s"$label address $address")
+      logger.info(s"\t$label address $address")
     }
 
   def printRefs(): Unit =
-    if (references.isEmpty)logger.info("No references made") else for (ref <- references) {
-      logger.info(s"Have reference to ${ref.name} value ${ref.value}")
-    }
+    logger.info(
+      """
+        |*****************
+        |*               *
+        |*   References  *
+        |*               *
+        |*****************
+        |
+        |""".stripMargin )
+    if references.isEmpty then
+      logger.info("No references made")
+    else
+      for ref <- references do
+        logger.info(s"Have reference to ${ref.name} value ${ref.value}")
 
   def addLabel(name: String): Unit =
     if (labels.contains(name))

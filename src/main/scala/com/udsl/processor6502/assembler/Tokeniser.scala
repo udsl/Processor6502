@@ -2,7 +2,7 @@ package com.udsl.processor6502.assembler
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
-import com.udsl.processor6502.Utilities.writeToFile
+import com.udsl.processor6502.Utilities.*
 import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken, ExceptionToken}
 import com.udsl.processor6502.cpu.CpuInstructions
 
@@ -56,16 +56,16 @@ object Tokeniser extends StrictLogging :
         // lets deal with the potential comment first
         val commentSplit = line.source.split(";")
 
-        // remove comment and split rest of line into fields
+        // remove comment and split rest of line into fields using space though these this could also be seperated by ,
         val fields =
           if commentSplit.length > 1 then
-            // we have a comment
+            // we have split so must be a ; and therefore a comment which shoul dbe at the end of the line
             tokenisedLine + Token(AssemblerTokenType.LineComment, commentSplit.tail.mkString)
             commentSplit.head.split("\\s+")
           else
             line.source.split("\\s+")
 
-        // command | Label |  Label instruction
+        // command | command value | command value[ ],[ ]value | Label |  Label instruction
         if !processCommand(fields, tokenisedLine) then
           val instruction = processLabel(fields, tokenisedLine)
           if !instruction.isEmpty then
@@ -90,18 +90,44 @@ object Tokeniser extends StrictLogging :
 
 
   private def processCommand(text: Array[String], tokenisedLine: TokenisedLine ) : Boolean =
+
+    def getReferenceToken( value: String ): Token =
+      logger.debug(s"value - $value")
+      if value == null || value.isEmpty then
+        Token(AssemblerTokenType.SyntaxErrorToken, "Value not given")
+      else
+        if isAlpha(value) then
+          Token(AssemblerTokenType.ReferenceToken, value)
+        else
+          if isNumeric(value) then
+            Token(AssemblerTokenType.ValueToken, value)
+          else
+            Token(AssemblerTokenType.SyntaxErrorToken, value)
+
+
     logger.debug(s"processCommand: ${text.mkString(" ")}")
     if !text.isEmpty then
       val head = text.head.toUpperCase
       head match {
-        case "ADDR" | "BYT" | "ORIG" | "WRD" =>
-          val value = text.tail
-          val token = if value.isEmpty then
-            Token(AssemblerTokenType.SyntaxErrorToken, "Value not given")
-          else
-            Token(AssemblerTokenType.CommandToken, head, TokenValue(value))
-          tokenisedLine + token
-          logger.debug(s"token added: $token")
+        case "ADDR" | "BYT" | "WRD" =>
+          val data: Array[String] = text.tail
+          // At this point we could have the values split on space or not split at all.
+          // So we need to look at each value and determine if it can be further split.
+          // the easy way join all back together (the previous split will have removed the spaces)
+          // And then split again on the , which will remove that!
+          val values = data.mkString("").split(",")
+          for value <- values do
+            val token = getReferenceToken(value)
+            tokenisedLine + token
+            logger.debug(s"token added: $token")
+          return true
+
+        case "ORIG" =>
+          val value: Array[String] = text.tail
+          if value.length == 1 then
+            val token = getReferenceToken(value(0))
+            tokenisedLine + token
+            logger.debug(s"token added: $token")
           return true
 
         // clr only valid on the first line
