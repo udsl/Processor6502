@@ -1,7 +1,13 @@
 package com.udsl.processor6502.cpu:
 
+  import com.udsl.processor6502.Utilities
+  import com.udsl.processor6502.Utilities.{writeStringToFile, writeToFile}
   import com.udsl.processor6502.cpu.execution.DecodedInstruction
   import scalafx.collections.ObservableBuffer
+
+  import java.io.{BufferedWriter, FileWriter}
+  import java.util
+  import scala.collection.mutable.ListBuffer
 
 
   object Processor {
@@ -29,6 +35,30 @@ package com.udsl.processor6502.cpu:
     val nmiVector: Address = Address(0)
     val irqVector: Address = Address(0)
 
+    def saveMemoryImage: Unit =
+      println("Saving memory image!")
+      val file = java.io.File("mem.dmp")
+      val bw = new BufferedWriter(new FileWriter(file))
+
+      val cells = memory.toList.map[Int](f => f.getValue())
+      val memoryImage = new ListBuffer[String]()
+      val image = new StringBuilder()
+      var count = 0
+      var lines = 0
+      for( x <- cells)
+        image.append(x)
+        if count == 9 then
+          count = 0
+          image.append("\n")
+          bw.write(image.toString())
+          image.clear()
+          lines += 1
+        else
+          image.append(", ")
+          count += 1
+      bw.write(image.toString().dropRight(2)) // write the last line - the comma and space
+      bw.close()
+      println(s"Memory size: ${memory.size}, Lines: $lines")
 
     def getAndIncIndex: Int = {
       val res = indexer

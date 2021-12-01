@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.errorAlert
 import com.udsl.processor6502.assembler.Assemble6502.logger
-import com.udsl.processor6502.assembler.Assemble6502FirstPass.{AssembleCommandToken, AssembleCommentLineToken, AssembleInstructionToken, logger, procesLabel, processClear}
+import com.udsl.processor6502.assembler.Assemble6502FirstPass.{assembleCommandToken, assembleCommentLineToken, assembleInstructionToken, logger, procesLabel, processClear, setAddresses, setBytes, setWords}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.assemble
 
 
@@ -272,7 +272,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
         case AssemblerTokenType.BlankLineToken => // extends AssemblerTokenType("BlankLineToken")
           logger.info("\tBlankLineToken ")
         case AssemblerTokenType.CommentLineToken => // extends AssemblerTokenType("CommentLineToken")
-          AssembleCommentLineToken(token)
+          assembleCommentLineToken(token)
         case AssemblerTokenType.LineComment => // extends AssemblerTokenType("LineComment")
           logger.info("\tLineComment ")
         case AssemblerTokenType.NoneCommentLine => // extends AssemblerTokenType("NoneCommentLine")
@@ -280,9 +280,9 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
         case AssemblerTokenType.LabelToken => // extends AssemblerTokenType("LabelToken")
           procesLabel(token)
         case AssemblerTokenType.CommandToken => // extends AssemblerTokenType("CommandToken")
-          AssembleCommandToken(token)
+          assembleCommandToken(token)
         case AssemblerTokenType.InstructionToken => // extends AssemblerTokenType("InstructionToken")
-          AssembleInstructionToken(token)
+          assembleInstructionToken(token)
         case AssemblerTokenType.SyntaxErrorToken => // extends AssemblerTokenType("SyntaxErrorToken")
           logger.info("\tSyntaxErrorToken ")
         case AssemblerTokenType.ClearToken =>
@@ -309,10 +309,10 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
   def NoneCommentLine(t: Token) : Unit =
     logger.info(s"\tNoneCommentLine '${t.tokenVal.strVal}' - ")
 
-  def AssembleCommentLineToken(t: Token) : Unit =
+  def assembleCommentLineToken(t: Token) : Unit =
     logger.info(s"\tCommentLineToken '${t.tokenVal.strVal}' - ")
 
-  def AssembleCommandToken(t: Token) : Unit =
+  def assembleCommandToken(t: Token) : Unit =
     logger.info(s"\tCommandToken '${t.tokenVal.strVal}' - ")
     t.tokenStr.toUpperCase() match
       case "ORIG" => AssembleLocation.setAssembleLoc(t.intValue)
@@ -328,7 +328,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
       logger.error(errorText)
       throw new Exception(errorText)
 
-  def AssembleInstructionToken(t: Token) : Unit =
+  def assembleInstructionToken(t: Token) : Unit =
     logger.info(s"\tInstructionToken '${t.tokenVal.strVal}' - location: $currentLocation")
     // Do we have a valid instruction?
     if !CpuInstructions.isValidInstruction(t.tokenStr) then
@@ -399,30 +399,45 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
   def assemble(tokenisedLine: TokenisedLine) : Unit =
     logger.info(s"\n\n2nd Pass ${tokenisedLine.sourceLine.lineNumber} ")
-//    for (token <- tokenisedLine.tokens)
-//      token.typeOfToken match {
-//        case AssemblerTokenType.BlankLineToken => // extends AssemblerTokenType("BlankLineToken")
-//          logger.info("\tBlankLineToken ")
-//        case AssemblerTokenType.CommentLineToken => // extends AssemblerTokenType("CommentLineToken")
-//          AssembleCommentLineToken(token)
-//        case AssemblerTokenType.LineComment => // extends AssemblerTokenType("LineComment")
-//          logger.info("\tLineComment ")
-//        case AssemblerTokenType.NoneCommentLine => // extends AssemblerTokenType("NoneCommentLine")
-//          logger.info("\tNoneCommentLine ")
-//        case AssemblerTokenType.LabelToken => // extends AssemblerTokenType("LabelToken")
-//          procesLabel(token)
-//        case AssemblerTokenType.CommandToken => // extends AssemblerTokenType("CommandToken")
-//          AssembleCommandToken(token)
-//        case AssemblerTokenType.InstructionToken => // extends AssemblerTokenType("InstructionToken")
-//          AssembleInstructionToken(token)
-//        case AssemblerTokenType.SyntaxErrorToken => // extends AssemblerTokenType("SyntaxErrorToken")
-//          logger.info("\tSyntaxErrorToken ")
-//        case AssemblerTokenType.ClearToken =>
-//          logger.info("\tClear Token")
-//          processClear(token, tokenisedLine)
-//
-//        case _ => logger.error(s"unsupported case ${token.typeOfToken}")
-//      }
+    for (token <- tokenisedLine.tokens)
+      token.typeOfToken match {
+        case AssemblerTokenType.BlankLineToken => // extends AssemblerTokenType("BlankLineToken")
+          logger.info("\tBlankLineToken ")
+        case AssemblerTokenType.CommentLineToken => // extends AssemblerTokenType("CommentLineToken")
+          logger.info("\tCommentLineToken ")
+        case AssemblerTokenType.LineComment => // extends AssemblerTokenType("LineComment")
+          logger.info("\tLineComment ")
+        case AssemblerTokenType.NoneCommentLine => // extends AssemblerTokenType("NoneCommentLine")
+          logger.info("\tNoneCommentLine ")
+        case AssemblerTokenType.LabelToken => // extends AssemblerTokenType("LabelToken")
+          procesLabel(token)
+        case AssemblerTokenType.CommandToken => // extends AssemblerTokenType("CommandToken")
+          assembleCommandToken(token)
+        case AssemblerTokenType.InstructionToken => // extends AssemblerTokenType("InstructionToken")
+          assembleInstructionToken(token)
+        case AssemblerTokenType.SyntaxErrorToken => // extends AssemblerTokenType("SyntaxErrorToken")
+          logger.info("\tSyntaxErrorToken ")
+        case AssemblerTokenType.ClearToken =>
+          logger.info("\tClear Token")
+          processClear(token, tokenisedLine)
+
+        case _ => logger.error(s"unsupported case ${token.typeOfToken}")
+      }
+
+  def procesLabel(token: Token): Unit =
+    logger.info("\tprocesLabel ")
+
+  def assembleCommandToken(t: Token): Unit =
+    logger.info(s"\tassembleCommandToken '${t.tokenVal.strVal}' - ")
+    t.tokenStr.toUpperCase() match
+      case "ORIG" => AssembleLocation.setAssembleLoc(t.intValue)
+      case "BYT" => setBytes(t.tokenVal.strVal)
+      case "WRD" => setWords(t.tokenVal.strVal)
+      case "ADDR" => setAddresses(t.tokenVal.strVal)
+      case _ => logger.info(s"\tInvalid command ${t.tokenStr} ")
+
+  def assembleInstructionToken(token: Token): Unit =
+    logger.info("\tassembleCommandToken ")
 
 
 class Reference( val name: String):

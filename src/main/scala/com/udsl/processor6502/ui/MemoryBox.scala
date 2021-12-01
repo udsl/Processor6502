@@ -4,6 +4,7 @@ package com.udsl.processor6502.ui:
   import com.udsl.processor6502.NumericFormatType
   import com.udsl.processor6502.ui.popups.{Executor, LineAssemblerPopup}
   import com.udsl.processor6502.assembler.CodeEditor
+  import com.udsl.processor6502.cpu.Processor.saveMemoryImage
   import com.udsl.processor6502.disassembler.Disassembler
   import javafx.collections.FXCollections
   import javafx.scene.input.ContextMenuEvent
@@ -13,7 +14,7 @@ package com.udsl.processor6502.ui:
   import scalafx.scene.control.{Button, ContextMenu, Label, ListView, MenuItem, TextField, Tooltip}
   import scalafx.scene.input.{KeyEvent, MouseEvent}
   import scalafx.scene.layout.{HBox, StackPane, VBox}
-  
+
   import scala.language.implicitConversions
   
   class MemoryBox extends VBox {
@@ -120,9 +121,23 @@ package com.udsl.processor6502.ui:
   
       children = List( viewCodeEditorButton, disassembleButton, disassembleLocation)
     }
-  
+
+    val memoryButtons = new HBox{
+      spacing = 20
+
+      val saveMemoryImageButton: Button = new Button {
+        text = "Save Image"
+        onAction = _ => {
+          saveMemoryImage
+        }
+      }
+      saveMemoryImageButton.setTooltip(new Tooltip("Save a memory image"))
+
+      children = List(saveMemoryImageButton)
+    }
+
     padding = Insets(20)
     spacing = 8
-    children = List(memoryBoxCaption, st, viewButtons, codeButtons)
+    children = List(memoryBoxCaption, st, memoryButtons, viewButtons, codeButtons)
   }
   

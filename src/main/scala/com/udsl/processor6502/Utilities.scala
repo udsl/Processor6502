@@ -236,4 +236,18 @@ object Utilities {
       bw.write("\n")
     bw.close()
   }
+  
+  def writeStringToFile(file: File, str: String): Unit = {
+    val bw = new BufferedWriter(new FileWriter(file))
+    bw.write(str)
+    bw.close()
+  }
+
+  def writeStringToFile(file: File, str: List[String]): Unit = {
+    val bw = new BufferedWriter(new FileWriter(file))
+    for (s <- str)
+      bw.write(s)
+    bw.close()
+  }
+
 }
