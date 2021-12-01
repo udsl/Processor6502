@@ -1,10 +1,21 @@
+class B(val X:Int){
+  override def toString =
+    s"b:$X"
+}
 
-val x = "12345,"
-x.substring(0, x.length-1)
-x.substring(x.length-1, x.length)
-x.dropRight(1)
-x.takeRight(1)
-val reg = "^\\$[0-9a-fA-F]+$".r
-reg.findFirstMatchIn("$ae")
-reg.findFirstMatchIn("$1Af")
-reg.findFirstMatchIn("$ag")
+class A(val b: List[B]) {
+  override def toString =
+    s"a: $b"
+}
+
+val listA1 = List(new B(1), new B(2), new B(3))
+val listA2 = List(new B(1), new B(7), new B(12))
+val listA3 = List(new B(9), new B(5), new B(3))
+
+val L = List(new A(listA1), new A(listA2), new A(listA3))
+
+println(L)
+
+val res = L.filter(x => x.b.exists(y => y.X == 3)).map(a => a.b)
+
+println(res)

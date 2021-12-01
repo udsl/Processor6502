@@ -60,7 +60,22 @@ object Utilities {
       case Some(_) => true
       case None => false
     }
-    
+
+  def numericValue(str: String): Int =
+    if isNumeric(str) then
+      if str.head == '$' then
+        return Integer.parseInt(str, 16)
+      else
+        return Integer.parseInt(str)
+    -1
+
+  def isLable( str: String): Boolean =
+    val alphaPattern: Regex = "^[A-Za-z][A-Za-z0-9]+$".r
+    alphaPattern.findFirstMatchIn(str) match {
+      case Some(_) => true
+      case None => false
+    }
+
 
   def getAddressSettingDialogue(dialogueTitle: String, currentValue: Int): TextInputDialog = {
     var lastChange = ""

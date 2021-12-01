@@ -1,5 +1,7 @@
 package com.udsl.processor6502.assembler
 
+import com.udsl.processor6502.assembler.AssemblerTokenType.SyntaxErrorToken
+
 import scala.collection.mutable.ListBuffer
 
 class TokenisedLine(val sourceLine: UntokenisedLine):
@@ -9,6 +11,9 @@ class TokenisedLine(val sourceLine: UntokenisedLine):
     tokens += other
   }
 
+  def hasSyntaxError: Boolean =
+    tokens.exists(y => y.typeOfToken == SyntaxErrorToken)
+  
   override def toString =
     var str: String = s"Line number: ${sourceLine.lineNumber} has ${tokens.length} tokens,  Source: '${sourceLine.source}', Tokens: \n"
     for t <- tokens do

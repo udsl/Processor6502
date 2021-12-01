@@ -121,4 +121,5 @@ enum AssemblerTokenType(val desc: String):
   case ClearToken extends AssemblerTokenType("ClearToken")
   case ReferenceToken extends AssemblerTokenType("ReferenceToken")
   case ValueToken extends AssemblerTokenType("ValueToken")
+  case OriginToken extends AssemblerTokenType("OriginToken")
 

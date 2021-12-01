@@ -59,7 +59,7 @@ object Tokeniser extends StrictLogging :
         // remove comment and split rest of line into fields using space though these this could also be seperated by ,
         val fields =
           if commentSplit.length > 1 then
-            // we have split so must be a ; and therefore a comment which shoul dbe at the end of the line
+            // we have split so must be a ; and therefore a comment which should be at the end of the line
             tokenisedLine + Token(AssemblerTokenType.LineComment, commentSplit.tail.mkString)
             commentSplit.head.split("\\s+")
           else
@@ -91,12 +91,14 @@ object Tokeniser extends StrictLogging :
 
   private def processCommand(text: Array[String], tokenisedLine: TokenisedLine ) : Boolean =
 
-    def getReferenceToken( value: String ): Token =
+    def
+    getReferenceToken( value: String ): Token =
       logger.debug(s"value - $value")
       if value == null || value.isEmpty then
         Token(AssemblerTokenType.SyntaxErrorToken, "Value not given")
       else
-        if isAlpha(value) then
+        if isLable(value) then
+          // is a label so a reference value
           Token(AssemblerTokenType.ReferenceToken, value)
         else
           if isNumeric(value) then
@@ -114,20 +116,25 @@ object Tokeniser extends StrictLogging :
           // At this point we could have the values split on space or not split at all.
           // So we need to look at each value and determine if it can be further split.
           // the easy way join all back together (the previous split will have removed the spaces)
-          // And then split again on the , which will remove that!
-          val values = data.mkString("").split(",")
-          for value <- values do
-            val token = getReferenceToken(value)
-            tokenisedLine + token
-            logger.debug(s"token added: $token")
+          // Now we have a value that wne split on , will be have no spaces.
+          val values = data.mkString("")
+          val token = Token(AssemblerTokenType.CommandToken, head, TokenValue(PredictedAddressingModes.NotApplicable, data.mkString("")))
+          tokenisedLine + token
+          logger.debug(s"token added: $token")
           return true
 
         case "ORIG" =>
           val value: Array[String] = text.tail
           if value.length == 1 then
-            val token = getReferenceToken(value(0))
-            tokenisedLine + token
-            logger.debug(s"token added: $token")
+            val str = value(0).trim
+            if Utilities.isNumeric(str) then
+              val token = Token(AssemblerTokenType.OriginToken, str)
+              tokenisedLine + token
+              logger.debug(s"token added: $token")
+            else
+              tokenisedLine + Token(AssemblerTokenType.SyntaxErrorToken, "Value for ORIG not numeric")
+          else
+            tokenisedLine + Token(AssemblerTokenType.SyntaxErrorToken, "Invalid ORIG command!")
           return true
 
         // clr only valid on the first line
@@ -136,7 +143,7 @@ object Tokeniser extends StrictLogging :
           tokenisedLine + token
           if tokenisedLine.sourceLine.lineNumber > 1 then
             tokenisedLine + Token(AssemblerTokenType.SyntaxErrorToken, head)
-          
+          AssemblyData.clear()
           logger.debug(s"token added: $token")
           return true
 

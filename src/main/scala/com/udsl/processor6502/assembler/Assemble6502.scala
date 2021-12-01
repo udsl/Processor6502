@@ -1,13 +1,16 @@
 package com.udsl.processor6502.assembler
 
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
-import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken, ExceptionToken, LabelToken, SyntaxErrorToken}
+import com.udsl.processor6502.assembler.AssemblerTokenType.{BlankLineToken, CommentLineToken, ExceptionToken, LabelToken, ReferenceToken, SyntaxErrorToken}
 import com.udsl.processor6502.cpu.{CpuInstructions, Processor}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import com.typesafe.scalalogging.StrictLogging
+import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.errorAlert
+import com.udsl.processor6502.assembler.Assemble6502.logger
+import com.udsl.processor6502.assembler.Assemble6502FirstPass.{AssembleCommandToken, AssembleCommentLineToken, AssembleInstructionToken, logger, procesLabel, processClear}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.assemble
 
 
@@ -26,11 +29,39 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
       listExceptions()
       listSyntaxErrors()
     else
+      // Create the references form the tokens
+      val references = tokenisedLines.filter(x => x.tokens.exists(y => y.typeOfToken == ReferenceToken)).map(a => a.tokens) //.filter(b => b.      filter(c => c.typeOfToken == ReferenceToken))
+      val referenceTokens = references.flatMap( _ )
+      for r <- references do
+        val r1 = r.toList
+        val r2 = r1.filter(x => x.typeOfToken == ReferenceToken)
+        for a <- r2 do
+          addReference(a.tokenStr)
+
+      // Now we have the references but before we can check we need the labels.
       firstPass()
-      secondPass()
+      // Now we can check.
+      if verification() then
+        secondPass()
       printTokenisedLines()
-      Assemble6502.printLabels()
-      Assemble6502.printRefs()
+      AssemblyData.printLabels()
+      AssemblyData.printRefs()
+
+  def addReference(value: String): Unit =
+    AssemblyData.addReference(value)
+
+  /**
+   * Verify that the first pass is without error
+   */
+  def verification(): Boolean =
+    val syntax = tokenisedLines.filter(x => x.tokens.exists(p = y => y.typeOfToken == SyntaxErrorToken))
+    if syntax.nonEmpty then
+      errorAlert("Errors", "Syntax errors")
+    // Check that all references have associated labels defined
+    val (result, errors) = AssemblyData.isValid
+    if !result then
+      errorAlert( "Validation failure", errors.mkString("\n"))
+    syntax.isEmpty & result
 
   def firstPass(): Unit =
     for (tokenisedLine <- tokenisedLines)
@@ -62,7 +93,7 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
     logger.info(s"  exceptions found: ${if exceptions.isEmpty then "ZERO" else exceptions.length}!")
 
   def listSyntaxErrors(): Unit =
-    val syntax = tokenisedLines.filter(x => x.tokens.exists(p = y => y.typeOfToken == SyntaxErrorToken))
+    val syntax = tokenisedLines.filter(x => x.hasSyntaxError)
     logger.info(
       """
         |*****************
@@ -77,10 +108,10 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
       logger.info(s"${syn.tokens}")
 
   def hasException: Boolean =
-    tokenisedLines.exists(x => x.tokens.exists(p = y => y.typeOfToken == ExceptionToken))
+    tokenisedLines.exists(x => x.tokens.exists(y => y.typeOfToken == ExceptionToken))
 
   def hasSyntaxError: Boolean =
-    tokenisedLines.exists(x => x.tokens.exists(p = y => y.typeOfToken == SyntaxErrorToken))
+    tokenisedLines.exists(x => x.hasSyntaxError)
 
   def printTokenisedLines(): Unit =
     logger.debug("\n\nTokenisedLines\n")
@@ -111,20 +142,16 @@ object AssembleLocation extends StrictLogging :
       val errorMessage = s"Bad word value $v"
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
-    Processor.setMemoryByte(currentLocation, v / 256)
-    currentLocation += 1
-    Processor.setMemoryByte(currentLocation, v % 256)
-    currentLocation += 1
+    setMemoryByte(v / 256)
+    setMemoryByte(v % 256)
 
   def setMemoryAddress(adr: Int): Unit =
     if adr > 65535 || adr < 0 then
       val errorMessage = s"Bad address value $adr"
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
-    Processor.setMemoryByte(currentLocation, adr % 256)
-    currentLocation += 1
-    Processor.setMemoryByte(currentLocation, adr / 256)
-    currentLocation += 1
+    setMemoryByte(adr % 256)
+    setMemoryByte(adr / 256)
 
   def setMemoryByte(v: Int): Unit =
     if v > 256 || v < 0 then
@@ -138,7 +165,7 @@ object AssembleLocation extends StrictLogging :
     currentLocation += insSize
 
 
-object Assemble6502 extends AssembleBase, StrictLogging :
+object Assemble6502 extends StrictLogging :
 
   def apply(source: String): Assemble6502 =
     logger.info("\n\n***** Starting Assembly *****\n\n")
@@ -147,19 +174,41 @@ object Assemble6502 extends AssembleBase, StrictLogging :
     val asm = new Assemble6502(Tokeniser.Tokenise(allLines) )
     asm
 
-  def printLabels(): Unit =
-    logger.info(
-      """
-        |*****************
-        |*               *
-        |*     Labels    *
-        |*               *
-        |*****************
-        |
-        |""".stripMargin )
-    if (labels.isEmpty) logger.info("No labels defined") else for ((label, address) <- labels) {
-      logger.info(s"\t$label address $address")
-    }
+
+object AssemblyData extends StrictLogging:
+  // labels defined in a base object so they common others
+  // this enables multi file assembly
+  val labels = new mutable.HashMap[String, Int]()
+  var references = new ListBuffer[Reference]()
+
+  def clear(): Unit =
+    labels.clear()
+    references.clear()
+
+  def isValid: (Boolean, List[String]) =
+    if AssemblyData.labels.isEmpty && AssemblyData.references.nonEmpty then
+      val error = "No labels but have references!"
+      logger.debug(error)
+      return (false, List(error))
+    var result = true
+    var errors = ListBuffer[String]()
+    for r <- AssemblyData.references do
+      if !AssemblyData.labels.contains(r.name) then
+        val error = s"Reference ${r.name} not found in labels."
+        logger.debug(error)
+        errors.addOne(error)
+        result = false
+    logger.debug(s"Have ${AssemblyData.labels.size} labels and ${AssemblyData.references.size} references")
+    (result, errors.toList)
+
+  def addReference(ref: String): Unit =
+    logger.debug(s"addReference to '$ref' @ $currentLocation")
+    references += Reference(ref);
+
+  def addLabel(name: String): Unit =
+    if (labels.contains(name))
+      throw new Exception(s"Label '$name' already defined")
+    labels.addOne(name, currentLocation)
 
   def printRefs(): Unit =
     logger.info(
@@ -177,21 +226,26 @@ object Assemble6502 extends AssembleBase, StrictLogging :
       for ref <- references do
         logger.info(s"Have reference to ${ref.name} value ${ref.value}")
 
-  def addLabel(name: String): Unit =
-    if (labels.contains(name))
-      throw new Exception("Label already defined")
-    labels.addOne(name, currentLocation)
 
-trait AssembleBase:
-  // labels defined in a base object so they common others
-  // this enables multi file assembly
-  val labels = new mutable.HashMap[String, Int]()
-  var references = new ListBuffer[Reference]()
+  def printLabels(): Unit =
+    logger.info(
+      """
+        |*****************
+        |*               *
+        |*     Labels    *
+        |*               *
+        |*****************
+        |
+        |""".stripMargin )
+    if (labels.isEmpty) logger.info("No labels defined") else for ((label, address) <- labels) {
+      logger.info(s"\t$label address $address")
+    }
+
 
 /**
  * The assembler common parts.
  */
-trait Assemble6502PassBase extends AssembleBase:
+trait Assemble6502PassBase:
 
   def setMemoryAddress(v: String): Unit =
     AssembleLocation.setMemoryAddress( if v.charAt(0) == '$' then
@@ -234,10 +288,23 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
         case AssemblerTokenType.ClearToken =>
           logger.info("\tClear Token")
           processClear(token, tokenisedLine)
+        case AssemblerTokenType.ValueToken =>
+          processValues(token)
+        case AssemblerTokenType.OriginToken =>
+          processOrigin(token)
 
         case _ => logger.error(s"unsupported case ${token.typeOfToken}")
       }
     logger.debug(tokenisedLine.sourceLine.source)
+
+  def processOrigin(t: Token) : Unit =
+    logger.info("\tOrigin Token")
+    val value = Utilities.numericValue(t.tokenStr)
+    if value > 0 then
+      AssembleLocation.setAssembleLoc(value)
+
+  def processValues(t: Token) : Unit =
+    logger.info("\tValue Token")
 
   def NoneCommentLine(t: Token) : Unit =
     logger.info(s"\tNoneCommentLine '${t.tokenVal.strVal}' - ")
@@ -292,7 +359,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 
   def procesLabel(t: Token) : Unit =
     logger.info(s"\tDefining label ${t.tokenStr} with value $currentLocation")
-    Assemble6502.addLabel(t.tokenStr)
+    AssemblyData.addLabel(t.tokenStr)
 
   def setBytes(v: String): Unit =
     logger.debug("setBytes")
@@ -308,7 +375,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 
   def setMemoryWord(v: String): Unit =
     if v.charAt(0).isLetter then // a label
-      addReference(v)
+      AssemblyData.addReference(v)
       AssembleLocation.setMemoryWord(0x6363) // word value for 99, 99 decimal
     else
       AssembleLocation.setMemoryWord(if v.charAt(0) == '$' then
@@ -322,9 +389,6 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
     for (value <- values)
       setMemoryAddress(value.trim)
 
-  def addReference(ref: String): Unit =
-    logger.debug(s"addReference to '$ref' @ $currentLocation")
-    references += Reference(ref);
 
 
 
@@ -334,7 +398,31 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
   def assemble(tokenisedLine: TokenisedLine) : Unit =
-    logger.info(s"\nAssembling ${tokenisedLine.sourceLine.lineNumber} ")
+    logger.info(s"\n\n2nd Pass ${tokenisedLine.sourceLine.lineNumber} ")
+//    for (token <- tokenisedLine.tokens)
+//      token.typeOfToken match {
+//        case AssemblerTokenType.BlankLineToken => // extends AssemblerTokenType("BlankLineToken")
+//          logger.info("\tBlankLineToken ")
+//        case AssemblerTokenType.CommentLineToken => // extends AssemblerTokenType("CommentLineToken")
+//          AssembleCommentLineToken(token)
+//        case AssemblerTokenType.LineComment => // extends AssemblerTokenType("LineComment")
+//          logger.info("\tLineComment ")
+//        case AssemblerTokenType.NoneCommentLine => // extends AssemblerTokenType("NoneCommentLine")
+//          logger.info("\tNoneCommentLine ")
+//        case AssemblerTokenType.LabelToken => // extends AssemblerTokenType("LabelToken")
+//          procesLabel(token)
+//        case AssemblerTokenType.CommandToken => // extends AssemblerTokenType("CommandToken")
+//          AssembleCommandToken(token)
+//        case AssemblerTokenType.InstructionToken => // extends AssemblerTokenType("InstructionToken")
+//          AssembleInstructionToken(token)
+//        case AssemblerTokenType.SyntaxErrorToken => // extends AssemblerTokenType("SyntaxErrorToken")
+//          logger.info("\tSyntaxErrorToken ")
+//        case AssemblerTokenType.ClearToken =>
+//          logger.info("\tClear Token")
+//          processClear(token, tokenisedLine)
+//
+//        case _ => logger.error(s"unsupported case ${token.typeOfToken}")
+//      }
 
 
 class Reference( val name: String):
@@ -344,12 +432,13 @@ class Reference( val name: String):
   def value : Option[Int] =
     Reference.getValue(this)
 
-object Reference extends AssembleBase:
+
+object Reference:
   def apply(name: String) : Reference =
     new Reference(name)
 
   def hasValue(instance: Reference): Boolean =
-    labels.contains(instance.name)
+    AssemblyData.labels.contains(instance.name)
 
   def getValue(instance: Reference) : Option[Int] =
-    labels.get(instance.name)
+    AssemblyData.labels.get(instance.name)
