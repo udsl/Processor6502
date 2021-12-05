@@ -183,7 +183,7 @@ object Tokeniser extends StrictLogging :
         case b if b.charAt(0) == '$' => token.tokenVal.pridictedMode = getPredition(b.substring(1), 16)
         case c if c.charAt(0).isDigit => token.tokenVal.pridictedMode = getPredition(c.substring(1), 10)
         case c if c.charAt(0).isLetter => token.tokenVal.pridictedMode = getPredition(c.substring(1), 16)
-        case d if d.charAt(0) == '(' => token.tokenVal.pridictedMode = PredictedAddressingModes.AbsoluteIndirect
+        case d if d.charAt(0) == '(' => token.tokenVal.pridictedMode = PredictedAddressingModes.Indirect
         case _ => token.tokenVal.pridictedMode = PredictedAddressingModes.NoPricitions
       }
   }

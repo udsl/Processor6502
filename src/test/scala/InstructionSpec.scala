@@ -1,45 +1,103 @@
+import com.udsl.processor6502.assembler.AddressingMode
+import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 import com.udsl.processor6502.cpu.execution.DecodedInstruction
+import org.scalatest.*
+import flatspec.*
+import matchers.*
 
-import org.scalatest._
-import flatspec._
-import matchers._
 
-
-class TestData(val code: Int, val opcode: String, val insLength: Int, val addMode: String){
+class TestData(val code: String, val opcode: Int, val insLength: Int, val addMode: AddressingMode){
 
 }
 
 object TestData{
-  def apply(code: Int, opcode: String, insLength: Int, addMode: String): TestData = {
+  def apply(code: String, opcode: Int, insLength: Int, addMode: AddressingMode): TestData = {
     new TestData(code, opcode, insLength, addMode)
   }
 }
-//
-//val dataFirTest: List[TestData] = List(
-//  TestData(0x69, "ADC", 2, "#"),
-//  TestData(0x65, "ADC", 2, "$LL"),
-//  TestData(0x75, "ADC", 2, "$LL,X"),
-//  TestData(0x6D, "ADC", 3, "absolute"),
-//  TestData(0x7D, "ADC", 3, "$LL,X"),
-//  TestData(0x79, "ADC", 3, "$LL,Y"),
-//  TestData(0x61, "ADC", 2, "($LL,X)"),
-//  TestData(0x71, "ADC", 2, "($LL),Y"),
-//  TestData(0xFE, "INC", 3, "$LL,X"),
-//  TestData(0xA6, "LDX", 2, "$LL")
-//)
-//
-//class InstructionSpec extends AnyFlatSpec with should.Matchers {
-//  "An instruction" should "should have the correct opcode and addressing mode" in {
-//    for (data <- dataFirTest) {
-//      val ins = Instruction(data.code)
-//      assert(ins.value === data.code)
-//      assert(ins.opcode.toString == data.opcode)
-//      assert(ins.addMode.value.bytes == data.insLength)
-//      assert(ins.insLen == data.insLength)
-//      assert(ins.addMode.toString === data.addMode)
-//    }
-//  }
-//
-//}
-//
+
+val dataValidInstructionTest: List[TestData] = List(
+  /*
+  ADC - Add Memory to Accumulator with Carry
+  immediate	    ADC #oper	    69	2
+  zeropage	    ADC oper	    65	2
+  zeropage,X	  ADC oper,X	  75	2
+  absolute	    ADC oper	    6D	3
+  absolute,X	  ADC oper,X	  7D	3
+  absolute,Y	  ADC oper,Y	  79	3
+  (indirect,X)	ADC (oper,X)	61	2
+  (indirect),Y	ADC (oper),Y	71	2
+*/
+  TestData("ADC", 0x69, 2, AddressingMode.Immediate), // #
+  TestData("ADC", 0x65, 2, AddressingMode.ZeroPage),  // $LL
+  TestData("ADC", 0x75, 2, AddressingMode.ZeroPageX), // $LL,X
+  TestData("ADC", 0x6D, 3, AddressingMode.Absolute),  // $LLLL
+  TestData("ADC", 0x7D, 3, AddressingMode.AbsoluteIndexedX), // $LL,X
+  TestData("ADC", 0x79, 3, AddressingMode.AbsoluteIndexedY), // $LL,Y
+  TestData("ADC", 0x61, 2, AddressingMode.ZeroPageIndirectX), // ($LL,X)
+  TestData("ADC", 0x71, 2, AddressingMode.ZeroPageIndirectY), //"($LL),Y"
+
+  /*
+ AND - Add Memory to Accumulator with Carry
+ immediate	  AND #oper	    29	2
+ zeropage	    AND oper	    25	2
+ zeropage,X	  AND oper,X	  35	2
+ absolute	    AND oper	    2D	3
+ absolute,X	  AND oper,X	  3D	3
+ absolute,Y	  AND oper,Y	  39	3
+ (indirect,X)	AND (oper,X)	21	2
+ (indirect),Y	AND (oper),Y	31	2
+*/
+  TestData("AND", 0x29, 2, AddressingMode.Immediate), // #
+  TestData("AND", 0x25, 2, AddressingMode.ZeroPage),  // $LL
+  TestData("AND", 0x35, 2, AddressingMode.ZeroPageX), // $LL,X
+  TestData("AND", 0x2D, 3, AddressingMode.Absolute),  // $LLLL
+  TestData("AND", 0x3D, 3, AddressingMode.AbsoluteIndexedX), // $LL,X
+  TestData("AND", 0x39, 3, AddressingMode.AbsoluteIndexedY), // $LL,Y
+  TestData("AND", 0x21, 2, AddressingMode.ZeroPageIndirectX), // ($LL,X)
+  TestData("AND", 0x31, 2, AddressingMode.ZeroPageIndirectY), //"($LL),Y"
+
+  /*
+ ASL - Add Memory to Accumulator with Carry
+ accumulator  ASL A   	    0A	1
+ zeropage	    ASL oper	    06	2
+ zeropage,X	  ASL oper,X	  16	2
+ absolute	    ASL oper	    0E	3
+ absolute,X	  ASL oper,X	  1E	3
+*/
+  TestData("ASL", 0x0A, 1, AddressingMode.Accumulator), // #
+  TestData("ASL", 0x06, 2, AddressingMode.ZeroPage),  // $LL
+  TestData("ASL", 0x16, 2, AddressingMode.ZeroPageX), // $LL,X
+  TestData("ASL", 0x0E, 3, AddressingMode.Absolute),  // $LLLL
+  TestData("ASL", 0x1E, 3, AddressingMode.AbsoluteIndexedX), // $LL,X
+ 
+  TestData("INC", 0xFE, 3, AddressingMode.AbsoluteIndexedX), //"$LL,X"
+  TestData("LDX", 0xA6, 2, AddressingMode.ZeroPage), //"$LL"
+)
+
+class InstructionSpec extends AnyFlatSpec with should.Matchers {
+  "An instruction" should "should have the correct opcode and addressing mode" in {
+    for (data <- dataValidInstructionTest) {
+      assert(CpuInstructions.isValidInstruction(data.code))
+      val instruction = CpuInstructions.getInstruction(data.code)
+
+      instruction match {
+        case Some(value) =>
+          val bytes = value.bytes(data.addMode)
+          bytes match
+            case Some(value) =>
+              assert(value == data.insLength)
+            case None => fail(s"Failed to get valid bytes for ${data.code} with ${data.addMode} addressing")
+          value.opcode(data.addMode) match
+            case Some(value) =>
+              assert(value == data.opcode, s"Invalid opcode 0x${data.opcode.toHexString} expected 0x${value.toHexString}")
+            case None => fail(s"Failed to get valid opcode for ${data.code}")
+
+        case None => fail(s"Invalid addressing mode for ${data.code}")
+      }
+    }
+  }
+
+}
+
 
