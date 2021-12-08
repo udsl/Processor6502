@@ -1,5 +1,6 @@
 package com.udsl.processor6502:
 
+  import com.udsl.processor6502.Dialogues.theStage
   import com.udsl.processor6502.ui.{FooterBox, MemoryBox, NumericFormatSelector, RegistersBox}
   import scalafx.application.JFXApp3
   import scalafx.geometry.Insets
@@ -38,6 +39,8 @@ package com.udsl.processor6502:
             }
         }
       }
+
+      theStage = stage
     }
 
     def selectSourceFileToSave: File =

@@ -1,6 +1,7 @@
 package com.udsl.processor6502.ui
 
-import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, readConfigFile, writeConfigFile}
+import com.udsl.processor6502.Dialogues.*
+import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue}
 import com.udsl.processor6502.config.DataSupplier.provideData
 import com.udsl.processor6502.config.{ConfigDatum, DataCollector}
 import com.udsl.processor6502.ui.NumericFormatSelector.updateDisplay

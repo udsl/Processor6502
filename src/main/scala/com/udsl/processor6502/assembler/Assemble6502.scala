@@ -7,8 +7,7 @@ import com.udsl.processor6502.cpu.{CpuInstructions, Processor}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.Utilities
-import com.udsl.processor6502.Utilities.errorAlert
+import com.udsl.processor6502.Dialogues.errorAlert
 import com.udsl.processor6502.assembler.Assemble6502.logger
 import com.udsl.processor6502.assembler.Assemble6502FirstPass.{assembleCommandToken, assembleCommentLineToken, assembleInstructionToken, logger, procesLabel, processClear, setAddresses, setBytes, setWords}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.assemble

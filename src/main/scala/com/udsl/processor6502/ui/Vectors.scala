@@ -1,5 +1,6 @@
 package com.udsl.processor6502.ui:
 
+  import com.udsl.processor6502.Dialogues.getAddressSettingDialogue
   import com.udsl.processor6502.Utilities.*
   import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
   import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}

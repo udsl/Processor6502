@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assembler
 
+import com.udsl.processor6502.Dialogues.confirmation
 import com.udsl.processor6502.Main
-import com.udsl.processor6502.Utilities.{confirmation}
 import scalafx.application.JFXApp
 import scalafx.event.EventHandler
 import scalafx.geometry.Insets
