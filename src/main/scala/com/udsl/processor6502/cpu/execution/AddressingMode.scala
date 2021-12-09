@@ -196,7 +196,7 @@ package com.udsl.processor6502.cpu.execution:
     override def bytes: Int = 1
   }
 
-  case object None extends AddressingMode {
+  case object Unknown extends AddressingMode {
     override def toString: String = "NONE"
     override def bytes: Int = 0
   }

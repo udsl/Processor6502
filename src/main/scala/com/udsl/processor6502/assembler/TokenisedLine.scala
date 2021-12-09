@@ -1,23 +1,23 @@
 package com.udsl.processor6502.assembler
 
-import com.udsl.processor6502.assembler.AssemblerTokenType.SyntaxErrorToken
-
+import com.udsl.processor6502.assembler.SyntaxErrorToken
+import com.udsl.processor6502.assembler.AssemblerToken
 import scala.collection.mutable.ListBuffer
 
 class TokenisedLine(val sourceLine: UntokenisedLine):
-  val tokens = new ListBuffer[Token]()
+  val tokens = new ListBuffer[AssemblerToken]()
 
-  def +(other: Token) = {
+  def +(other: AssemblerToken) = {
     tokens += other
   }
 
   def hasSyntaxError: Boolean =
-    tokens.exists(y => y.typeOfToken == SyntaxErrorToken)
+    tokens.contains(SyntaxErrorToken)
   
   override def toString =
     var str: String = s"Line number: ${sourceLine.lineNumber} has ${tokens.length} tokens,  Source: '${sourceLine.source}', Tokens: \n"
     for t <- tokens do
-      str += s"\t${t.typeOfToken.toString} - ${t.tokenVal.pridictedMode}\n"
+      str += s"\t${t} - ${t.predictedAddressingModes}\n"
     str
 
 object TokenisedLine:

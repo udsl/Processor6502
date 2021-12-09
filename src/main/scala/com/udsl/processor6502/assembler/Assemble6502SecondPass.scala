@@ -13,43 +13,43 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
   def assemble(tokenisedLine: TokenisedLine) : Unit =
     logger.info(s"\n\n2nd Pass ${tokenisedLine.sourceLine.lineNumber} ")
     for (token <- tokenisedLine.tokens)
-      token.typeOfToken match {
-        case AssemblerTokenType.BlankLineToken => // extends AssemblerTokenType("BlankLineToken")
+      token match {
+        case BlankLineToken( _, _ ) => // extends AssemblerTokenType("BlankLineToken")
           logger.info("\tBlankLineToken ")
-        case AssemblerTokenType.CommentLineToken => // extends AssemblerTokenType("CommentLineToken")
+        case CommentLineToken( _, _ ) => // extends AssemblerTokenType("CommentLineToken")
           logger.info("\tCommentLineToken ")
-        case AssemblerTokenType.LineComment => // extends AssemblerTokenType("LineComment")
+        case LineComment( _, _ ) => // extends AssemblerTokenType("LineComment")
           logger.info("\tLineComment ")
-        case AssemblerTokenType.NoneCommentLine => // extends AssemblerTokenType("NoneCommentLine")
+        case NoneCommentLine( _, _ ) => // extends AssemblerTokenType("NoneCommentLine")
           logger.info("\tNoneCommentLine ")
-        case AssemblerTokenType.LabelToken => // extends AssemblerTokenType("LabelToken")
+        case LabelToken( _, _ ) => // extends AssemblerTokenType("LabelToken")
           procesLabel(token)
-        case AssemblerTokenType.CommandToken => // extends AssemblerTokenType("CommandToken")
+        case CommandToken( _, _ ) => // extends AssemblerTokenType("CommandToken")
           assembleCommandToken(token)
-        case AssemblerTokenType.InstructionToken => // extends AssemblerTokenType("InstructionToken")
+        case InstructionToken( _, _ ) => // extends AssemblerTokenType("InstructionToken")
           assembleInstructionToken(token)
-        case AssemblerTokenType.SyntaxErrorToken => // extends AssemblerTokenType("SyntaxErrorToken")
+        case SyntaxErrorToken( _, _ ) => // extends AssemblerTokenType("SyntaxErrorToken")
           logger.info("\tSyntaxErrorToken ")
-        case AssemblerTokenType.ClearToken =>
+        case ClearToken( _, _ ) =>
           logger.info("\tClear Token")
           processClear(token, tokenisedLine)
 
-        case _ => logger.error(s"unsupported case ${token.typeOfToken}")
+        case _ => logger.error(s"unsupported case ${token.value}")
       }
 
-  def procesLabel(token: Token): Unit =
+  def procesLabel(token: AssemblerToken): Unit =
     logger.info("\tprocesLabel ")
 
-  def assembleCommandToken(t: Token): Unit =
-    logger.info(s"\tassembleCommandToken '${t.tokenVal.strVal}' - ")
-    t.tokenStr.toUpperCase() match
+  def assembleCommandToken(t: AssemblerToken): Unit =
+    logger.info(s"\tassembleCommandToken '${t.value}' - ")
+    t.value.toUpperCase() match
       case "ORIG" => AssembleLocation.setAssembleLoc(t.intValue)
-      case "BYT" => setBytes(t.tokenVal.strVal)
-      case "WRD" => setWords(t.tokenVal.strVal)
-      case "ADDR" => setAddresses(t.tokenVal.strVal)
-      case _ => logger.info(s"\tInvalid command ${t.tokenStr} ")
+      case "BYT" => setBytes(t.value)
+      case "WRD" => setWords(t.value)
+      case "ADDR" => setAddresses(t.value)
+      case _ => logger.info(s"\tInvalid command ${t.value} ")
 
-  def assembleInstructionToken(token: Token): Unit =
+  def assembleInstructionToken(token: AssemblerToken): Unit =
     logger.info("\tassembleCommandToken ")
 
 
