@@ -132,22 +132,22 @@ package com.udsl.processor6502.cpu.execution:
   }
 
   case object Absolute extends AddressingMode {
-    override def toString: String = "absolute"
+    override def toString: String = "$LLHH absolute"
     override def bytes: Int = 3
   }
 
   case object AbsoluteX extends AddressingMode {
-    override def toString: String = "$LL,X"
+    override def toString: String = "$LLHH,X AbsoluteX"
     override def bytes: Int = 3
   }
 
   case object AbsoluteY extends AddressingMode {
-    override def toString: String = "$LL,Y"
+    override def toString: String = "$LLHH,Y AbsoluteY"
     override def bytes: Int = 3
   }
 
   case object Immediate extends AddressingMode {
-    override def toString: String = "#"
+    override def toString: String = "#$LL Immediate"
     override def bytes: Int = 2
   }
 
@@ -157,37 +157,37 @@ package com.udsl.processor6502.cpu.execution:
   }
 
   case object Indirect extends AddressingMode {
-    override def toString: String = "($LLHH)"
+    override def toString: String = "($LLHH) Indirect"
     override def bytes: Int = 2
   }
 
   case object IndirectX extends AddressingMode {
-    override def toString: String = "($LL,X)"
+    override def toString: String = "($LL,X) IndirectX"
     override def bytes: Int = 2
   }
 
   case object IndirectY extends AddressingMode {
-    override def toString: String = "($LL),Y"
+    override def toString: String = "($LL),Y IndirectY"
     override def bytes: Int = 2
   }
 
   case object Relative extends AddressingMode {
-    override def toString: String = "$BB"
+    override def toString: String = "Relative"
     override def bytes: Int = 2
   }
 
   case object ZeroPage extends AddressingMode {
-    override def toString: String = "$LL"
+    override def toString: String = "$LL ZeroPage"
     override def bytes: Int = 2
   }
 
   case object ZeroPageX extends AddressingMode {
-    override def toString: String = "$LL,X"
+    override def toString: String = "$LL,X ZeroPageX"
     override def bytes: Int = 2
   }
 
   case object ZeroPageY extends AddressingMode {
-    override def toString: String = "$LL,Y"
+    override def toString: String = "$LL,Y ZeroPageY"
     override def bytes: Int = 2
   }
 
