@@ -1,6 +1,6 @@
-import com.udsl.processor6502.assembler.AddressingMode
+
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
-import com.udsl.processor6502.cpu.execution.DecodedInstruction
+import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, DecodedInstruction, Immediate, IndirectX, IndirectY, ZeroPage, ZeroPageX}
 import org.scalatest.*
 import flatspec.*
 import matchers.*
@@ -28,14 +28,14 @@ val dataValidInstructionTest: List[TestData] = List(
   (indirect,X)	ADC (oper,X)	61	2
   (indirect),Y	ADC (oper),Y	71	2
 */
-  TestData("ADC", 0x69, 2, AddressingMode.Immediate), // #
-  TestData("ADC", 0x65, 2, AddressingMode.ZeroPage),  // $LL
-  TestData("ADC", 0x75, 2, AddressingMode.ZeroPageX), // $LL,X
-  TestData("ADC", 0x6D, 3, AddressingMode.Absolute),  // $LLLL
-  TestData("ADC", 0x7D, 3, AddressingMode.AbsoluteIndexedX), // $LL,X
-  TestData("ADC", 0x79, 3, AddressingMode.AbsoluteIndexedY), // $LL,Y
-  TestData("ADC", 0x61, 2, AddressingMode.ZeroPageIndirectX), // ($LL,X)
-  TestData("ADC", 0x71, 2, AddressingMode.ZeroPageIndirectY), //"($LL),Y"
+  TestData("ADC", 0x69, 2, Immediate), // #
+  TestData("ADC", 0x65, 2, ZeroPage),  // $LL
+  TestData("ADC", 0x75, 2, ZeroPageX), // $LL,X
+  TestData("ADC", 0x6D, 3, Absolute),  // $LLLL
+  TestData("ADC", 0x7D, 3, AbsoluteX), // $LL,X
+  TestData("ADC", 0x79, 3, AbsoluteY), // $LL,Y
+  TestData("ADC", 0x61, 2, IndirectX), // ($LL,X)
+  TestData("ADC", 0x71, 2, IndirectY), //"($LL),Y"
 
   /*
  AND - Add Memory to Accumulator with Carry
@@ -48,14 +48,14 @@ val dataValidInstructionTest: List[TestData] = List(
  (indirect,X)	AND (oper,X)	21	2
  (indirect),Y	AND (oper),Y	31	2
 */
-  TestData("AND", 0x29, 2, AddressingMode.Immediate), // #
-  TestData("AND", 0x25, 2, AddressingMode.ZeroPage),  // $LL
-  TestData("AND", 0x35, 2, AddressingMode.ZeroPageX), // $LL,X
-  TestData("AND", 0x2D, 3, AddressingMode.Absolute),  // $LLLL
-  TestData("AND", 0x3D, 3, AddressingMode.AbsoluteIndexedX), // $LL,X
-  TestData("AND", 0x39, 3, AddressingMode.AbsoluteIndexedY), // $LL,Y
-  TestData("AND", 0x21, 2, AddressingMode.ZeroPageIndirectX), // ($LL,X)
-  TestData("AND", 0x31, 2, AddressingMode.ZeroPageIndirectY), //"($LL),Y"
+  TestData("AND", 0x29, 2, Immediate), // #
+  TestData("AND", 0x25, 2, ZeroPage),  // $LL
+  TestData("AND", 0x35, 2, ZeroPageX), // $LL,X
+  TestData("AND", 0x2D, 3, Absolute),  // $LLLL
+  TestData("AND", 0x3D, 3, AbsoluteX), // $LL,X
+  TestData("AND", 0x39, 3, AbsoluteY), // $LL,Y
+  TestData("AND", 0x21, 2, IndirectX), // ($LL,X)
+  TestData("AND", 0x31, 2, IndirectY), //"($LL),Y"
 
   /*
  ASL - Add Memory to Accumulator with Carry
@@ -65,14 +65,14 @@ val dataValidInstructionTest: List[TestData] = List(
  absolute	    ASL oper	    0E	3
  absolute,X	  ASL oper,X	  1E	3
 */
-  TestData("ASL", 0x0A, 1, AddressingMode.Accumulator), // #
-  TestData("ASL", 0x06, 2, AddressingMode.ZeroPage),  // $LL
-  TestData("ASL", 0x16, 2, AddressingMode.ZeroPageX), // $LL,X
-  TestData("ASL", 0x0E, 3, AddressingMode.Absolute),  // $LLLL
-  TestData("ASL", 0x1E, 3, AddressingMode.AbsoluteIndexedX), // $LL,X
+  TestData("ASL", 0x0A, 1, Accumulator), // #
+  TestData("ASL", 0x06, 2, ZeroPage),  // $LL
+  TestData("ASL", 0x16, 2, ZeroPageX), // $LL,X
+  TestData("ASL", 0x0E, 3, Absolute),  // $LLLL
+  TestData("ASL", 0x1E, 3, AbsoluteX), // $LL,X
  
-  TestData("INC", 0xFE, 3, AddressingMode.AbsoluteIndexedX), //"$LL,X"
-  TestData("LDX", 0xA6, 2, AddressingMode.ZeroPage), //"$LL"
+  TestData("INC", 0xFE, 3, AbsoluteX), //"$LL,X"
+  TestData("LDX", 0xA6, 2, ZeroPage), //"$LL"
 )
 
 class InstructionSpec extends AnyFlatSpec with should.Matchers {
