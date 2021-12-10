@@ -46,27 +46,27 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
     logger.debug(tokenisedLine.sourceLine.source)
 
   def processOrigin(t: AssemblerToken) : Unit =
-    logger.info("\tOrigin Token")
-    val value = Utilities.numericValue(t.value)
-    if value > 0 then
-      AssembleLocation.setAssembleLoc(value)
+    logger.info(s"\tOrigin Token '${t.mnemonic}'")
+    if (t.fields.length == 1){
+      AssembleLocation.setAssembleLoc(Utilities.numericValue(t.fields.head))
+    }
 
   def processValues(t: AssemblerToken) : Unit =
-    logger.info("\tValue Token")
+    logger.info(s"\tValue Token '${t.mnemonic}'")
 
   def NoneCommentLine(t: AssemblerToken) : Unit =
-    logger.info(s"\tNoneCommentLine '${t.value}' - ")
+    logger.info(s"\tNoneCommentLine '${t.mnemonic}' - ")
 
   def assembleCommentLineToken(t: AssemblerToken) : Unit =
-    logger.info(s"\tCommentLineToken '${t.value}' - ")
+    logger.info(s"\tCommentLineToken '${t.mnemonic}' - ")
 
   def assembleCommandToken(t: AssemblerToken) : Unit =
-    logger.info(s"\tCommandToken '${t.value}' - ")
-    t.value.toUpperCase() match
+    logger.info(s"\tCommandToken '${t.mnemonic}' - ")
+    t.mnemonic.toUpperCase() match
       case "ORIG" => AssembleLocation.setAssembleLoc(t.intValue)
-      case "BYT" => setBytes(t.value)
-      case "WRD" => setWords(t.value)
-      case "ADDR" => setAddresses(t.value)
+      case "BYT" => setBytes(t.fields)
+      case "WRD" => setWords(t.fields)
+      case "ADDR" => setAddresses(t.fields)
       case _ => logger.info(s"\tInvalid command ${t} ")
 
   def processClear(t: AssemblerToken, tl: TokenisedLine) : Unit =
@@ -108,18 +108,16 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 
   def procesLabel(t: AssemblerToken) : Unit =
     logger.info(s"\tDefining label ${t.value} with value $currentLocation")
-    AssemblyData.addLabel(t.value)
+    AssemblyData.addLabel(t.mnemonic)
 
-  def setBytes(v: String): Unit =
+  def setBytes(fields: Array[String]): Unit =
     logger.debug("setBytes")
-    val values = v.split(",")
-    for (value <- values)
+    for (value <- fields)
       setMemoryByte(value.trim)
 
-  def setWords(v: String): Unit =
+  def setWords(fields: Array[String]): Unit =
     logger.debug("setWords")
-    val values = v.split(",")
-    for (value <- values)
+    for (value <- fields)
       setMemoryWord(value.trim)
 
   def setMemoryWord(v: String): Unit =
@@ -132,10 +130,9 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
       else
         Integer.parseInt(v))
 
-  def setAddresses(v: String): Unit =
+  def setAddresses(fields: Array[String]): Unit =
     logger.debug("setAddresses")
-    val values = v.split(",")
-    for (value <- values)
+    for (value <- fields)
       setMemoryAddress(value.trim)
 
 

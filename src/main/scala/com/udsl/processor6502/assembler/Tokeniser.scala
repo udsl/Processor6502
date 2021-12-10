@@ -118,7 +118,7 @@ object Tokeniser extends StrictLogging :
           // the easy way join all back together (the previous split will have removed the spaces)
           // Now we have a value that wne split on , will be have no spaces.
           val values = data.mkString("")
-          val token = CommandToken(head, data)
+          val token = CommandToken(head, values.split(","))
           token.addPrediction(Unknown) //, data.mkString("")))
           tokenisedLine + token
           logger.debug(s"token added: $token")

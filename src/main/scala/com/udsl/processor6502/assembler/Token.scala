@@ -2,7 +2,7 @@ package com.udsl.processor6502.assembler
 
 import com.udsl.processor6502.cpu.execution.AddressingMode
 
-trait AssemblerToken(mnemonic: String, fields: Array[String] ):
+trait AssemblerToken(val mnemonic: String, val fields: Array[String] ):
   val predictedAddressingModes: List[AddressingMode] = List[AddressingMode]()
   var value: String = ""
 
@@ -16,72 +16,72 @@ trait AssemblerToken(mnemonic: String, fields: Array[String] ):
       addPrediction(pred)
 
 
-case class Accumulator(mnemonic: String, fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String]):
+case class Accumulator(override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String]):
   override def toString: String =
     "accumulator"
 
 
-case class BlankLineToken(mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class BlankLineToken(override val mnemonic: String, override val fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "BlankLineToken"
 
 
-case class CommentLineToken(mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class CommentLineToken(override val mnemonic: String, override val fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "CommentLineToken"
 
 
-case class LineComment (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class LineComment (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "LineComment"
 
 
-case class NoneCommentLine (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class NoneCommentLine (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "NoneCommentLine"
 
 
-case class LabelToken (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class LabelToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "LabelToken"
 
 
-case class CommandToken (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class CommandToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "CommandToken"
 
 
-case class InstructionToken (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class InstructionToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "InstructionToken"
 
 
-case class SyntaxErrorToken (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class SyntaxErrorToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "SyntaxErrorToken"
 
 
-case class ExceptionToken (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class ExceptionToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "ExceptionToken"
 
 
-case class ClearToken (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class ClearToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "ClearToken"
 
 
-case class ReferenceToken (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class ReferenceToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "ReferenceToken"
 
 
-case class ValueToken (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class ValueToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "ValueToken"
 
 
-case class OriginToken (mnemonic: String, fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class OriginToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "OriginToken"
 
