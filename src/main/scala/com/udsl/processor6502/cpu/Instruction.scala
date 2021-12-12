@@ -1,8 +1,7 @@
 package com.udsl.processor6502.cpu
 
-import com.udsl.processor6502.cpu.execution.{ZeroPage, ZeroPageX}
+import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Invalid, Relative, ZeroPage, ZeroPageX, ZeroPageY}
 import com.udsl.processor6502.cpu.insData
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Relative, ZeroPage, ZeroPageX, ZeroPageY, Accumulator}
 
 class insData(val opcode: Int, val bytes: Int)
 
@@ -39,7 +38,7 @@ case class ADC() extends CpuInstruction(Map(Immediate -> insData( 0x69, 2),
   override def name() = "ADC"
 
   
-case class AND() extends CpuInstruction(Map(Immediate -> insData( 0x29, 1),
+case class AND() extends CpuInstruction(Map(Immediate -> insData( 0x29, 2),
   ZeroPage -> insData( 0x25, 2),
   ZeroPageX -> insData( 0x35, 2),
   Absolute -> insData( 0x2D, 3),
@@ -87,7 +86,7 @@ case class BPL() extends CpuInstruction(Map(Relative -> insData( 0x10, 2))):
   override def name() = "BPL"
 
 
-case class BRK() extends CpuInstruction(Map(Relative -> insData( 0x00, 1))):
+case class BRK() extends CpuInstruction(Map(Implied -> insData( 0x00, 1))):
   override def name() = "BRK"
 
 
@@ -346,6 +345,8 @@ case class TXS() extends CpuInstruction(Map(Implied -> insData( 0x9A, 1))):
 case class TYA() extends CpuInstruction(Map(Implied -> insData( 0x98, 1))):
   override def name() = "TYA"
 
+case object INVALID extends CpuInstruction(Map()):
+  override def name() = "INVALID"
 
 object CpuInstructions :
   val validInstructions = LazyList(ADC(),AND(),ASL(),BCC(),BCS(),BEQ(),BIT(),BMI(),BNE(),BPL(),BRK(),BVC(),BVS(),CLC(),
@@ -360,8 +361,10 @@ object CpuInstructions :
   def getInstruction(ins: String): Option[CpuInstruction] =
     validInstructions.find(a => a.name().equals(ins.toUpperCase()))
 
-  def getInstruction(ins: String, adrMode: AddressingMode): Option[CpuInstruction] =
-    val instructions = validInstructions.find(a => a.name().equals(ins.toUpperCase()))
-    instructions
+  def getInstructionOpcodeBytes(ins: String, adrMode: AddressingMode): (Int, Int) =
+    val instruction = validInstructions.find(a => a.name().equals(ins.toUpperCase())).getOrElse(INVALID)
+    if instruction == INVALID then
+      return (-1, 0)
+    (instruction.opcode(adrMode), instruction.bytes(adrMode))
 
   

@@ -6,7 +6,8 @@ import com.udsl.processor6502.Utilities.*
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.execution.{Absolute, AddressingMode, ZeroPage}
-import  com.udsl.processor6502.assembler.{AssemblerToken,BlankLineToken,CommandToken,LabelToken,OriginToken,ClearToken,InstructionToken,SyntaxErrorToken}
+import com.udsl.processor6502.assembler.{AssemblerToken, BlankLineToken, ClearToken, CommandToken, InstructionToken, LabelToken, OriginToken, SyntaxErrorToken}
+
 import scala.collection.mutable.ListBuffer
 
 object Tokeniser extends StrictLogging :
@@ -71,7 +72,7 @@ object Tokeniser extends StrictLogging :
           val instruction = processLabel(fields, tokenisedLine)
           if !instruction.isEmpty then
             val tokenisedInstruction = processInstruction(instruction, tokenisedLine)
-            if tokenisedInstruction == InstructionToken then
+            if tokenisedInstruction.isInstanceOf[InstructionToken] then
               processValue(instruction.tail, tokenisedLine, tokenisedInstruction)
 
     tokenisedLine
@@ -180,22 +181,102 @@ object Tokeniser extends StrictLogging :
       token.addPredictions(List(Accumulator, Implied))
     else if text.length == 1 then
       text(0) match {
-        case a if a.charAt(0) == '#' => token.addPredictions(getPrediction(a.substring(1), 10))
-        case b if b.charAt(0) == '$' => token.addPredictions(getPrediction(b.substring(1), 16))
-        case c if c.charAt(0).isDigit => token.addPredictions(getPrediction(c.substring(1), 10))
-        case c if c.charAt(0).isLetter => token.addPredictions(getPrediction(c.substring(1), 16))
-        case d if d.charAt(0) == '(' => token.addPrediction(Indirect)
+        case a if a.charAt(0) == '#' => token.addPrediction(Immediate)
+        case b if b.charAt(0) == '$' => token.addPredictions(getPredictions(b.substring(1), 16))
+        case c if c.charAt(0).isDigit => token.addPredictions(getPredictions(c, 10))
+        case d if d.charAt(0).isLetter => token.addPredictions(getLabelPredictions(d))
+        case e if e.charAt(0) == '(' => token.addPredictions(getIndirectPredictions(e))
         case _ => token.addPrediction(Unknown)
       }
   }
 
-  // TODO too simple!
-  def getPrediction(t: String, base: Int) : List[AddressingMode] =
-      val modes = List[AddressingMode]()
-      val value = Integer.parseInt(t, base)
-      if value > 256 then
-        modes.appended(Absolute)
-      else
-        modes.appended(ZeroPage)
+  /**
+   * ind	indirect	OPC ($LLHH)	operand is address; effective address is contents of word at address: C.w($HHLL)
+   * X,ind	X-indexed, indirect	OPC ($LL,X)	operand is zeropage address; effective address is word in (LL + X, LL + X + 1), inc. without carry: C.w($00LL + X)
+   * ind,Y	indirect, Y-indexed	OPC ($LL),Y	operand is zeropage address; effective address is word in (LL, LL + 1) incremented by Y with carry: C.w($00LL) + Y
+   *
+   * @param t the string representing the operand
+   * @return a prediction of the real addressing mode, we only need a prediction. The 2nd pass will have to do the full calc anyway.
+   *         The prediction just goves it a starting point saves a bit of time.
+   *
+   */
+  def getIndirectPredictions(t: String) : List[AddressingMode] =
+    // lastChar should be ) or Y
+    val lastChar = t.substring(t.length() - 1).toUpperCase()
+    lastChar match {
+      case ")" => List(Indirect, IndirectX)
+      case "Y" => List(IndirectY)
+      case _ => List(Unknown)
+    }
+
+  /**
+   * The operand starts with a letter so it could be almost anny mode with the address being defined with a DEF later in the file
+   * so at this point we have no idea if the label even exists! Therefore no way to tell if zero page can only determine if X or Y indexed.
+   *
+   * All indirect start with ( so cant be any of those and Implied has no operand so that also not possible.
+   * Immediate is dealt with prior to calling this method also not possible
+   *
+   * The indexed options
+   * abs,X	absolute, X-indexed	OPC $LLHH,X	operand is address; effective address is address incremented by X with carry
+   * abs,Y	absolute, Y-indexed	OPC $LLHH,Y	operand is address; effective address is address incremented by Y with carry
+   * zpg,X	zeropage, X-indexed	OPC $LL,X	operand is zeropage address; effective address is address incremented by X without carry
+   * zpg,Y	zeropage, Y-indexed	OPC $LL,Y	operand is zeropage address; effective address is address incremented by Y without carry
+   *
+   * None index options
+   * abs	absolute	OPC $LLHH	operand is address $HHLL
+   * rel	relative	OPC $BB	branch target is PC + signed offset BB
+   * zpg	zeropage	OPC $LL	operand is zeropage address (hi-byte is zero, address = $00LL)
+   *
+   *
+   * @param t the string representing the operand (label)
+   * @returna prediction of the real addressing mode, we only need a prediction. The 2nd pass will have to do the full calc anyway.
+   *         The prediction just gives it a starting point saves a bit of time.
+   */
+  def getLabelPredictions(t: String) : List[AddressingMode] =
+    // labels can end with an X or a Y but cant contain a comma therefor indexing is indicated by ',X' or ',Y' termination
+    val lastChars = t.substring(t.length() - 2).toUpperCase()
+    if lastChars == ",X" then
+      List(AbsoluteX, ZeroPageX)
+    else if lastChars == ",Y" then
+      List(AbsoluteY, ZeroPageY)
+    else
+      List(Absolute, Relative, ZeroPage)
+
+  /**
+   * Addressing modes starting with a numeric value
+   *
+   * abs	absolute	OPC $LLHH	operand is address $HHLL
+   *
+   * rel	relative	OPC $BB	branch target is PC + signed offset BB
+   * zpg	zeropage	OPC $LL	operand is zeropage address (hi-byte is zero, address = $00LL)
+   *
+   * abs,X	absolute, X-indexed	OPC $LLHH,X	operand is address; effective address is address incremented by X with carry
+   * abs,Y	absolute, Y-indexed	OPC $LLHH,Y	operand is address; effective address is address incremented by Y with carry
+   * zpg,X	zeropage, X-indexed	OPC $LL,X	operand is zeropage address; effective address is address incremented by X without carry
+   * zpg,Y	zeropage, Y-indexed	OPC $LL,Y	operand is zeropage address; effective address is address incremented by Y without carry
+   *
+   * @param t the string representing the operand
+   * @param base if base of the number Decimal or hex
+   * @return a prediction of the real addressing mode, we only need a prediction. The 2nd pass will have to do the full calc anyway.
+   *         The prediction just goves it a starting point saves a bit of time.
+   */
+  def getPredictions(t: String, base: Int) : List[AddressingMode] =
+    val lastChars = t.substring(t.length() - 2).toUpperCase()
+    val indexed = lastChars == ",X" || lastChars == ",Y"
+    val valStr = if indexed then
+      t.substring(t.length - 2)
+    else
+      t
+    val value = Integer.parseInt(valStr, base)
+    if value > 256 then
+      lastChars match
+        case ",X" => List(AbsoluteX)
+        case ",Y" => List(AbsoluteY)
+        case _ => List(Absolute)
+    else
+      lastChars match
+        case ",X" => List(ZeroPageX)
+        case ",Y" => List(ZeroPageY)
+        case _ => List(ZeroPage, Relative)
 
 

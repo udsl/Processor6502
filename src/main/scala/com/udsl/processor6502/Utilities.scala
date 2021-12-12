@@ -63,19 +63,19 @@ object Utilities {
 
   def numericValue(str: String): Int =
     if isNumeric(str) then
-      if str.head == '$' then
-        return Integer.parseInt(str, 16)
+      if str.charAt(0) == '$' then
+        return Integer.parseInt(str.substring(1), 16)
       else
         return Integer.parseInt(str)
     -1
 
-  def isLable( str: String): Boolean =
+  def isLabel( str: String): Boolean =
     val alphaPattern: Regex = "^[A-Za-z][A-Za-z0-9]+$".r
     alphaPattern.findFirstMatchIn(str) match {
       case Some(_) => true
       case None => false
     }
-  
+
   def getConfigValue(lines: List[ConfigDatum], configKey: String, default: String): String = {
     val datum = lines.find(_.key == configKey)
 
@@ -84,8 +84,8 @@ object Utilities {
       case None => default
     }
   }
-  
-  
+
+
   def writeToFile(file: File, tokenisedList: List[TokenisedLine]): Unit = {
     val bw = new BufferedWriter(new FileWriter(file))
     for (token <- tokenisedList)

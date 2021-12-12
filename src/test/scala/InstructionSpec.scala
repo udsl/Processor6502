@@ -82,7 +82,7 @@ val dataValidInstructionTest: List[TestData] = List(
   TestData("BMI", 0x30, 2, Relative), // $LL
   TestData("BNE", 0xD0, 2, Relative), // $LL
 
-  TestData("BRK", 0x00, 2, Relative), // $LL
+  TestData("BRK", 0x00, 1, Implied), // $LL
 
   TestData("BVC", 0x50, 2, Relative), // $LL
   TestData("BVS", 0x70, 2, Relative), // $LL
@@ -101,20 +101,11 @@ class InstructionSpec extends AnyFlatSpec with should.Matchers {
   "An instruction" should "should have the correct opcode and addressing mode" in {
     for (data <- dataValidInstructionTest) {
       assert(CpuInstructions.isValidInstruction(data.code), s"Instruction not found ${data.code}")
-      val instruction = CpuInstructions.getInstruction(data.code, data.addMode)
-
-      instruction match {
-        case Some(value) =>
-          val bytes = value.bytes(data.addMode)
-          if bytes < 0 then
-            fail(s"Failed to get valid bytes for ${data.code} with ${data.addMode} addressing")
-          val opcode = value.opcode(data.addMode)
-          if opcode < 0 then
-            fail(s"Failed to get valid opcode for ${data.code}")
-          assert(opcode == data.opcode, s"Invalid opcode for ${data.code} - ${data.addMode}! expected 0x${data.opcode.toHexString.toUpperCase()} got 0x${opcode.toHexString.toUpperCase()}.")
-
-        case None => fail(s"Invalid addressing mode for ${data.code}")
-      }
+      val (opcode: Int, bytes:Int)  = CpuInstructions.getInstructionOpcodeBytes(data.code, data.addMode)
+      assert(1 to 3 contains bytes, s"Failed to get valid bytes for ${data.code} with ${data.addMode} addressing")
+      assert(opcode >= 0,s"Failed to get valid opcode for ${data.code}")
+      assert(opcode == data.opcode, s"Invalid opcode for ${data.code} - ${data.addMode}! expected 0x${data.opcode.toHexString.toUpperCase()} got 0x${opcode.toHexString.toUpperCase()}.")
+      assert(bytes == data.insLength, s"Invalid instruction length for ${data.code} - ${data.addMode}! expected ${data.insLength} got ${bytes}.")
     }
   }
 

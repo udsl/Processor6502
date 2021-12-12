@@ -2,18 +2,20 @@ package com.udsl.processor6502.assembler
 
 import com.udsl.processor6502.cpu.execution.AddressingMode
 
+import scala.collection.mutable.ListBuffer
+
 trait AssemblerToken(val mnemonic: String, val fields: Array[String] ):
-  val predictedAddressingModes: List[AddressingMode] = List[AddressingMode]()
+  val predictedAddressingModes: ListBuffer[AddressingMode] = ListBuffer[AddressingMode]()
   var value: String = ""
 
   def intValue: Int = value.toInt
 
   def addPrediction(prediction: AddressingMode): Unit =
-    predictedAddressingModes.appended(prediction)
+    predictedAddressingModes.addOne(prediction)
 
   def addPredictions(predictions: List[AddressingMode]): Unit =
-    for pred <- predictions do
-      addPrediction(pred)
+    predictedAddressingModes.addAll(predictions)
+
 
 
 case class Accumulator(override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String]):

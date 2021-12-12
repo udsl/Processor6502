@@ -155,9 +155,12 @@ object AssembleLocation extends StrictLogging :
 
   def setMemoryByte(v: Int): Unit =
     if v > 256 || v < 0 then
-      throw new Exception("Not a byt value")
+      throw new Exception(s"Not a byt value: $v")
     Processor.setMemoryByte(currentLocation, v)
     currentLocation += 1
+
+  def getMemoryByte(v: Int): Int =
+    Processor.getMemoryByte(v)
 
   def addInstructionSize(insSize: Int) : Unit =
     if insSize < 1 || insSize > 3 then
@@ -253,13 +256,17 @@ trait Assemble6502PassBase:
     else
       Integer.parseInt(v))
 
+  def setMemoryAddress(v: Int): Unit =
+    AssembleLocation.setMemoryAddress(v)
+    
   def setMemoryByte(v: String): Unit =
     AssembleLocation.setMemoryByte(if v.charAt(0) == '$' then
       Integer.parseInt(v.substring(1), 16)
     else
       Integer.parseInt(v))
-
-
+    
+  def setMemoryByte(v: Int): Unit =
+    AssembleLocation.setMemoryByte(v)
 
 class Reference( val name: String):
   def hasValue: Boolean =
