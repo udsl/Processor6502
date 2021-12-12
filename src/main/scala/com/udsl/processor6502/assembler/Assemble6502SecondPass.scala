@@ -59,7 +59,8 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       if isNumeric(operand) then
         numericValue(operand)
       else // only other possibility is a label
-        AssemblyData.labels.getOrElse(t.fields.head, -1)
+        val labelValue = AssemblyData.labels.getOrElse(operand, -1)
+        labelValue
 
     def getOperandValue: Int =
       val operand = if t.fields.head.charAt(0) == '#' then
@@ -78,7 +79,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
      * @return
      */
     def getIndirectOperandValue: Int =
-      val op1 = t.fields.head.substring(1) // remove the leading '('
+      val op1 = t.fields.head.toUpperCase.substring(1) // remove the leading '('
       if op1.substring(op1.length() - 3) == "),Y"  || op1.substring(op1.length() - 3) == ",X)" then // (indirect),Y or (indirect,X)
         getValue(op1.substring(0, op1.length() - 3))
       else
@@ -91,6 +92,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
             val operandValue = getOperandValue
             if t.fields.head.charAt(0) == '#' && (0 to 255 contains operandValue) then
               return (Immediate, operandValue)
+
           case Absolute | ZeroPage =>
             val operandValue = getOperandValue
             if operandValue > 255 then
@@ -104,27 +106,34 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
               return (ZeroPageX, operandValue)
 
           case AbsoluteX =>
-            val operandValue = getIndexedOperandValue
-            if (0 to 255 contains operandValue) then
-              return (ZeroPageX, operandValue) // prediction was AbsoluteX but actually ZeroPageX, why labels need updating.
-            else
-              return (AbsoluteX, operandValue)
+            if t.fields.head.toUpperCase.contains(",X") then
+              val operandValue = getIndexedOperandValue
+              if (0 to 255 contains operandValue) then
+                return (ZeroPageX, operandValue) // prediction was AbsoluteX but actually ZeroPageX, why labels need updating.
+              else
+                return (AbsoluteX, operandValue)
 
           case AbsoluteY =>
-            val operandValue = getIndexedOperandValue
-            return (AbsoluteY, operandValue) // no ZeroPageY
+            if t.fields.head.toUpperCase.contains(",Y") then
+              val operandValue = getIndexedOperandValue
+              return (AbsoluteY, operandValue) // no ZeroPageY
 
           case IndirectX =>
-            val operandValue = getIndirectOperandValue
-            return (IndirectX, operandValue)
+            if t.fields.head.toUpperCase.contains(",X)") then
+              val operandValue = getIndirectOperandValue
+              if (0 to 255 contains operandValue) then
+                return (IndirectX, operandValue)
 
           case IndirectY =>
-            val operandValue = getIndirectOperandValue
-            return (IndirectY, operandValue)
+            if t.fields.head.toUpperCase.contains("),Y") then
+              val operandValue = getIndirectOperandValue
+              if (0 to 255 contains operandValue) then
+                return (IndirectY, operandValue)
 
           case Indirect =>
-            val operandValue = getIndirectOperandValue
-            return (Indirect, operandValue)
+            if !t.fields.head.contains(",") then // if it has a comma then its not Indirect
+              val operandValue = getIndirectOperandValue
+              return (Indirect, operandValue)
 
           case _ =>
         }
