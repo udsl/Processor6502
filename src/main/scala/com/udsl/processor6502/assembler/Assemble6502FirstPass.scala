@@ -40,7 +40,8 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
           processValues(token)
         case OriginToken( _, _ ) =>
           processOrigin(token)
-
+        case DefToken( _, _ ) =>
+          processDefinition(token)
         case _ => logger.error(s"unsupported case ${token}")
       }
     logger.debug(tokenisedLine.sourceLine.source)
@@ -106,8 +107,12 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
       AssembleLocation.addInstructionSize(insSize)
 
 
+  def processDefinition(t: AssemblerToken) : Unit =
+    logger.info(s"\tDefinition of label ${t.value} with value ")
+    AssemblyData.addLabel(t.mnemonic, t.value)
+
   def procesLabel(t: AssemblerToken) : Unit =
-    logger.info(s"\tDefining label ${t.value} with value $currentLocation")
+    logger.info(s"\tDefining label ${t.mnemonic} with value $currentLocation")
     AssemblyData.addLabel(t.mnemonic)
 
   def setBytes(fields: Array[String]): Unit =

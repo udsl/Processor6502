@@ -87,4 +87,7 @@ case class OriginToken (override val mnemonic: String, override val fields: Arra
   override def toString: String =
     "OriginToken"
 
+case class DefToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+  override def toString: String =
+    "DefinitionToken"
 

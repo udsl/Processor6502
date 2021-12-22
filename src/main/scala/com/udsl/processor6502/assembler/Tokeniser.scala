@@ -149,6 +149,18 @@ object Tokeniser extends StrictLogging :
           logger.debug(s"token added: $token")
           return true
 
+        case "DEF" =>
+          val value: Array[String] = text.tail
+          val head = value.head
+          // fist part must be the label being defined
+          // 2nd is the value which must not be a label
+          if value.length > 2 || !isLabel(value.head) || !isNumeric(value.tail.head) then
+            tokenisedLine + SyntaxErrorToken(head, text.tail)
+          else
+            val token = DefToken(value.head, value.tail)
+            token.value = value.tail.head
+            tokenisedLine + token
+
         case _ =>
       }
     false
@@ -177,7 +189,7 @@ object Tokeniser extends StrictLogging :
     //      nothing implied addressing
 
     // At this point we only need to tokenise the addressign mode not work out if its valid.
-    if text.isEmpty then // applied addrtessing mode
+    if text.length == 0 then // applied addrtessing mode
       token.addPredictions(List(Accumulator, Implied))
     else if text.length == 1 then
       text(0) match {

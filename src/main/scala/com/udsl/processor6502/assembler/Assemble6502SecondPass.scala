@@ -7,7 +7,7 @@ import com.udsl.processor6502.assembler.Assemble6502FirstPass.{processClear, set
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.logger
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.CpuInstructions.{getInstruction, isValidInstruction}
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, AddressingMode, Immediate, Indirect, IndirectX, IndirectY, Invalid, ZeroPage, ZeroPageX, ZeroPageY}
+import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Invalid, Relative, ZeroPage, ZeroPageX, ZeroPageY}
 
 
 /**
@@ -54,6 +54,12 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       case "ADDR" => setAddresses(t.fields)
       case _ => logger.info(s"\tInvalid mnemonic ${t.value} ")
 
+  def processOrigin(t: AssemblerToken): Unit =
+    logger.info("\tOrigin Token 2nd pass")
+    val value = Utilities.numericValue(t.fields.head)
+    if value > 0 then
+      AssembleLocation.setAssembleLoc(value)
+
   def assembleInstructionToken(t: AssemblerToken): Unit =
     def getValue(operand: String): Int =
       if isNumeric(operand) then
@@ -86,7 +92,8 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
         getValue(op1.substring(0, op1.length() - 1)) // (indirect)
 
     def validateAddressingMode: (AddressingMode, Int) =
-      for mode: AddressingMode <- t.predictedAddressingModes do
+      val sortedModes = t.predictedAddressingModes.sortBy(_.bytes)
+      for mode: AddressingMode <- sortedModes do
         mode match {
           case Immediate =>
             val operandValue = getOperandValue
@@ -135,6 +142,21 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
               val operandValue = getIndirectOperandValue
               return (Indirect, operandValue)
 
+          case Implied | Accumulator =>
+            if t.fields.length == 0 then
+              return (Implied, -1) // there is no operand
+
+          case Relative =>
+            // Target of branch can be a byte value or a label destination
+            val operandValue = getOperandValue
+            if isLabel(t.fields.head) then // its an address to branch to
+              val offset = operandValue - AssembleLocation.currentLocation
+              if offset > -128 && offset < 128 then
+                return (Relative, offset)
+            else
+              if operandValue > 0 && operandValue < 256 then
+                return (Relative, operandValue)
+
           case _ =>
         }
       (Invalid, -1)
@@ -143,7 +165,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       val (addrMode: AddressingMode, value: Int) = validateAddressingMode
       val (opcode: Int, bytes:Int) = CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode)
       if opcode < 0 then
-          throw new Exception(s"Invalid instruction/Addressing mode - mnemonic: ${t.mnemonic}, operand: ${t.fields.head}, predicted: ${t.predictedAddressingModes}, actual: $addrMode" )
+          throw new Exception(s"Invalid instruction/Addressing mode - mnemonic: ${t.mnemonic}, operand: ${t.fields.mkString(", ")}, predicted: ${t.predictedAddressingModes}, actual: $addrMode" )
       setMemoryByte(opcode)
       // now we know how long the instruction shoud be
       bytes match
@@ -159,8 +181,3 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
           throw new Exception("SYSTEM ERROR INVALID BYTES FOR INSTRUCTION!")
 
 
-  def processOrigin(t: AssemblerToken) : Unit =
-    logger.info("\tOrigin Token 2nd pass")
-    val value = Utilities.numericValue(t.fields.head)
-    if value > 0 then
-      AssembleLocation.setAssembleLoc(value)

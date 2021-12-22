@@ -1,7 +1,7 @@
 
 import com.udsl.processor6502.assembler
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, DecodedInstruction, Immediate, Implied, IndirectX, IndirectY, Relative, ZeroPage, ZeroPageX}
+import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, DecodedInstruction, Immediate, Implied, Indirect, IndirectX, IndirectY, Relative, ZeroPage, ZeroPageX}
 import org.scalatest.*
 import flatspec.*
 import matchers.*
@@ -93,7 +93,116 @@ val dataValidInstructionTest: List[TestData] = List(
   TestData("CLI", 0x58, 1, Implied),
   TestData("CLV", 0xB8, 1, Implied),
 
-  TestData("INC", 0xFE, 3, AbsoluteX), //"$LL
+  /**
+   * CMP Compare Memory with Accumulator
+   *
+   * immediate	CMP #oper	C9	2
+   * zeropage	CMP oper	C5	2
+   * zeropage,X	CMP oper,X	D5	2
+   * absolute	CMP oper	CD	3
+   * absolute,X	CMP oper,X	DD	3
+   * absolute,Y	CMP oper,Y	D9	3
+   * (indirect,X)	CMP (oper,X)	C1	2
+   * (indirect),Y	CMP (oper),Y	D1	2
+   */
+  TestData("CMP", 0xC9, 2, Immediate), // #
+  TestData("CMP", 0xC5, 2, ZeroPage),  // $LL
+  TestData("CMP", 0xD5, 2, ZeroPageX), // $LL,X
+  TestData("CMP", 0xCD, 3, Absolute),  // $LLHH
+  TestData("CMP", 0xDD, 3, AbsoluteX), // $LL,X
+  TestData("CMP", 0xD9, 3, AbsoluteY), // $LL,X
+  TestData("CMP", 0xC1, 2, IndirectX), // $LL,X
+  TestData("CMP", 0xD1, 2, IndirectY), // $LL,X
+
+  /**
+   * CPX Compare Memory and Index X
+   *
+   * immediate CPX #oper E0	2
+   * zeropage	 CPX oper	 E4	2
+   * absolute	 CPX oper	 EC	3
+   */
+  TestData("CPX", 0xE0, 2, Immediate), // #
+  TestData("CPX", 0xE4, 2, ZeroPage),  // $LL
+  TestData("CPX", 0xEC, 3, Absolute),  // $LLHH
+
+
+  /**
+   * CPY Compare Memory and Index Y
+   *
+   * immediate CPY #oper C0	2
+   * zeropage	 CPY oper	 C4	2
+   * absolute  CPY oper	 CC	3
+   */
+  TestData("CPY", 0xC0, 2, Immediate), // #
+  TestData("CPY", 0xC4, 2, ZeroPage),  // $LL
+  TestData("CPY", 0xCC, 3, Absolute),  // $LLHH
+
+  /**
+   * DEC Compare Memory and Index Y
+   *
+   * zeropage   DEC #oper C6	2
+   * zeropage,X DEC oper	D6	2
+   * absolute   DEC oper	CE	3
+   * absolute,X DEC oper	DE	3
+   */
+  TestData("DEC", 0xC6, 2, ZeroPage),
+  TestData("DEC", 0xD6, 2, ZeroPageX),
+  TestData("DEC", 0xCE, 3, Absolute),
+  TestData("DEC", 0xDE, 3, AbsoluteX),
+
+  TestData("DEX", 0xCA, 1, Implied),
+
+  TestData("DEY", 0x88, 1, Implied),
+
+  /**
+   * EOR Compare Memory with Accumulator
+   *
+   * immediate	EOR #oper	49	2
+   * zeropage	EOR oper	45	2
+   * zeropage,X	EOR oper,X	55	2
+   * absolute	EOR oper	4D	3
+   * absolute,X	EOR oper,X	5D	3
+   * absolute,Y	EOR oper,Y	59	3
+   * (indirect,X)	EOR (oper,X)	41	2
+   * (indirect),Y	EOR (oper),Y	51	2
+   */
+  TestData("EOR", 0x49, 2, Immediate), // #
+  TestData("EOR", 0x45, 2, ZeroPage),  // $LL
+  TestData("EOR", 0x55, 2, ZeroPageX), // $LL,X
+  TestData("EOR", 0x4D, 3, Absolute),  // $LLHH
+  TestData("EOR", 0x5D, 3, AbsoluteX), // $LL,X
+  TestData("EOR", 0x59, 3, AbsoluteY), // $LL,X
+  TestData("EOR", 0x41, 2, IndirectX), // $LL,X
+  TestData("EOR", 0x51, 2, IndirectY), // $LL,X
+
+  /**
+   * INC Compare Memory and Index Y
+   *
+   * zeropage   INC #oper E6	2
+   * zeropage,X INC oper	F6	2
+   * absolute   INC oper	EE	3
+   * absolute,X INC oper	FE	3
+   */
+  TestData("INC", 0xE6, 2, ZeroPage),
+  TestData("INC", 0xF6, 2, ZeroPageX),
+  TestData("INC", 0xEE, 3, Absolute),
+  TestData("INC", 0xFE, 3, AbsoluteX),
+
+  TestData("INX", 0xE8, 1, Implied),
+
+  TestData("INY", 0xC8, 1, Implied),
+
+  /**
+   * JMP Jump to New Location
+   *
+   * absolute	JMP oper	4C	3
+   * indirect	JMP (oper)	6C	3
+   */
+  TestData("JMP", 0x4C, 3, Absolute),
+  TestData("JMP", 0x6C, 3, Indirect),
+
+  TestData("JSR", 0x20, 3, Absolute),
+
   TestData("LDX", 0xA6, 2, ZeroPage), //"$LL"
 )
 

@@ -159,7 +159,7 @@ case class EOR() extends CpuInstruction (Map(Immediate -> insData( 0x49, 2),
   AbsoluteX -> insData( 0x5D, 3),    // absolute,X
   AbsoluteY -> insData( 0x59, 3),   // absolute,Y
   IndirectX -> insData( 0x41, 2),  // (indirect,X)
-  IndirectY -> insData( 0x41, 2))): // (indirect),Y
+  IndirectY -> insData( 0x51, 2))): // (indirect),Y
   override def name() = "EOR"
 
 

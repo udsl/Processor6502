@@ -8,6 +8,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Dialogues.errorAlert
+import com.udsl.processor6502.Utilities.numericValue
 import com.udsl.processor6502.assembler.Assemble6502.logger
 import com.udsl.processor6502.assembler.Assemble6502FirstPass.{assembleCommandToken, assembleCommentLineToken, assembleInstructionToken, logger, procesLabel, processClear, setAddresses, setBytes, setWords}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.assemble
@@ -154,9 +155,12 @@ object AssembleLocation extends StrictLogging :
     setMemoryByte(adr / 256)
 
   def setMemoryByte(v: Int): Unit =
-    if v > 256 || v < 0 then
+    if v > 256 || v < -127 then
       throw new Exception(s"Not a byt value: $v")
-    Processor.setMemoryByte(currentLocation, v)
+    if v < 0 then
+      Processor.setMemoryByte(currentLocation, v & 255)
+    else
+      Processor.setMemoryByte(currentLocation, v)
     currentLocation += 1
 
   def getMemoryByte(v: Int): Int =
@@ -212,6 +216,11 @@ object AssemblyData extends StrictLogging:
     if (labels.contains(name))
       throw new Exception(s"Label '$name' already defined")
     labels.addOne(name, currentLocation)
+
+  def addLabel(name: String, value: String): Unit =
+    if (labels.contains(name))
+      throw new Exception(s"Label '$name' already defined")
+    labels.addOne(name, numericValue(value))
 
   def printRefs(): Unit =
     logger.info(
