@@ -64,7 +64,6 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
   def assembleCommandToken(t: AssemblerToken) : Unit =
     logger.info(s"\tCommandToken '${t.mnemonic}' - ")
     t.mnemonic.toUpperCase() match
-      case "ORIG" => AssembleLocation.setAssembleLoc(t.intValue)
       case "BYT" => setBytes(t.fields)
       case "WRD" => setWords(t.fields)
       case "ADDR" => setAddresses(t.fields)

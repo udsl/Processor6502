@@ -1,7 +1,7 @@
 package com.udsl.processor6502.cpu:
 
-  import com.udsl.processor6502.Utilities
-  import com.udsl.processor6502.Utilities.{writeStringToFile, writeToFile}
+  import com.udsl.processor6502.{NumericFormatType, Utilities}
+  import com.udsl.processor6502.Utilities.{numToString, writeStringToFile, writeToFile}
   import com.udsl.processor6502.cpu.execution.DecodedInstruction
   import scalafx.collections.ObservableBuffer
 
@@ -137,7 +137,7 @@ package com.udsl.processor6502.cpu:
   class MemoryCell(private val location: Address, private var value: ByteValue = ByteValue.apply) {
 
     override def toString: String = {
-      s"[${location.toString}] ${value}"
+      s"[${location.toAddressString(MemoryCell.currentMemoryFormat)}] ${value.toDisplayString(MemoryCell.currentMemoryFormat)}"
     }
 
     def getValue(): Int = {
@@ -150,6 +150,8 @@ package com.udsl.processor6502.cpu:
   }
 
   object MemoryCell {
+    private var currentMemoryFormat = NumericFormatType.DEC
+
     def apply(index: Int): MemoryCell = {
       Address.validate(index)
       val m = new MemoryCell(Address(index))
@@ -162,4 +164,7 @@ package com.udsl.processor6502.cpu:
       val m = new MemoryCell(Address(index), ByteValue(byt))
       m
     }
+
+    def changeDisplayMode( displayMode: NumericFormatType): Unit =
+      currentMemoryFormat = displayMode
   }

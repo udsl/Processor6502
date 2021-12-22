@@ -160,6 +160,8 @@ object Tokeniser extends StrictLogging :
             val token = DefToken(value.head, value.tail)
             token.value = value.tail.head
             tokenisedLine + token
+            logger.debug(s"token added: $token")
+          return true
 
         case _ =>
       }

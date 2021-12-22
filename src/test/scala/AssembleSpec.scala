@@ -1,5 +1,5 @@
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.assembleInstructionToken
-import com.udsl.processor6502.assembler.{AssembleLocation, AssemblerToken, InstructionToken}
+import com.udsl.processor6502.assembler.{AssembleLocation, AssemblerToken, InstructionToken, TokenisedLine}
 import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, AddressingMode, Immediate, IndirectX, IndirectY, ZeroPage, ZeroPageX, ZeroPageY}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -28,7 +28,7 @@ class AssembleSpec extends AnyFlatSpec with should.Matchers {
   "Given a valid instruction token" should "should assemble to the correct opcode and value" in {
     for ((token, opcode, loByte, hiByte) <- dataValidTokensTest) {
       val srtLoc = AssembleLocation.currentLocation
-      assembleInstructionToken(token)
+      assembleInstructionToken(token, TokenisedLine(s"testing $token - $opcode"))
       val memValue = AssembleLocation.getMemoryByte(srtLoc)
       assert(memValue == opcode, s"Expected opcode: 0x${opcode.toHexString.toUpperCase} was 0x${memValue.toHexString.toUpperCase}")
       val lowByte = AssembleLocation.getMemoryByte(srtLoc+1)

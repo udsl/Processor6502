@@ -184,7 +184,7 @@ class CodeEditor extends Stage {
 }
 
 object CodeEditor {
-  def showOdeEditor(): Unit = {
+  def showCodeEditor(): Unit = {
     val editor = new CodeEditor()
     editor.showAndWait()
   }

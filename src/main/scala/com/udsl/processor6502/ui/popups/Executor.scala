@@ -1,21 +1,29 @@
+import com.udsl.processor6502.ui.popups.Executor
 package com.udsl.processor6502.ui.popups:
 
+  import com.udsl.processor6502.Main
   import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
   import scalafx.application.JFXApp
   import scalafx.scene.Scene
   import scalafx.scene.control.{Button, Label, TextField}
   import scalafx.scene.layout.{HBox, VBox}
   import scalafx.stage.{Modality, Stage}
-  
+  import scalafx.event.EventIncludes.eventClosureWrapperWithZeroParam
+
   class Executor extends Stage{
-    title = "Executor - Popup"
+    title = "Executor / Debugger"
     width = 400
     height = 200
     resizable = false
-  
-    initOwner(JFXApp.ActiveApp.stage)
-    initModality(Modality.ApplicationModal)
-  
+
+    initOwner(new Stage)
+    initModality(Modality.None)
+
+    onCloseRequest = () => {
+      println("Stage is closing")
+      Executor.close()
+    }
+
     scene = new Scene {
       root = {
         new VBox {
@@ -65,3 +73,25 @@ package com.udsl.processor6502.ui.popups:
       }
     }
   }
+
+  object Executor:
+    var executor: Option[Executor] = None
+
+    def close(): Unit =
+      executor = None
+
+    def toBack():Unit =
+      executor match
+        case Some(_) =>
+          executor.get.toBack()
+        case _ =>
+
+
+    def showExecutor(): Unit =
+      executor match
+        case Some(_) =>
+          executor.get.toFront()
+        case _ =>
+          executor = Some(Executor())
+          executor.get.show()
+

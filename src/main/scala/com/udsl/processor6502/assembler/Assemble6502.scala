@@ -43,9 +43,11 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
       // Now we can check.
       if verification() then
         secondPass()
-      printTokenisedLines()
+      //printTokenisedLines()
       AssemblyData.printLabels()
       AssemblyData.printRefs()
+      listExceptions()
+      listSyntaxErrors()
 
   def addReference(value: String): Unit =
     AssemblyData.addReference(value)
@@ -74,7 +76,11 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
   def secondPass(): Unit =
     for (tokenisedLine <- tokenisedLines)
       try
-        Assemble6502SecondPass.assemble(tokenisedLine)
+        val resultToken = Assemble6502SecondPass.assemble(tokenisedLine)
+        resultToken match
+          case NoTokenToken( _, _ ) =>
+          case _ =>
+            tokenisedLine.tokens.addOne(resultToken)
       catch
         case e: Exception => throw new Exception(s"${e.getMessage}\nOn line ${tokenisedLine.sourceLine.lineNumber}" )
         case a => logger.error(s"Unknown exception! $a\nOn line ${tokenisedLine.sourceLine.lineNumber}")
@@ -93,8 +99,14 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
     logger.info(s"  exceptions found: ${if exceptions.isEmpty then "ZERO" else exceptions.length}!")
 
   def listSyntaxErrors(): Unit =
-//    val syntax = tokenisedLines.filter(x => x.hasSyntaxError)
-    val syntax = tokenisedLines.flatMap(_.tokens.filter( _ == SyntaxErrorToken))
+    val syntax = tokenisedLines.filter(x => x.hasSyntaxError)
+    val syntax0 = tokenisedLines.flatMap(_.tokens.filter( _ match {
+                                                case SyntaxErrorToken( _,_ ) => true;
+                                                case _ => false
+                                              }))
+    val syntax2 = tokenisedLines.filter( _.hasSyntaxError)
+
+    //   val syntax = tokenisedLines.flatMap(_.tokens.filter( _ == SyntaxErrorToken))
     logger.info(
       """
         |*****************
@@ -104,9 +116,17 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
         |*****************
         |
         |""".stripMargin )
-    logger.info(s"  syntax errors found ${if syntax.isEmpty then "ZERO" else syntax.length}!")
+    logger.info(s"  syntax errors found ${if syntax.isEmpty then "ZERO" else s"in ${syntax.length} lines"}!")
     for syn <- syntax do
-      logger.info(s"${syn}")
+      val str = new StringBuilder(s"Line number: ${syn.sourceLine.lineNumber} - '${syn.sourceLine.source}'\n")
+      val errs = syn.tokens.filter( _ match {
+        case SyntaxErrorToken( _,_ ) => true;
+        case _ => false
+      })
+
+      for err <- errs do
+        str.append(s"\tError ${err.mnemonic}\n")
+      logger.info(str.toString())
 
   def hasException: Boolean =
     tokenisedLines.exists(x => x.tokens.contains(ExceptionToken))
@@ -177,7 +197,7 @@ object Assemble6502 extends StrictLogging :
   def apply(source: String): Assemble6502 =
     logger.info("\n\n***** Starting Assembly *****\n\n")
     val allLines = for ((str, index) <- source.split("\n").zipWithIndex)
-      yield new UntokenisedLine(index + 1, str)
+      yield new UntokenisedLine(index + 1, str.trim)
     val asm = new Assemble6502(Tokeniser.Tokenise(allLines) )
     asm
 
@@ -198,7 +218,7 @@ object AssemblyData extends StrictLogging:
       logger.debug(error)
       return (false, List(error))
     var result = true
-    var errors = ListBuffer[String]()
+    val errors = ListBuffer[String]()
     for r <- AssemblyData.references do
       if !AssemblyData.labels.contains(r.name) then
         val error = s"Reference ${r.name} not found in labels."

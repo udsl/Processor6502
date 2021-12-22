@@ -15,7 +15,7 @@ import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Acc
  */
 object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
-  def assemble(tokenisedLine: TokenisedLine) : Unit =
+  def assemble(tokenisedLine: TokenisedLine) : AssemblerToken =
     logger.info(s"\n\n2nd Pass ${tokenisedLine.sourceLine.lineNumber} ")
     for (token <- tokenisedLine.tokens)
       token match {
@@ -32,7 +32,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
         case CommandToken( _, _ ) => // extends AssemblerTokenType("CommandToken")
           assembleCommandToken(token)
         case InstructionToken( _, _ ) => // extends AssemblerTokenType("InstructionToken")
-          assembleInstructionToken(token)
+          return assembleInstructionToken(token, tokenisedLine)
         case SyntaxErrorToken( _, _ ) => // extends AssemblerTokenType("SyntaxErrorToken")
           logger.info("\tSyntaxErrorToken ")
         case ClearToken( _, _ ) =>
@@ -41,6 +41,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
         case _ => logger.error(s"unsupported case ${token.value}")
       }
+    NoTokenToken("", Array[String]())
 
   def procesLabel(token: AssemblerToken): Unit =
     logger.info("\tprocesLabel ")
@@ -60,12 +61,14 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
     if value > 0 then
       AssembleLocation.setAssembleLoc(value)
 
-  def assembleInstructionToken(t: AssemblerToken): Unit =
+  def assembleInstructionToken(t: AssemblerToken, tl: TokenisedLine): AssemblerToken =
     def getValue(operand: String): Int =
       if isNumeric(operand) then
         numericValue(operand)
       else // only other possibility is a label
         val labelValue = AssemblyData.labels.getOrElse(operand, -1)
+        if labelValue < 0 then
+          tl.tokens.addOne(SyntaxErrorToken(s"Undefined label '$operand'", t.fields))
         labelValue
 
     def getOperandValue: Int =
@@ -163,21 +166,23 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
     if isValidInstruction(t.mnemonic) then
       val (addrMode: AddressingMode, value: Int) = validateAddressingMode
-      val (opcode: Int, bytes:Int) = CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode)
-      if opcode < 0 then
-          throw new Exception(s"Invalid instruction/Addressing mode - mnemonic: ${t.mnemonic}, operand: ${t.fields.mkString(", ")}, predicted: ${t.predictedAddressingModes}, actual: $addrMode" )
-      setMemoryByte(opcode)
-      // now we know how long the instruction shoud be
-      bytes match
-        case 1 =>
-          // implied or accumulator so nothing else to write.
-        case 2 =>
-          // Imeadiate, zeropage etc
-          setMemoryByte(value)
-        case 3 =>
-          // Absolute
-          setMemoryAddress(value)
+      addrMode match
+        case Invalid =>
+          return SyntaxErrorToken(s"Invalid addressing mode for '${t.mnemonic}'", t.fields)
         case _ =>
-          throw new Exception("SYSTEM ERROR INVALID BYTES FOR INSTRUCTION!")
-
+          val (opcode: Int, bytes:Int) = CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode)
+          setMemoryByte(opcode)
+          // now we know how long the instruction shoud be
+          bytes match
+            case 1 =>
+              // implied or accumulator so nothing else to write.
+            case 2 =>
+              // Imeadiate, zeropage etc
+              setMemoryByte(value)
+            case 3 =>
+              // Absolute
+              setMemoryAddress(value)
+            case _ =>
+              throw new Exception("SYSTEM ERROR INVALID BYTES FOR INSTRUCTION!")
+    NoTokenToken("", Array[String]())
 

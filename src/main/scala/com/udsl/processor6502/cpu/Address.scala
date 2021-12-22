@@ -24,10 +24,10 @@ package com.udsl.processor6502.cpu:
          * Get the address as a Little Endian String if hex. otherwise as a number
          * @return the string representation
          */
-        def toAddressString: String = {
-            (numericFormatProperty.value) match {
-                case NumericFormatType.DEC => numToString(getLo) + numToString(getHi)
-                case _ => toString
+        def toAddressString(format: NumericFormatType): String = {
+            format match {
+                case NumericFormatType.HEX => addr.toHexString
+                case _ => addr.toString
             }
         }
 

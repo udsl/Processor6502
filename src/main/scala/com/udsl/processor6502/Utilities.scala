@@ -28,11 +28,47 @@ object Utilities {
     }
 
   def numToString(value: Int): String =
-    numericFormatProperty.value match {
-      case NumericFormatType.HEX => value.toHexString.toUpperCase
-      case NumericFormatType.OCT => value.toOctalString
-      case NumericFormatType.BIN => value.toBinaryString
-      case NumericFormatType.DEC => value.toString
+    numToString(value, numericFormatProperty.value)
+
+  def numToString(value: Int, format: NumericFormatType): String =
+    format match {
+      case NumericFormatType.HEX => s"$$${value.toHexString.toUpperCase}"
+      case NumericFormatType.OCT => s"o${value.toOctalString}"
+      case NumericFormatType.BIN => s"b${value.toBinaryString}"
+      case NumericFormatType.DEC => s"${value.toString}"
+    }
+
+  def numToByteString(value: Int, format: NumericFormatType): String =
+    format match {
+      case NumericFormatType.HEX =>
+        val v = value.toHexString.toUpperCase
+        s"$$${if v.length == 1 then
+          s"0$v"
+        else
+          v}"
+      case NumericFormatType.OCT =>
+        val v = value.toOctalString
+        val str = if v.length < 3 then
+          val s = s"000$v"
+          s.substring(s.length - 3)
+        else
+          v
+        s"o${str}"
+      case NumericFormatType.BIN =>
+        val v = value.toBinaryString
+        val str = if v.length < 8 then
+          val s = s"00000000$v"
+          s.substring(s.length - 8)
+        else
+          v
+        s"b${str}"
+
+      case NumericFormatType.DEC =>
+        val v = value.toString
+        s"${if v.length == 1 then
+          s"0$v"
+        else
+          v}"
     }
 
   /**

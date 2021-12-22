@@ -18,9 +18,9 @@ trait AssemblerToken(val mnemonic: String, val fields: Array[String] ):
 
 
 
-case class Accumulator(override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String]):
-  override def toString: String =
-    "accumulator"
+//case class Accumulator(override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String]):
+//  override def toString: String =
+//    "accumulator"
 
 
 case class BlankLineToken(override val mnemonic: String, override val fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
@@ -90,4 +90,8 @@ case class OriginToken (override val mnemonic: String, override val fields: Arra
 case class DefToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "DefinitionToken"
+
+case class NoTokenToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+  override def toString: String =
+    "NoTokenToken"
 

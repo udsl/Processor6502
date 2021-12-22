@@ -12,7 +12,11 @@ class TokenisedLine(val sourceLine: UntokenisedLine):
   }
 
   def hasSyntaxError: Boolean =
-    tokens.contains(SyntaxErrorToken)
+    tokens.exists(_ match {
+      case SyntaxErrorToken(_, _) => true;
+      case _ => false
+    })
+
   
   override def toString =
     var str: String = s"Line number: ${sourceLine.lineNumber} has ${tokens.length} tokens,  Source: '${sourceLine.source}', Tokens: \n"
@@ -23,6 +27,9 @@ class TokenisedLine(val sourceLine: UntokenisedLine):
 object TokenisedLine:
   def apply(line: UntokenisedLine) : TokenisedLine =
     new TokenisedLine(line)
+
+  def apply(line: String) : TokenisedLine =
+    new TokenisedLine(UntokenisedLine( -1, line))
 
 
 class UntokenisedLine( val lineNumber: Int, val source: String):

@@ -4,6 +4,7 @@ package com.udsl.processor6502.ui:
   import com.udsl.processor6502.NumericFormatType
   import com.udsl.processor6502.ui.popups.{Executor, LineAssemblerPopup}
   import com.udsl.processor6502.assembler.CodeEditor
+  import com.udsl.processor6502.cpu.MemoryCell.*
   import com.udsl.processor6502.cpu.Processor.saveMemoryImage
   import com.udsl.processor6502.disassembler.Disassembler
   import javafx.collections.FXCollections
@@ -18,16 +19,15 @@ package com.udsl.processor6502.ui:
   import scala.language.implicitConversions
   
   class MemoryBox extends VBox {
-    private var currentMemoryFormat = NumericFormatType.DEC
+
   
     implicit def toShort(x: Int): Short = x.toShort
-  
-    // TODO
-//    val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
-//      (_, oldValue, newValue) =>
-//        currentMemoryFormat = newValue
-//        memoryView.refresh()
-//    }
+
+    val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
+      (_, oldValue, newValue) =>
+        changeDisplayMode(newValue)
+        memoryView.refresh()
+    }
   
     val memoryBoxCaption: Label = new Label {
       text = "Memory View"
@@ -92,7 +92,7 @@ package com.udsl.processor6502.ui:
         text = "Edit Code"
         onAction = _ => {
           println("Editing code!")
-          CodeEditor.showOdeEditor()
+          CodeEditor.showCodeEditor()
         }
       }
       viewCodeEditorButton.setTooltip(new Tooltip("Open code window"))

@@ -235,8 +235,7 @@ package com.udsl.processor6502.ui:
         text = "Exe"
         onAction = _ => {
           println("EXE!")
-          val executor = new Executor()
-          executor.showAndWait()
+          Executor.showExecutor()
         }
       }
       exeButton.setTooltip(new Tooltip("Execute a single instruction"))
