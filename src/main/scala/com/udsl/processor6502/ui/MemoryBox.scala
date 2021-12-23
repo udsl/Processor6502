@@ -105,7 +105,7 @@ package com.udsl.processor6502.ui:
           println(s"Disassembling location ${disassembleLocation.text}!")
           val loc: Int = Integer.parseInt(disassembleLocation.text.value)
           memoryView.scrollTo(loc)
-          Disassembler.apply(loc)
+//          Disassembler.apply(loc)
         }
       }
   

@@ -2,7 +2,7 @@ package com.udsl.processor6502.cpu:
 
   import com.udsl.processor6502.{NumericFormatType, Utilities}
   import com.udsl.processor6502.Utilities.{numToString, writeStringToFile, writeToFile}
-  import com.udsl.processor6502.cpu.execution.DecodedInstruction
+  import com.udsl.processor6502.cpu.execution.Opcode
   import scalafx.collections.ObservableBuffer
 
   import java.io.{BufferedWriter, FileWriter}
@@ -106,8 +106,8 @@ package com.udsl.processor6502.cpu:
       memory(address).getValue()
     }
 
-    def getNextInstruction(): DecodedInstruction = {
-      DecodedInstruction(memory(pc.addr).getValue())
+    def getNextInstruction(): Opcode = {
+      Opcode.disassemble(memory(pc.addr).getValue())
     }
 
     private def pushPc = {

@@ -1,7 +1,7 @@
 
 import com.udsl.processor6502.assembler
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, DecodedInstruction, Immediate, Implied, Indirect, IndirectX, IndirectY, Relative, ZeroPage, ZeroPageX}
+import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Relative, ZeroPage, ZeroPageX}
 import org.scalatest.*
 import flatspec.*
 import matchers.*

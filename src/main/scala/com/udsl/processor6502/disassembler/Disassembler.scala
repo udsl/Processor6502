@@ -1,40 +1,19 @@
 package com.udsl.processor6502.disassembler
 
+import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.numToString
-import scalafx.application.JFXApp
-import scalafx.geometry.Insets
-import scalafx.scene.Scene
-import scalafx.scene.control.Label
-import scalafx.scene.layout.{BorderPane, HBox}
-import scalafx.stage.{Modality, Stage}
+import com.udsl.processor6502.cpu.Processor
+import com.udsl.processor6502.cpu.Processor.*
+import com.udsl.processor6502.cpu.execution.Opcode
 
-class Disassembler( val loc: Int) extends Stage {
-  title = "Disassembler"
 
-  initOwner(JFXApp.ActiveApp.stage)
-  initModality(Modality.ApplicationModal)
+object Disassembler extends StrictLogging{
+  def fromPC(): Opcode =
+    disassemble(pc.addr)
 
-  scene = new Scene {
-    root = {
-      val titleBox = new HBox {
-        val label: Label = new Label(s"Disassembling for location: ${numToString(loc)}")
-
-        children = List(label)
-      }
-
-      new BorderPane {
-        maxWidth = 400
-        maxHeight = 300
-        padding = Insets(20)
-        top = titleBox
-      }
-    }
-  }
-}
-
-object Disassembler {
- def apply( loc: Int) = {
-   val disassembler = new Disassembler(loc)
-   disassembler.showAndWait()
-  }
+  def disassemble(locatoion: Int): Opcode =
+    val ins = getMemoryByte(locatoion)
+    val disassembled = Opcode.disassemble(ins)
+    logger.info(s"Decoded instruction $disassembled")
+    disassembled
 }

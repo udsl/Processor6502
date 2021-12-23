@@ -15,7 +15,7 @@ class LineAssemblerPopup(val location: Int) extends Stage {
   height = 200
   resizable = false
 
-  initOwner(JFXApp.ActiveApp.stage)
+  initOwner(new Stage)
   initModality(Modality.ApplicationModal)
 
   val textArea = new TextArea()
@@ -43,10 +43,9 @@ class LineAssemblerPopup(val location: Int) extends Stage {
         val assembleButton = new Button {
           text = "Assemble"
           onAction = _ => {
-//              doAssemble()
-//              val assember = Assemble6502.apply()
-//              assember.assemble(textArea.text.value, location)
-//              assember.printTokenisedLines
+              val assember = Assemble6502.apply(textArea.text.value, location)
+              assember.assemble()
+              assember.printTokenisedLines()
           }
         }
         children = List(closeButton, assembleButton)

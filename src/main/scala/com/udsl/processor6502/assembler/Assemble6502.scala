@@ -201,6 +201,13 @@ object Assemble6502 extends StrictLogging :
     val asm = new Assemble6502(Tokeniser.Tokenise(allLines) )
     asm
 
+  def apply(source: String, location: Int): Assemble6502 =
+    logger.info(s"\n\n***** Starting Assembly for $location *****\n\n")
+    val allLines = for ((str, index) <- s"ORIG $location\n$source".split("\n").zipWithIndex)
+      yield new UntokenisedLine(index + 1, str.trim)
+    val asm = new Assemble6502(Tokeniser.Tokenise(allLines) )
+    asm
+
 
 object AssemblyData extends StrictLogging:
   // labels defined in a base object so they common others
