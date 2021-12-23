@@ -20,7 +20,6 @@ package com.udsl.processor6502.ui.popups:
     initModality(Modality.None)
 
     onCloseRequest = () => {
-      println("Stage is closing")
       Executor.close()
     }
 
@@ -74,13 +73,13 @@ package com.udsl.processor6502.ui.popups:
     }
   }
 
-  object Executor:
+  object Executor {
     var executor: Option[Executor] = None
 
     def close(): Unit =
       executor = None
 
-    def toBack():Unit =
+    def toBack(): Unit =
       executor match
         case Some(_) =>
           executor.get.toBack()
@@ -95,3 +94,4 @@ package com.udsl.processor6502.ui.popups:
           executor = Some(Executor())
           executor.get.show()
 
+  }

@@ -12,6 +12,7 @@ import scalafx.stage.{Modality, Stage}
 
 import java.io.{BufferedWriter, File, FileWriter}
 import scala.io.Source
+import scalafx.event.EventIncludes.eventClosureWrapperWithZeroParam
 
 
 class CodeEditor extends Stage {
@@ -21,8 +22,12 @@ class CodeEditor extends Stage {
   maxWidth = 600
   maxHeight = 800
 
-  initOwner(Main.stage)
-  initModality(Modality.ApplicationModal)
+  initOwner(new Stage)
+  initModality(Modality.None)
+
+  onCloseRequest = () => {
+    CodeEditor.close()
+  }
 
   var currentFile: File = null
   var textChanged = false
@@ -132,7 +137,7 @@ class CodeEditor extends Stage {
     if (saveFile != null) {
       currentFile = saveFile
     }
-    witeToSaveFile()
+    writeToSaveFile()
   }
 
   def save(): Unit = {
@@ -140,11 +145,11 @@ class CodeEditor extends Stage {
       saveAs()
     }
     else {
-      witeToSaveFile()
+      writeToSaveFile()
     }
   }
 
-  def witeToSaveFile(): Unit = {
+  def writeToSaveFile(): Unit = {
     val editorText = textArea.text.value
     val bw = new BufferedWriter(new FileWriter(currentFile))
     bw.write(editorText)
@@ -171,8 +176,7 @@ class CodeEditor extends Stage {
   }
 
   def assemble(): Unit = {
-//    val editorText = textArea.text.value.split("\n").toList
-    var asm = Assemble6502.apply(textArea.text.value)
+    val asm = Assemble6502.apply(textArea.text.value)
     asm.assemble()
   }
 
@@ -184,8 +188,22 @@ class CodeEditor extends Stage {
 }
 
 object CodeEditor {
-  def showCodeEditor(): Unit = {
-    val editor = new CodeEditor()
-    editor.showAndWait()
-  }
+  var codeEditor: Option[CodeEditor] = None
+
+  def close(): Unit =
+    codeEditor = None
+
+  def toBack():Unit =
+    codeEditor match
+      case Some(_) =>
+        codeEditor.get.toBack()
+      case _ =>
+
+  def showCodeEditor(): Unit =
+    codeEditor match
+      case Some(_) =>
+        codeEditor.get.toFront()
+      case _ =>
+        codeEditor = Some(CodeEditor())
+        codeEditor.get.show()
 }
