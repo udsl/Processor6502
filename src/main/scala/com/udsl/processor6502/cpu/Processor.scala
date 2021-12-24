@@ -1,5 +1,6 @@
 package com.udsl.processor6502.cpu:
 
+  import com.typesafe.scalalogging.StrictLogging
   import com.udsl.processor6502.{NumericFormatType, Utilities}
   import com.udsl.processor6502.Utilities.{numToString, writeStringToFile, writeToFile}
   import com.udsl.processor6502.cpu.execution.{Opcode, OpcodeValue}
@@ -10,7 +11,7 @@ package com.udsl.processor6502.cpu:
   import scala.collection.mutable.ListBuffer
 
 
-  object Processor {
+  object Processor extends StrictLogging{
     private val memory = new ObservableBuffer[MemoryCell]()
     memory.addAll(Array.fill[MemoryCell](65536)(MemoryCell(getAndIncIndex)))
 
@@ -36,7 +37,7 @@ package com.udsl.processor6502.cpu:
     val irqVector: Address = Address(0)
 
     def saveMemoryImage: Unit =
-      println("Saving memory image!")
+      logger.info("Saving memory image!")
       val file = java.io.File("mem.dmp")
       val bw = new BufferedWriter(new FileWriter(file))
 
@@ -58,7 +59,7 @@ package com.udsl.processor6502.cpu:
           count += 1
       bw.write(image.toString().dropRight(2)) // write the last line - the comma and space
       bw.close()
-      println(s"Memory size: ${memory.size}, Lines: $lines")
+      logger.info(s"Memory size: ${memory.size}, Lines: $lines")
 
     def getAndIncIndex: Int = {
       val res = indexer
@@ -110,9 +111,23 @@ package com.udsl.processor6502.cpu:
       memory(address).getValue()
     }
 
-    def getNextInstruction(): Opcode = {
-      Opcode.disassemble(memory(pc.addr).getValue())
-    }
+    def getNextInstruction: OpcodeValue =
+      Opcode.disassemble(memory(pc.addr).getValue()).v
+
+    def getNextInstructionOperand: (Int, Int) =
+      (memory(pc.addr + 1).getValue(), memory(pc.addr + 2).getValue())
+
+    /**
+     * Used to update executer on PC change
+     * @param address
+     * @return
+     */
+    def getInstruction(address: Int): OpcodeValue =
+      Opcode.disassemble(memory(address).getValue()).v
+
+    def getInstructionOperand(address: Int): (Int, Int) =
+      (memory(address + 1).getValue(), memory(address + 2).getValue())
+
 
     private def pushPc = {
       // Push MSB

@@ -1,5 +1,6 @@
 package com.udsl.processor6502.ui:
 
+  import com.typesafe.scalalogging.StrictLogging
   import com.udsl.processor6502.Utilities.getConfigValue
   import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
   import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}
@@ -12,11 +13,11 @@ package com.udsl.processor6502.ui:
 
   import scala.collection.mutable.ListBuffer
 
-  class StatusRegisterView extends VBox {
+  class StatusRegisterView extends VBox, StrictLogging {
 
     val srSubscription: Subscription = Processor.sr._ebr.onChange {
       (_, oldValue, newValue) => {
-        println(s"Status register subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"Status register subscription fired - ${oldValue}, ${newValue}")
         updateDisplayedValues(newValue.intValue())
       }
     }
@@ -78,11 +79,11 @@ package com.udsl.processor6502.ui:
     }
   }
 
-  class StatusFlag( statusName: String, initalValue: Boolean = false, readOnly: Boolean = false) extends HBox with DataProvider with DataConsumer {
+  class StatusFlag( statusName: String, initalValue: Boolean = false, readOnly: Boolean = false) extends HBox, DataProvider, DataConsumer, StrictLogging{
 
     registerDataSource( this)
 
-    println(s"Creating StatusFlag '$statusName'")
+    logger.info(s"Creating StatusFlag '$statusName'")
     var currentValue: Boolean = initalValue
     val isReadOnly: Boolean = readOnly
     val label: Label = new Label(statusName){
@@ -102,12 +103,12 @@ package com.udsl.processor6502.ui:
     }
 
     override def getData(collector: ListBuffer[ConfigDatum]): Unit = {
-      println("Collecting from RegisterBox")
+      logger.info("Collecting from RegisterBox")
       collector += ConfigDatum.apply(statusName, currentValue.toString)
     }
 
     override def setData( provider: List[ConfigDatum]): Unit = {
-      println("Providing to StatusFlag")
+      logger.info("Providing to StatusFlag")
       update(
         getConfigValue(provider, statusName, currentValue.toString) match {
           case "true" => true

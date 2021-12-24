@@ -15,6 +15,11 @@ package com.udsl.processor6502.cpu:
         }
 
         def addr: Int = _addr.value
+        
+        def inc(by: Int = 1): Int = 
+          _addr.value += by
+          _addr.value
+        
 
         override def toString: String = {
             numToString(_addr.value)

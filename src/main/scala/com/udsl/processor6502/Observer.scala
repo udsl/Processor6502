@@ -1,0 +1,13 @@
+package com.udsl.processor6502
+
+trait Observer[S]:
+  def receiveUpdate(subject: S ): Unit
+
+
+trait Subject[S] {
+  this: S =>
+  private var observers: List[Observer[S]] = Nil
+  def addObserver(observer: Observer[S]) = observers = observer :: observers
+
+  def notifyObservers() = observers.foreach(_.receiveUpdate(this))
+}

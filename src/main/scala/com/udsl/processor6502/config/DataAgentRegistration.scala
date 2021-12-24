@@ -1,8 +1,10 @@
 package com.udsl.processor6502.config
 
+import com.typesafe.scalalogging.StrictLogging
+
 import scala.collection.mutable.ArrayBuffer
 
-object DataAgentRegistration {
+object DataAgentRegistration extends StrictLogging{
   val registeredProviders: ArrayBuffer[DataProvider] = ArrayBuffer[DataProvider]()
   val registeredConsumers: ArrayBuffer[DataConsumer] = ArrayBuffer[DataConsumer]()
 
@@ -14,17 +16,17 @@ object DataAgentRegistration {
       }
       case c: DataAgent with DataProvider => registeredProviders += c
       case d: DataAgent with DataConsumer => registeredConsumers += d
-      case _ => println("Not a DataProvider")
+      case _ => logger.info("Not a DataProvider")
     }
 
 
 //    registrant match {
 //      case c: DataAgent with DataProvider => registeredProviders += c
-//      case _ => println("Not a DataProvider")
+//      case _ => logger.info("Not a DataProvider")
 //    }
 //    registrant match {
 //      case d: DataAgent with DataConsumer => registeredConsumers += d
-//      case _ => println("Not a DataConsumer")
+//      case _ => logger.info("Not a DataConsumer")
 //    }
   }
 

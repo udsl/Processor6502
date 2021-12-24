@@ -25,7 +25,7 @@ val undefinedInstructionTestData: List[(Int)] = List(
   (0x02)
 )
 
-class DisassembleSpec extends AnyFlatSpec with should.Matchers {
+class DisassembleSpec extends AnyFlatSpec, should.Matchers {
   "Given a valid opcode" should "disassemble to the correct instruction and addressing mode" in {
     for ((opcode, expected, result) <- testData) {
       val disassembled = disassemble(opcode)

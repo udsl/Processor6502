@@ -44,8 +44,8 @@ package com.udsl.processor6502.ui:
     val lineAss = new MenuItem("Line assembler")
     lineAss.onAction =  _ => {
       val selected = memoryView.selectionModel.apply().getSelectedItems.get(0)
-      println(s"menu action - '${selected}'")
-      println(selected.getLocation())
+      logger.info(s"menu action - '${selected}'")
+//      logger.info(selected.getLocation())
       val lineAssembler = new LineAssemblerPopup(selected.getLocation())
       lineAssembler.showAndWait()
     }
@@ -63,7 +63,7 @@ package com.udsl.processor6502.ui:
       val viewPcButton: Button = new Button {
         text = "View PC"
         onAction = _ => {
-          println("Viewing PC location!")
+          logger.info("Viewing PC location!")
           memoryView.scrollTo(Processor.pc.addr)
         }
       }
@@ -72,7 +72,7 @@ package com.udsl.processor6502.ui:
       val viewLocationButton: Button = new Button {
         text = "View "
         onAction = _ => {
-          println(s"Viewing location ${toView.text}!")
+          logger.info(s"Viewing location ${toView.text}!")
           val loc: Int = Integer.parseInt(toView.text.value)
           memoryView.scrollTo(loc)
         }
@@ -92,7 +92,7 @@ package com.udsl.processor6502.ui:
       val viewCodeEditorButton: Button = new Button {
         text = "Edit Code"
         onAction = _ => {
-          println("Editing code!")
+          logger.info("Editing code!")
           CodeEditor.showCodeEditor()
         }
       }

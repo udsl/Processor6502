@@ -24,7 +24,7 @@ val dataValidTokensTest: List[(InstructionToken, Int, Int, Int)] = List(
   (Token("LDA", Array[String]("($56),Y"), List(IndirectY)), 0xB1, 0x56, -1)
 )
 
-class AssembleSpec extends AnyFlatSpec with should.Matchers {
+class AssembleSpec extends AnyFlatSpec, should.Matchers {
   "Given a valid instruction token" should "should assemble to the correct opcode and value" in {
     for ((token, opcode, loByte, hiByte) <- dataValidTokensTest) {
       val srtLoc = AssembleLocation.currentLocation

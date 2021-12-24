@@ -1,6 +1,10 @@
 package com.udsl.processor6502.cpu.execution:
 
-  class Opcode( private val code: OpcodeValue) {
+  import com.typesafe.scalalogging.StrictLogging
+  import com.udsl.processor6502.cpu.StatusRegisterFlags
+  import com.udsl.processor6502.cpu.StatusRegisterFlags.*
+
+  class Opcode( private val code: OpcodeValue) extends StrictLogging{
     def v: OpcodeValue = { code }
     override def toString: String = code.toString
 
@@ -9,7 +13,7 @@ package com.udsl.processor6502.cpu.execution:
       x.mnemonic == code.mnemonic && x.addressMode == code.addressMode
   }
   
-  object Opcode{
+  object Opcode extends StrictLogging {
     val aaaMask: Int = Integer.parseInt("11100000", 2)
     val bbbMask: Int = Integer.parseInt("00011100", 2)
     val ccMask: Int = Integer.parseInt("00000011", 2)
@@ -335,7 +339,7 @@ package com.udsl.processor6502.cpu.execution:
     }
   
     def illegalOpcode: OpcodeValue ={
-      println( "Found opcode with illegal bits 1 and 2")
+      logger.info( "Found opcode with illegal bits 1 and 2")
       Illegal(NotApplicable)
     }
   }
@@ -343,6 +347,7 @@ package com.udsl.processor6502.cpu.execution:
   sealed trait OpcodeValue:
     val addressMode: AddressingMode
     def mnemonic: String  = ""
+    def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags]()
     override def toString: String = s"$mnemonic - $addressMode"
   
   case class NULL(addressMode: AddressingMode) extends OpcodeValue {
@@ -423,6 +428,7 @@ package com.udsl.processor6502.cpu.execution:
   
   case class LDX(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "LDX"
+    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative, StatusRegisterFlags.Zero)
   }
   
   case class DEC(addressMode: AddressingMode) extends OpcodeValue {

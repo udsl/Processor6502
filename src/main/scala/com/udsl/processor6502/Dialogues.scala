@@ -1,5 +1,6 @@
 package com.udsl.processor6502
 
+import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.NumericFormatType.{BIN, DEC, HEX, OCT}
 import com.udsl.processor6502.Utilities.{currentFormat, numToString, stringToNum}
 import com.udsl.processor6502.config.ConfigDatum
@@ -13,7 +14,7 @@ import java.io.{BufferedWriter, File, FileWriter}
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-object Dialogues:
+object Dialogues extends StrictLogging:
   var theStage: PrimaryStage = null
 
   def errorAlert(header: String, content: String = "Please correct the issue and assemble again."): Unit = {
@@ -27,8 +28,8 @@ object Dialogues:
     alert.showAndWait()
 
     //    result match
-    //      case Some(ButtonType.OK) => println("OK"); true
-    //      case _ => println("Cancel or closed"); false
+    //      case Some(ButtonType.OK) => logger.info("OK"); true
+    //      case _ => logger.info("Cancel or closed"); false
   }
 
   def getAddressSettingDialogue(dialogueTitle: String, currentValue: Int): TextInputDialog = {
@@ -57,12 +58,12 @@ object Dialogues:
           case DEC => "0123456789".contains(k.getChar)
           //            case _ => false
         }) || (k.getCode == 8) || (k.getCode == 127) // TODO add other key codes for valid keys
-        println(s"${et.getName} occurred ${e.getCode} which is ${if (lastKeyValid) "VALID" else "INVALID"}")
+        logger.info(s"${et.getName} occurred ${e.getCode} which is ${if (lastKeyValid) "VALID" else "INVALID"}")
       }
 
       editor.text.onChange({
         (_, oldValue, newValue) =>
-          println(s"$oldValue => $newValue last keyCode: $lastKeyCode")
+          logger.info(s"$oldValue => $newValue last keyCode: $lastKeyCode")
           if (!oldValue.equals(newValue)) {
             if (!lastKeyValid) {
               Platform.runLater(new Runnable() {
@@ -73,7 +74,7 @@ object Dialogues:
               })
             }
             else if (!lastChange.equals(newValue)) { // Only the is a change in the text
-              println(s"$oldValue => $newValue")
+              logger.info(s"$oldValue => $newValue")
               if (lastFormat.equals(currentFormat)) { // not due to changing format
                 if (newValue.length > oldValue.length) { // if text is longer then user has typed a char
                   // That char could be at the end or inserted anywhere
@@ -185,8 +186,8 @@ object Dialogues:
     val result = alert.showAndWait()
 
     result match
-      case Some(ButtonType.OK) => println("OK"); true
-      case _ => println("Cancel or closed"); false
+      case Some(ButtonType.OK) => logger.info("OK"); true
+      case _ => logger.info("Cancel or closed"); false
   }
 
 

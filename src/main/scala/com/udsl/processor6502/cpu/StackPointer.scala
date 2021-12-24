@@ -1,11 +1,12 @@
 package com.udsl.processor6502.cpu
 
+import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.cpu.EightBitRegister.MAX_VALUE
 
 
-class StackPointer(name: String) extends EightBitRegister(name: String) {
+class StackPointer(name: String) extends EightBitRegister(name: String), StrictLogging {
   def pushByte(byt: Int): Unit ={
-    println(s"Pushing byte $byt")
+    logger.info(s"Pushing byte $byt")
     // write byte to memory offset by sp value
     val addr = 256 + ebr
     Processor.setMemoryByte(addr, byt)
@@ -16,7 +17,7 @@ class StackPointer(name: String) extends EightBitRegister(name: String) {
     increment()
     val addr = 255 + ebr
     val byt: Int = Processor.getMemoryByte(addr)
-    println(s"Popping byte $byt")
+    logger.info(s"Popping byte $byt")
     byt
   }
 

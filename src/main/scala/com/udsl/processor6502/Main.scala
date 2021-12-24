@@ -1,5 +1,6 @@
 package com.udsl.processor6502:
 
+  import com.typesafe.scalalogging.StrictLogging
   import com.udsl.processor6502.Dialogues.theStage
   import com.udsl.processor6502.assembler.CodeEditor
   import com.udsl.processor6502.ui.popups.Executor
@@ -17,7 +18,7 @@ package com.udsl.processor6502:
   import java.io.File
 
 
-  object Main extends JFXApp3 {
+  object Main extends JFXApp3 with StrictLogging {
 
     def start(): Unit = {
       val registersBox = new RegistersBox()
@@ -44,8 +45,6 @@ package com.udsl.processor6502:
               bottom = footer
             }
         }
-
-
       }
 
       theStage = stage
@@ -55,7 +54,7 @@ package com.udsl.processor6502:
 
       val mainFocus = (o: javafx.beans.Observable, oldVal: java.lang.Boolean, newVal: java.lang.Boolean) => {
         def foo(o: javafx.beans.Observable, oldVal: java.lang.Boolean, newVal: java.lang.Boolean) =
-          println(newVal)
+          logger.info(newVal.toString)
 //          if newVal then
 //            Executor.toBack()
         foo(o, oldVal, newVal)

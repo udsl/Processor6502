@@ -1,7 +1,8 @@
 import com.udsl.processor6502.ui.popups.Executor
 package com.udsl.processor6502.ui.popups:
 
-  import com.udsl.processor6502.Main
+  import com.typesafe.scalalogging.StrictLogging
+  import com.udsl.processor6502.{Main, Observer}
   import com.udsl.processor6502.cpu.execution.ExecutionUnit
   import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
   import scalafx.application.JFXApp
@@ -10,9 +11,10 @@ package com.udsl.processor6502.ui.popups:
   import scalafx.scene.layout.{BorderPane, HBox, VBox}
   import scalafx.stage.{Modality, Stage}
   import scalafx.event.EventIncludes.eventClosureWrapperWithZeroParam
+  import scalafx.event.subscriptions.Subscription
   import scalafx.geometry.Insets
 
-  class Executor extends Stage{
+  class Executor extends Stage, Observer[ExecutionUnit], StrictLogging{
     title = "Executor / Debugger"
     width = 400
     height = 200
@@ -25,22 +27,41 @@ package com.udsl.processor6502.ui.popups:
       Executor.close()
     }
 
+    val currentInsLabel: Label = new Label(Executor.executionUnit.get.decodeInstruction())
+
+    val currentInsBox = new HBox{
+      spacing = 20
+
+      val currentLabel: Label = new Label("Current Instruction")
+
+
+      children = List(currentLabel, currentInsLabel)
+    }
+
+    val pcSubscription: Subscription = Processor.pc._addr.onChange {
+      (_, oldValue, newValue) => {
+        logger.info(s"PC subscription fired - ${oldValue}, ${newValue}")
+        currentInsLabel.text = Executor.executionUnit.get.decodeInstruction()
+      }
+    }
+
+    override def receiveUpdate(subject: ExecutionUnit ) =
+      logger.info(s"Recived notification of ExecutionUnit update")
+
     scene = new Scene {
       root = {
-        val label: Label = new Label("Just a label")
-  
         val pushButton: Button = new Button {
           text = "Step"
           onAction = _ => {
-            println("Executing STEP!")
-            Executor.executionUnit.singleStep()
+            logger.info("Executing STEP!")
+            Executor.executionUnit.get.singleStep()
           }
         }
 
         def togle(flag: StatusRegisterFlags) = {
-          print(flag)
+          logger.info(flag.toString)
           val state = Processor.sr.testFlag(flag)
-          println(s"  $state")
+          logger.info(s"  $state")
           if (state) Processor.sr.clearFlag(flag) else Processor.sr.setFlag(flag)
         }
 
@@ -48,7 +69,7 @@ package com.udsl.processor6502.ui.popups:
           val toggleButton: Button = new Button {
             text = "Togle"
             onAction = _ => {
-              println("Executing toggle!")
+              logger.info("Executing toggle!")
               val c = toToggle.text.value.toString.toUpperCase().take(1)
               c match {
                 case "N" => togle(StatusRegisterFlags.Negative)
@@ -58,7 +79,7 @@ package com.udsl.processor6502.ui.popups:
                 case "I" => togle(StatusRegisterFlags.Interrupt)
                 case "Z" => togle(StatusRegisterFlags.Zero)
                 case "C" => togle(StatusRegisterFlags.Carry)
-                case _ => println("WTF!")
+                case _ => logger.info("WTF!")
               }
             }
           }
@@ -72,7 +93,7 @@ package com.udsl.processor6502.ui.popups:
           maxWidth = 400
           maxHeight = 200
           padding = Insets(20)
-          top = label
+          top = currentInsBox
 //          left = registersBox
           right = pushButton
           bottom = flagTest
@@ -83,10 +104,11 @@ package com.udsl.processor6502.ui.popups:
 
   object Executor {
     var executor: Option[Executor] = None
-    val executionUnit: ExecutionUnit = ExecutionUnit.apply
+    private var executionUnit: Option[ExecutionUnit] = None
     
     def close(): Unit =
       executor = None
+      executionUnit = None
 
     def toBack(): Unit =
       executor match
@@ -100,6 +122,9 @@ package com.udsl.processor6502.ui.popups:
         case Some(_) =>
           executor.get.toFront()
         case _ =>
+          // Need to get an ExecutionUnit before we create the screen that uses it.
+          if executionUnit.isEmpty then
+            executionUnit = Some(ExecutionUnit.apply)
           executor = Some(Executor())
           executor.get.show()
 

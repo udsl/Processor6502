@@ -1,6 +1,6 @@
 package com.udsl.processor6502.ui:
 
-  import com.udsl.processor6502.Dialogues.getAddressSettingDialogue
+  import com.typesafe.scalalogging.StrictLogging
   import com.udsl.processor6502.Utilities.*
   import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
   import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}
@@ -8,14 +8,14 @@ package com.udsl.processor6502.ui:
   import com.udsl.processor6502.cpu.Processor.*
   import scalafx.application.Platform
   import scalafx.event.subscriptions.Subscription
-  import scalafx.geometry.Insets
-  import scalafx.scene.control.*
-  import scalafx.scene.layout.{HBox, StackPane, VBox}
-
+  import scalafx.scene.layout.{StackPane, VBox, HBox}
+  import com.udsl.processor6502.Dialogues.getAddressSettingDialogue
   import scala.collection.IterableOnce.iterableOnceExtensionMethods
   import scala.collection.mutable.ListBuffer
+  import scalafx.scene.control.{Button, Label, TextField, Tooltip}
+  import scalafx.geometry.Insets
 
-  class Vectors extends VBox {
+  class Vectors extends VBox, StrictLogging {
     val display = new StackPane {
       val titleBox = new HBox {
         val title: Label = new Label {
@@ -43,7 +43,7 @@ package com.udsl.processor6502.ui:
 
       val rstSubscription: Subscription = Processor.resetVector._addr.onChange {
         (_, oldValue, newValue) => {
-          println(s"rstSubscription fired: ${Processor.resetVector.toString} ${oldValue} ${newValue}")
+          logger.info(s"rstSubscription fired: ${Processor.resetVector.toString} ${oldValue} ${newValue}")
           Platform.runLater(() -> {
             reset.value.setText(Processor.resetVector.toString)
           })
@@ -52,7 +52,7 @@ package com.udsl.processor6502.ui:
 
       val irqSubscription: Subscription = Processor.irqVector._addr.onChange {
         (_, oldValue, newValue) => {
-          println(s"rstSubscription fired: ${Processor.irqVector.toString} ${oldValue} ${newValue}")
+          logger.info(s"irqSubscription fired: ${Processor.irqVector.toString} ${oldValue} ${newValue}")
           Platform.runLater(() -> {
             irq.value.setText(Processor.irqVector.toString)
           })
@@ -61,7 +61,7 @@ package com.udsl.processor6502.ui:
 
       val nmiSubscription: Subscription = Processor.nmiVector._addr.onChange {
         (_, oldValue, newValue) => {
-          println(s"rstSubscription fired: ${Processor.nmiVector.toString} ${oldValue} ${newValue}")
+          logger.info(s"nmiSubscription fired: ${Processor.nmiVector.toString} ${oldValue} ${newValue}")
           Platform.runLater(() -> {
             nmi.value.setText(Processor.nmiVector.toString)
           })
@@ -72,7 +72,7 @@ package com.udsl.processor6502.ui:
     def nmiChanges(newVectorDest: Int): Unit = {
       val lo: Int = newVectorDest % 256
       val hi: Int = (newVectorDest / 256) % 256
-      println(s"NMI updated to $lo, $hi")
+      logger.info(s"NMI updated to $lo, $hi")
       Processor.nmiVector.addr = newVectorDest
       Processor.setMemoryByte(NMI_VECTOR_LO_ADDRESS_BYTE, lo)
       Processor.setMemoryByte(NMI_VECTOR_HI_ADDRESS_BYTE, hi)
@@ -81,7 +81,7 @@ package com.udsl.processor6502.ui:
     def irqChanges(newVectorDest: Int): Unit = {
       val lo: Int = newVectorDest % 256
       val hi: Int = (newVectorDest / 256) % 256
-      println(s"IRQ updated to $lo, $hi")
+      logger.info(s"IRQ updated to $lo, $hi")
       Processor.irqVector.addr = newVectorDest
       Processor.setMemoryByte(IRQ_VECTOR_LO_ADDRESS_BYTE, lo)
       Processor.setMemoryByte(IRQ_VECTOR_HI_ADDRESS_BYTE, hi)
@@ -90,7 +90,7 @@ package com.udsl.processor6502.ui:
     def resetChanges(newVectorDest: Int): Unit = {
       val lo: Int = newVectorDest % 256
       val hi: Int = (newVectorDest / 256) % 256
-      println(s"RESET updated to $lo, $hi")
+      logger.info(s"RESET updated to $lo, $hi")
       Processor.resetVector.addr = newVectorDest
       Processor.setMemoryByte(RESET_VECTOR_LO_ADDRESS_BYTE, lo)
       Processor.setMemoryByte(RESET_VECTOR_HI_ADDRESS_BYTE, hi)
@@ -100,18 +100,18 @@ package com.udsl.processor6502.ui:
     children = List(display)
   }
 
-  class Vector(vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, initalValue: Int = 0) extends HBox with DataProvider with DataConsumer {
+  class Vector(vectorName: String, vectorAddress: Int, onChange: (Int) => Unit, initalValue: Int = 0) extends HBox, DataProvider, DataConsumer, StrictLogging {
 
     registerDataSource(this)
 
-    println(s"Creating vector '$vectorName' location '$vectorAddress")
+    logger.info(s"Creating vector '$vectorName' location '$vectorAddress")
     val changeHandler: (Int) => Unit = onChange
     val tooltip = new Tooltip(s"Location $vectorAddress")
     val label: Label = new Label(vectorName) {
       prefWidth = 70
     }
 
-    val value: TextField = new TextField {
+    val value = new TextField {
       text = initalValue.toString
       disable = true
       prefWidth = 120
@@ -122,20 +122,20 @@ package com.udsl.processor6502.ui:
     val setButton: Button = new Button {
       text = "set"
       onAction = _ => {
-        println("Setting PC!")
-        val dialog: TextInputDialog = getAddressSettingDialogue(s"New ${vectorName} Vector", currentValue)
+        logger.info("Setting PC!")
+        val dialog = getAddressSettingDialogue(s"New ${vectorName} Vector", currentValue)
 
         val result = dialog.showAndWait()
         result match {
           case Some(value) => updated(value)
-          case None => println("Dialog was canceled.")
+          case None => logger.info("Dialog was canceled.")
         }
       }
     }
 
     val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
       (_, oldValue, newValue) => {
-        println(s"Num format subscription fired: $newValue")
+        logger.info(s"Num format subscription fired: $newValue")
         value.text = numToString(currentValue)
       }
     }
@@ -146,12 +146,12 @@ package com.udsl.processor6502.ui:
     children = List(label, value, setButton)
 
     override def getData(collector: ListBuffer[ConfigDatum]): Unit = {
-      println(s"Collecting for vector $vectorName $currentValue")
+      logger.info(s"Collecting for vector $vectorName $currentValue")
       collector += ConfigDatum.apply(vectorName, currentValue.toString)
     }
 
     override def setData(provider: List[ConfigDatum]): Unit = {
-      println(s"Providing to Vector: $vectorName")
+      logger.info(s"Providing to Vector: $vectorName")
       updated(getConfigValue(provider, vectorName, currentValue.toString))
     }
 

@@ -6,7 +6,6 @@ package com.udsl.processor6502.cpu:
   import com.udsl.processor6502.cpu.EightBitRegister.validate
   import scalafx.beans.property.IntegerProperty
 
-
   class EightBitRegister(private val name: String) :
     val _ebr: IntegerProperty = IntegerProperty(0)
 

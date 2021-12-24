@@ -27,20 +27,65 @@ package com.udsl.processor6502.cpu:
         case StatusRegisterFlags.Carry => ebr = ebr | CARRY_FLAG_MASK
       }
     }
-  
+
+    /**
+     * If toSet the flag is reset (cleared), if false then the flag is set.
+     * 
+     * @param flag the flag to update
+     * @param toSet should it be set or reset
+     */
+    def updateFlag( flag: StatusRegisterFlags, toSet: Boolean): Unit = {
+      flag match {
+        case StatusRegisterFlags.Negative => 
+          if toSet then
+            ebr = ebr | NEGATIVE_FLAG_MASK
+          else
+            ebr = ebr  & (255 ^ NEGATIVE_FLAG_MASK)
+        case StatusRegisterFlags.Overflow =>
+          if toSet then
+            ebr = ebr | OVERFLOW_FLAG_MASK
+          else
+            ebr = ebr  & (255 ^ OVERFLOW_FLAG_MASK)
+        case StatusRegisterFlags.Break =>
+          if toSet then
+            ebr = ebr | BREAK_FLAG_MASK
+          else
+            ebr = ebr  & (255 ^ BREAK_FLAG_MASK)
+        case StatusRegisterFlags.Decimal =>
+          if toSet then
+            ebr = ebr | DECIMAL_FLAG_MASK
+          else
+            ebr = ebr  & (255 ^ DECIMAL_FLAG_MASK)
+        case StatusRegisterFlags.Interrupt => 
+          if toSet then
+            ebr = ebr | INTERRUPT_FLAG_MASK
+          else
+            ebr = ebr  & (255 ^ INTERRUPT_FLAG_MASK)
+        case StatusRegisterFlags.Zero =>
+          if toSet then
+            ebr = ebr | ZERO_FLAG_MASK
+          else
+            ebr = ebr  & (255 ^ ZERO_FLAG_MASK)
+        case StatusRegisterFlags.Carry => 
+          if toSet then
+            ebr = ebr | CARRY_FLAG_MASK
+          else
+            ebr = ebr  & (255 ^ CARRY_FLAG_MASK)
+      }
+    }
+
     /**
      * To clear the bit and with the negative mask which we can mahe by xor the mask with 255
      *
      * @param flag  the flag to clear
      */
     def clearFlag( flag: StatusRegisterFlags): Unit = {
-      println(s"clearing $flag - $ebr")
       flag match {
-        case StatusRegisterFlags.Negative => ebr = ebr & (255 ^ NEGATIVE_FLAG_MASK) ; println(s"${ebr & (255 ^ NEGATIVE_FLAG_MASK)}")
-        case StatusRegisterFlags.Overflow => ebr = ebr & (255 ^ OVERFLOW_FLAG_MASK) ; println(s"${ebr & (255 ^ OVERFLOW_FLAG_MASK)}")
+        case StatusRegisterFlags.Negative => ebr = ebr & (255 ^ NEGATIVE_FLAG_MASK)
+        case StatusRegisterFlags.Overflow => ebr = ebr & (255 ^ OVERFLOW_FLAG_MASK)
         case StatusRegisterFlags.Break => ebr = ebr & (255 ^ BREAK_FLAG_MASK)
         case StatusRegisterFlags.Decimal => ebr = ebr & (255 ^ DECIMAL_FLAG_MASK)
-        case StatusRegisterFlags.Interrupt => ebr = ebr & (255 ^ INTERRUPT_FLAG_MASK) ; println(s"${ebr & (255 ^ INTERRUPT_FLAG_MASK)}")
+        case StatusRegisterFlags.Interrupt => ebr = ebr & (255 ^ INTERRUPT_FLAG_MASK)
         case StatusRegisterFlags.Zero => ebr = ebr & (255 ^ ZERO_FLAG_MASK)
         case StatusRegisterFlags.Carry => ebr = ebr & (255 ^ CARRY_FLAG_MASK)
       }

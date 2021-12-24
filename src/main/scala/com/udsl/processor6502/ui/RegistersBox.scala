@@ -1,5 +1,6 @@
 package com.udsl.processor6502.ui:
 
+  import com.typesafe.scalalogging.StrictLogging
   import com.udsl.processor6502.Dialogues.getAddressSettingDialogue
   import com.udsl.processor6502.Main.stage
   import com.udsl.processor6502.ui.popups.Executor
@@ -16,7 +17,7 @@ package com.udsl.processor6502.ui:
 
   import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
-  class RegistersBox extends VBox with DataProvider with DataConsumer {
+  class RegistersBox extends VBox , DataProvider , DataConsumer , StrictLogging{
 
     registerDataSource(this)
 
@@ -27,13 +28,13 @@ package com.udsl.processor6502.ui:
 
     val pcSubscription: Subscription = Processor.pc._addr.onChange {
       (_, oldValue, newValue) => {
-        println(s"PC subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"PC subscription fired - ${oldValue}, ${newValue}")
         updateDisplayedValues()
       }
     }
 
     private def updateDisplayedValues(): Unit = {
-      println("updateDisplayedValues")
+      logger.info("updateDisplayedValues")
       Platform.runLater(() -> {
         pc.setText(Processor.pc.toString)
         sp.setText(Processor.sp.toString)
@@ -45,7 +46,7 @@ package com.udsl.processor6502.ui:
 
     val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
       (_, oldValue, newValue) => {
-        println("Num format subscription fired")
+        logger.info("Num format subscription fired")
         currentFormat = newValue
         updateDisplayedValues()
       }
@@ -68,13 +69,13 @@ package com.udsl.processor6502.ui:
       val setButton: Button = new Button {
         text = "set"
         onAction = _ => {
-          println("Setting PC!")
+          logger.info("Setting PC!")
           val dialog: TextInputDialog = getAddressSettingDialogue("New Program Counter", Processor.pc.addr)
 
           val result = dialog.showAndWait()
           result match {
             case Some(value) => Processor.pc.addr = stringToNum(value)
-            case None => println("Dialog was canceled.")
+            case None => logger.info("Dialog was canceled.")
           }
         }
       }
@@ -99,28 +100,28 @@ package com.udsl.processor6502.ui:
 
     val spSubscription: Subscription = Processor.sp._ebr.onChange {
       (_, oldValue, newValue) => {
-        println(s"SP subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"SP subscription fired - ${oldValue}, ${newValue}")
         updateDisplayedValues()
       }
     }
 
     val accSubscription: Subscription = Processor.ac._ebr.onChange {
       (_, oldValue, newValue) => {
-        println(s"Acc subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"Acc subscription fired - ${oldValue}, ${newValue}")
         updateDisplayedValues()
       }
     }
 
     val inxSubscription: Subscription = Processor.ix._ebr.onChange {
       (_, oldValue, newValue) => {
-        println(s"Index X subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"Index X subscription fired - ${oldValue}, ${newValue}")
         updateDisplayedValues()
       }
     }
 
     val inySubscription: Subscription = Processor.iy._ebr.onChange {
       (_, oldValue, newValue) => {
-        println(s"Index Y subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"Index Y subscription fired - ${oldValue}, ${newValue}")
         updateDisplayedValues()
       }
     }
@@ -207,7 +208,7 @@ package com.udsl.processor6502.ui:
       val resetButton: Button = new Button {
         text = "Reset"
         onAction = _ => {
-          println("Resetting!")
+          logger.info("Resetting!")
           Processor.reset
         }
       }
@@ -216,7 +217,7 @@ package com.udsl.processor6502.ui:
       val nmiButton: Button = new Button {
         text = "NMI"
         onAction = _ => {
-          println("NMI!")
+          logger.info("NMI!")
           Processor.nmi
         }
       }
@@ -225,7 +226,7 @@ package com.udsl.processor6502.ui:
       val irqButton: Button = new Button {
         text = "IRQ"
         onAction = _ => {
-          println("IRQ!")
+          logger.info("IRQ!")
           Processor.irq
         }
       }
@@ -234,7 +235,7 @@ package com.udsl.processor6502.ui:
       val exeButton: Button = new Button {
         text = "Exe"
         onAction = _ => {
-          println("EXE!")
+          logger.info("EXE!")
           Executor.showExecutor()
         }
       }
@@ -249,7 +250,7 @@ package com.udsl.processor6502.ui:
     children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status, vectors, buttonBox)
 
     override def getData(collector: ListBuffer[ConfigDatum]): Unit = {
-      println("Collecting from RegisterBox")
+      logger.info("Collecting from RegisterBox")
       collector += ConfigDatum.apply("pc", Processor.pc.addr.toString)
       collector += ConfigDatum.apply("sp", Processor.sp.toValueString)
       collector += ConfigDatum.apply("ac", Processor.ac.toValueString)
@@ -258,7 +259,7 @@ package com.udsl.processor6502.ui:
     }
 
     override def setData(provider: List[ConfigDatum]): Unit = {
-      println("Providing to RegisterBox")
+      logger.info("Providing to RegisterBox")
       Processor.pc.addr = Integer.parseInt(getConfigValue(provider, "pc", Processor.pc.addr.toString))
       Processor.sp.ebr = Integer.parseInt(getConfigValue(provider, "sp", Processor.sp.toString))
       Processor.ac.ebr = Integer.parseInt(getConfigValue(provider, "ac", Processor.ac.toString))
