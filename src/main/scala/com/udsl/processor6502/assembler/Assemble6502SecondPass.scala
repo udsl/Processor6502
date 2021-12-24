@@ -1,13 +1,13 @@
 package com.udsl.processor6502.assembler
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.Utilities
-import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
+import com.udsl.processor6502.{NumericFormatType, Utilities}
+import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numToByteString, numToWordString, numericValue}
 import com.udsl.processor6502.assembler.Assemble6502FirstPass.{processClear, setAddresses, setBytes, setWords}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.logger
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.CpuInstructions.{getInstruction, isValidInstruction}
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Invalid, Relative, ZeroPage, ZeroPageX, ZeroPageY}
+import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Invalid, NotApplicable, Relative, Unknown, ZeroPage, ZeroPageX, ZeroPageY}
 
 
 /**
@@ -60,6 +60,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
     val value = Utilities.numericValue(t.fields.head)
     if value > 0 then
       AssembleLocation.setAssembleLoc(value)
+
 
   def assembleInstructionToken(t: AssemblerToken, tl: TokenisedLine): AssemblerToken =
     def getValue(operand: String): Int =
@@ -164,14 +165,39 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
         }
       (Invalid, -1)
 
+    def constructSourceLine(addrMode: AddressingMode, value: Int): String =
+      val adr = addrMode match
+        case Accumulator => "A"
+        case Implied  => " "
+        case Immediate => s"#${numToByteString(value, NumericFormatType.HEX) }"
+        case ZeroPage
+             | Relative => s"${numToByteString(value, NumericFormatType.HEX) }"
+
+        case ZeroPageX => s"${numToByteString(value, NumericFormatType.HEX)}, X"
+        case ZeroPageY => s"${numToByteString(value, NumericFormatType.HEX)}, Y"
+        case IndirectX => s"(${numToByteString(value, NumericFormatType.HEX)}, X)"
+        case IndirectY => s"(${numToByteString(value, NumericFormatType.HEX)}), Y)"
+        case Absolute => s"${numToWordString(value, NumericFormatType.HEX)}"
+        case Indirect => s"(${numToWordString(value, NumericFormatType.HEX)})"
+        case AbsoluteX => s"${numToWordString(value, NumericFormatType.HEX)}, X"
+        case AbsoluteY => s"${numToWordString(value, NumericFormatType.HEX)}, Y"
+        case Invalid | Unknown | NotApplicable => ""
+      if adr.nonEmpty then
+        s" - ${t.mnemonic} $adr"
+      else
+        adr
+
     if isValidInstruction(t.mnemonic) then
       val (addrMode: AddressingMode, value: Int) = validateAddressingMode
       addrMode match
         case Invalid =>
           return SyntaxErrorToken(s"Invalid addressing mode for '${t.mnemonic}'", t.fields)
         case _ =>
+          //TODO
+          // Need details of the instruction for the disassembly byte string
+          // mnemonic, value and number bytes
           val (opcode: Int, bytes:Int) = CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode)
-          setMemoryByte(opcode)
+          setMemoryByte(opcode, constructSourceLine(addrMode, value))
           // now we know how long the instruction shoud be
           bytes match
             case 1 =>

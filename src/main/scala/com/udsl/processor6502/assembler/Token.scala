@@ -7,7 +7,8 @@ import scala.collection.mutable.ListBuffer
 trait AssemblerToken(val mnemonic: String, val fields: Array[String] ):
   val predictedAddressingModes: ListBuffer[AddressingMode] = ListBuffer[AddressingMode]()
   var value: String = ""
-
+  var source: String = ""
+  
   def intValue: Int = value.toInt
 
   def addPrediction(prediction: AddressingMode): Unit =

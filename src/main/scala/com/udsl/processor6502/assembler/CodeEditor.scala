@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assembler
 
-import com.udsl.processor6502.Dialogues.confirmation
-import com.udsl.processor6502.Main
+import com.udsl.processor6502.Dialogues.{confirmation, selectSourceFileToLoad}
+import com.udsl.processor6502.{Main, Utilities}
 import scalafx.application.JFXApp
 import scalafx.event.EventHandler
 import scalafx.geometry.Insets
@@ -133,7 +133,7 @@ class CodeEditor extends Stage {
   }
 
   def saveAs(): Unit = {
-    val saveFile = Main.selectSourceFileToSave
+    val saveFile = Utilities.selectSourceFileToSave
     if (saveFile != null) {
       currentFile = saveFile
     }
@@ -157,10 +157,11 @@ class CodeEditor extends Stage {
     bw.close()
     textChanged = false
     label.setText(titleText)
+    CodeEditor.toFront()
   }
 
   def load(): Unit = {
-    val sourceFile = Main.selectSourceFileToLoad
+    val sourceFile = selectSourceFileToLoad
     if (sourceFile != null) {
       currentFile = sourceFile
       label.setText(titleText)
@@ -173,6 +174,7 @@ class CodeEditor extends Stage {
       val bufferedSource = Source.fromFile(currentFile)
       textArea.text.value = bufferedSource.mkString
     }
+    CodeEditor.toFront()
   }
 
   def assemble(): Unit = {
@@ -193,10 +195,16 @@ object CodeEditor {
   def close(): Unit =
     codeEditor = None
 
-  def toBack():Unit =
+  def toBack(): Unit =
     codeEditor match
       case Some(_) =>
         codeEditor.get.toBack()
+      case _ =>
+
+  def toFront(): Unit =
+    codeEditor match
+      case Some(_) =>
+        codeEditor.get.toFront()
       case _ =>
 
   def showCodeEditor(): Unit =

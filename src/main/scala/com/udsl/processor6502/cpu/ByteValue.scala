@@ -4,16 +4,23 @@ import com.udsl.processor6502.cpu.ByteValue.validate
 import com.udsl.processor6502.NumericFormatType
 import com.udsl.processor6502.ui.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.Utilities.{numToByteString, numToString}
+import com.udsl.processor6502.cpu.execution.{NULL, NotApplicable, OpcodeValue}
 import scalafx.beans.property.IntegerProperty
 
 class ByteValue {
-
     val _byte: IntegerProperty = IntegerProperty(0)
+    private var disassembly: String = ""
 
     def byte_= (b: Int): Unit = {
         validate( b )
         _byte.value = b
     }
+
+    def setDisassembly(theDisassembly: String): Unit =
+        disassembly = theDisassembly
+
+    def getDisassembly: String =
+        disassembly
 
     def byte: Int = _byte.value
 
@@ -36,6 +43,13 @@ object ByteValue {
     def apply(b: Int): ByteValue = {
         val b_ = new ByteValue
         b_.byte = b
+        b_
+    }
+
+    def apply(b: Int, theDisassembly: String): ByteValue = {
+        val b_ = new ByteValue
+        b_.byte = b
+        b_.setDisassembly(theDisassembly)
         b_
     }
 

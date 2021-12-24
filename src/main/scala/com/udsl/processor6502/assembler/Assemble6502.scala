@@ -12,6 +12,7 @@ import com.udsl.processor6502.Utilities.numericValue
 import com.udsl.processor6502.assembler.Assemble6502.logger
 import com.udsl.processor6502.assembler.Assemble6502FirstPass.{assembleCommandToken, assembleCommentLineToken, assembleInstructionToken, logger, procesLabel, processClear, setAddresses, setBytes, setWords}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.assemble
+import com.udsl.processor6502.cpu.execution.OpcodeValue
 
 
 /**
@@ -174,6 +175,15 @@ object AssembleLocation extends StrictLogging :
     setMemoryByte(adr % 256)
     setMemoryByte(adr / 256)
 
+  def setMemoryByte(v: Int, disassembly: String): Unit =
+    if v > 256 || v < -127 then
+      throw new Exception(s"Not a byt value: $v")
+    if v < 0 then
+      Processor.setMemoryByte(currentLocation, v & 255, disassembly)
+    else
+      Processor.setMemoryByte(currentLocation, v, disassembly)
+    currentLocation += 1
+
   def setMemoryByte(v: Int): Unit =
     if v > 256 || v < -127 then
       throw new Exception(s"Not a byt value: $v")
@@ -300,9 +310,12 @@ trait Assemble6502PassBase:
       Integer.parseInt(v.substring(1), 16)
     else
       Integer.parseInt(v))
-    
+
   def setMemoryByte(v: Int): Unit =
     AssembleLocation.setMemoryByte(v)
+
+  def setMemoryByte(v: Int, disassenmbly: String): Unit =
+    AssembleLocation.setMemoryByte(v, disassenmbly)
 
 class Reference( val name: String):
   def hasValue: Boolean =

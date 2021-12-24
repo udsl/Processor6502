@@ -1,5 +1,6 @@
 package com.udsl.processor6502.ui:
   
+  import com.typesafe.scalalogging.StrictLogging
   import com.udsl.processor6502.cpu.{MemoryCell, Processor}
   import com.udsl.processor6502.NumericFormatType
   import com.udsl.processor6502.ui.popups.{Executor, LineAssemblerPopup}
@@ -18,7 +19,7 @@ package com.udsl.processor6502.ui:
 
   import scala.language.implicitConversions
   
-  class MemoryBox extends VBox {
+  class MemoryBox extends VBox, StrictLogging {
 
   
     implicit def toShort(x: Int): Short = x.toShort
@@ -102,10 +103,9 @@ package com.udsl.processor6502.ui:
         disable = true
   
         onAction = _ => {
-          println(s"Disassembling location ${disassembleLocation.text}!")
           val loc: Int = Integer.parseInt(disassembleLocation.text.value)
+          logger.info(s"Disassembling location ${loc}!")
           memoryView.scrollTo(loc)
-//          Disassembler.apply(loc)
         }
       }
   

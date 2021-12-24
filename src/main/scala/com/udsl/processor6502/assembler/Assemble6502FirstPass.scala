@@ -100,7 +100,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
                | Indirect
                | AbsoluteX
                | AbsoluteY => 3
-          case Invalid | Unknown => -1
+          case Invalid | Unknown | NotApplicable=> -1
       // Is that addressing mode valid for the instruction?
       // Now we can move the program counter along by the instruction size.
       AssembleLocation.addInstructionSize(insSize)

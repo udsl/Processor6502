@@ -9,6 +9,7 @@ import scalafx.application.Platform
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType, TextInputDialog}
 import scalafx.scene.input.{KeyEvent, MouseEvent}
+import scalafx.stage.FileChooser
 
 import java.io.*
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -41,34 +42,33 @@ object Utilities {
   def numToByteString(value: Int, format: NumericFormatType): String =
     format match {
       case NumericFormatType.HEX =>
-        val v = value.toHexString.toUpperCase
-        s"$$${if v.length == 1 then
-          s"0$v"
-        else
-          v}"
+        val v = s"00${value.toHexString.toUpperCase}"
+        s"$$${v.substring(v.length - 2)}"
       case NumericFormatType.OCT =>
-        val v = value.toOctalString
-        val str = if v.length < 3 then
-          val s = s"000$v"
-          s.substring(s.length - 3)
-        else
-          v
-        s"o${str}"
+        val v = s"000${value.toOctalString.toUpperCase}"
+        s"o${v.substring(v.length - 3)}"
       case NumericFormatType.BIN =>
-        val v = value.toBinaryString
-        val str = if v.length < 8 then
-          val s = s"00000000$v"
-          s.substring(s.length - 8)
-        else
-          v
-        s"b${str}"
-
+        val v = s"00000000${value.toBinaryString}"
+        s"b${{v.substring(v.length - 8)}}"
       case NumericFormatType.DEC =>
-        val v = value.toString
-        s"${if v.length == 1 then
-          s"0$v"
-        else
-          v}"
+        val v = s"000${value.toString}"
+        s"${v.substring(v.length - 3)}"
+    }
+
+  def numToWordString(value: Int, format: NumericFormatType): String =
+    format match {
+      case NumericFormatType.HEX =>
+        val v = s"0000${value.toHexString.toUpperCase}"
+        s"$$${v.substring(v.length - 4)}"
+      case NumericFormatType.OCT =>
+        val v = s"000000${value.toOctalString.toUpperCase}"
+        s"o${v.substring(v.length - 6)}"
+      case NumericFormatType.BIN =>
+        val v = s"0000000000000000${value.toBinaryString}"
+        s"b${{v.substring(v.length - 16)}}"
+      case NumericFormatType.DEC =>
+        val v = s"00000${value.toString}"
+        s"${v.substring(v.length - 5)}"
     }
 
   /**
@@ -142,5 +142,37 @@ object Utilities {
       bw.write(s)
     bw.close()
   }
+
+  def selectSourceFileToSave: File =
+    getChosenSaveFile(getSourceFileChooser)
+
+  def selectSourceFileToLoad: File =
+    getChosenLoadFile(getSourceFileChooser)
+
+  private def getSourceFileChooser: FileChooser =
+    val chooser = new FileChooser
+    val saveFilter = new FileChooser.ExtensionFilter("Code Save Files", "*.asm")
+    chooser.getExtensionFilters.add(saveFilter)
+    chooser
+
+  def selectConfigFileToSave: File =
+    getChosenSaveFile(getConfigFileChooser)
+
+  def selectConfigFileToLoad: File =
+    getChosenLoadFile(getConfigFileChooser)
+
+  private def getConfigFileChooser: FileChooser =
+    val chooser = new FileChooser
+    val saveFilter = new FileChooser.ExtensionFilter("Config Save Files", "*.save")
+    chooser.getExtensionFilters.add(saveFilter)
+    chooser
+
+  private def getChosenSaveFile(chooser: FileChooser): File =
+    chooser.setInitialDirectory(new File("."));
+    chooser.showSaveDialog(Main.stage)
+
+  private def getChosenLoadFile(chooser: FileChooser): File =
+    chooser.setInitialDirectory(new File("."));
+    chooser.showOpenDialog(Main.stage)
 
 }

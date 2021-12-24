@@ -2,7 +2,7 @@ package com.udsl.processor6502.cpu:
 
   import com.udsl.processor6502.{NumericFormatType, Utilities}
   import com.udsl.processor6502.Utilities.{numToString, writeStringToFile, writeToFile}
-  import com.udsl.processor6502.cpu.execution.Opcode
+  import com.udsl.processor6502.cpu.execution.{Opcode, OpcodeValue}
   import scalafx.collections.ObservableBuffer
 
   import java.io.{BufferedWriter, FileWriter}
@@ -102,6 +102,10 @@ package com.udsl.processor6502.cpu:
       memory(address) = MemoryCell(address, value)
     }
 
+    def setMemoryByte(address: Int, value: Int, disassembly: String): Unit = {
+      memory(address) = MemoryCell(address, value, disassembly)
+    }
+
     def getMemoryByte(address: Int): Int = {
       memory(address).getValue()
     }
@@ -136,9 +140,8 @@ package com.udsl.processor6502.cpu:
 
   class MemoryCell(private val location: Address, private var value: ByteValue = ByteValue.apply) {
 
-    override def toString: String = {
-      s"[${location.toAddressString(MemoryCell.currentMemoryFormat)}] ${value.toDisplayString(MemoryCell.currentMemoryFormat)}"
-    }
+    override def toString: String =
+      s"[${location.toAddressString(MemoryCell.currentMemoryFormat)}] ${value.toDisplayString(MemoryCell.currentMemoryFormat)} ${value.getDisassembly}"
 
     def getValue(): Int = {
       value._byte.value
@@ -162,6 +165,14 @@ package com.udsl.processor6502.cpu:
       Address.validate(index)
       ByteValue.validate(byt)
       val m = new MemoryCell(Address(index), ByteValue(byt))
+      m
+    }
+
+    def apply(index: Int, byt: Int, disassembly: String): MemoryCell = {
+      Address.validate(index)
+      ByteValue.validate(byt)
+      val b = ByteValue(byt, disassembly)
+      val m = new MemoryCell(Address(index), b)
       m
     }
 

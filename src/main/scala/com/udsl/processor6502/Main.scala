@@ -64,37 +64,4 @@ package com.udsl.processor6502:
       val x = stage.focusedProperty()
       x.addListener(mainFocus)
     }
-
-    def selectSourceFileToSave: File =
-      getChosenSaveFile(getSourceFileChooser)
-
-    def selectSourceFileToLoad: File =
-      getChosenLoadFile(getSourceFileChooser)
-
-    private def getSourceFileChooser: FileChooser =
-      val chooser = new FileChooser
-      val saveFilter = new FileChooser.ExtensionFilter("Code Save Files", "*.asm")
-      chooser.getExtensionFilters.add(saveFilter)
-      chooser
-
-    def selectConfigFileToSave: File =
-      getChosenSaveFile(getConfigFileChooser)
-
-    def selectConfigFileToLoad: File =
-      getChosenLoadFile(getConfigFileChooser)
-
-    private def getConfigFileChooser: FileChooser =
-      val chooser = new FileChooser
-      val saveFilter = new FileChooser.ExtensionFilter("Config Save Files", "*.save")
-      chooser.getExtensionFilters.add(saveFilter)
-      chooser
-
-    private def getChosenSaveFile(chooser: FileChooser): File =
-      chooser.setInitialDirectory(new File("."));
-      chooser.showSaveDialog(Main.stage)
-
-    private def getChosenLoadFile(chooser: FileChooser): File =
-      chooser.setInitialDirectory(new File("."));
-      chooser.showOpenDialog(Main.stage)
-
   }
