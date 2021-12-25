@@ -16,7 +16,7 @@ package com.udsl.processor6502.ui:
   import scalafx.scene.control.{Button, ContextMenu, Label, ListView, MenuItem, TextField, Tooltip}
   import scalafx.scene.input.{KeyEvent, MouseEvent}
   import scalafx.scene.layout.{HBox, StackPane, VBox}
-
+  import com.udsl.processor6502.Utilities.numericValue
   import scala.language.implicitConversions
   
   class MemoryBox extends VBox, StrictLogging {
@@ -73,7 +73,8 @@ package com.udsl.processor6502.ui:
         text = "View "
         onAction = _ => {
           logger.info(s"Viewing location ${toView.text}!")
-          val loc: Int = Integer.parseInt(toView.text.value)
+          val loc: Int =
+            numericValue(toView.text.value)
           memoryView.scrollTo(loc)
         }
       }

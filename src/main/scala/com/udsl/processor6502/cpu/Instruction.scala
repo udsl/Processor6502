@@ -367,4 +367,7 @@ object CpuInstructions :
       return (-1, 0)
     (instruction.opcode(adrMode), instruction.bytes(adrMode))
 
-  
+  def isAddressingModeValid(ins: String, adrMode: AddressingMode): Boolean =
+    val instruction = validInstructions.find(a => a.name().equals(ins.toUpperCase())).getOrElse(INVALID)
+    instruction.code.contains(adrMode)
+    

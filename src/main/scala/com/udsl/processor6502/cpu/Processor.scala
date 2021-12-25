@@ -104,6 +104,7 @@ package com.udsl.processor6502.cpu:
     }
 
     def setMemoryByte(address: Int, value: Int, disassembly: String): Unit = {
+      logger.info(s"Updating $address to $value with disassembly '$disassembly'")
       memory(address) = MemoryCell(address, value, disassembly)
     }
 
@@ -167,30 +168,30 @@ package com.udsl.processor6502.cpu:
     }
   }
 
-  object MemoryCell {
+  object MemoryCell:
     private var currentMemoryFormat = NumericFormatType.DEC
 
-    def apply(index: Int): MemoryCell = {
+    def apply(index: Int): MemoryCell =
       Address.validate(index)
       val m = new MemoryCell(Address(index))
       m
-    }
 
-    def apply(index: Int, byt: Int): MemoryCell = {
+
+    def apply(index: Int, byt: Int): MemoryCell =
       Address.validate(index)
       ByteValue.validate(byt)
       val m = new MemoryCell(Address(index), ByteValue(byt))
       m
-    }
 
-    def apply(index: Int, byt: Int, disassembly: String): MemoryCell = {
+
+    def apply(index: Int, byt: Int, disassembly: String): MemoryCell =
       Address.validate(index)
       ByteValue.validate(byt)
       val b = ByteValue(byt, disassembly)
       val m = new MemoryCell(Address(index), b)
       m
-    }
+
 
     def changeDisplayMode( displayMode: NumericFormatType): Unit =
       currentMemoryFormat = displayMode
-  }
+

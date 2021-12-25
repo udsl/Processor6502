@@ -42,6 +42,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     logger.info(s"Executing instruction ${opcode.mnemonic}, operand ${operand}")
     opcode.mnemonic match {
       case "LDX" => excuteLDX
+      case "LDY" => excuteLDY
       case "DEX" => excuteDEX
       case _ => logger.info(s"${opcode.mnemonic} excution not implemented")
     }
@@ -61,6 +62,18 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     Processor.sr.updateFlag(StatusRegisterFlags.Negative, value > 127)
     Processor.sr.updateFlag(StatusRegisterFlags.Zero, value == 0)
     Processor.ix.ebr = value
+    val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+    logger.info(s"Updating PC -> $newPc")
+
+  def excuteLDY: Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      Processor.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    Processor.sr.updateFlag(StatusRegisterFlags.Negative, value > 127)
+    Processor.sr.updateFlag(StatusRegisterFlags.Zero, value == 0)
+    Processor.iy.ebr = value
     val newPc = Processor.pc.inc(opcode.addressMode.bytes)
     logger.info(s"Updating PC -> $newPc")
 
@@ -96,18 +109,18 @@ object ExecutionUnit:
       EffectiveAddress(true, operand._1)
     case ZeroPageX =>
       //TODO verify what happens when $LL + index exceeds 255
-      EffectiveAddress(true, operand._1 + Processor.ix.##)
+      EffectiveAddress(true, operand._1 + Processor.ix.ebr)
     case ZeroPageY =>
       //TODO verify what happens when $LL + index exceeds 255
-      EffectiveAddress(true, operand._1 + Processor.iy.##)
+      EffectiveAddress(true, operand._1 + Processor.iy.ebr)
     case IndirectX =>
       val loByte = Processor.getMemoryByte(operand._1)
       val hiByte = Processor.getMemoryByte(operand._1 + 1)
-      EffectiveAddress(true, loByte + (hiByte * 256) + Processor.ix.##)
+      EffectiveAddress(true, loByte + (hiByte * 256) + Processor.ix.ebr)
     case IndirectY =>
       val loByte = Processor.getMemoryByte(operand._1)
       val hiByte = Processor.getMemoryByte(operand._1 + 1)
-      EffectiveAddress(true, loByte + (hiByte * 256) + Processor.iy.##)
+      EffectiveAddress(true, loByte + (hiByte * 256) + Processor.iy.ebr)
     case Indirect =>
       val indirectAddr = operand._1 + (operand._2 * 256)
       val loByte = Processor.getMemoryByte(indirectAddr)
@@ -116,9 +129,9 @@ object ExecutionUnit:
     case Absolute =>
       EffectiveAddress(true, operand._1 + (operand._2 * 256))
     case AbsoluteX =>
-      EffectiveAddress(true, operand._1 + (operand._2 * 256) + Processor.ix.##)
+      EffectiveAddress(true, operand._1 + (operand._2 * 256) + Processor.ix.ebr)
     case AbsoluteY =>
-      EffectiveAddress(true, operand._1 + (operand._2 * 256) + Processor.iy.##)
+      EffectiveAddress(true, operand._1 + (operand._2 * 256) + Processor.iy.ebr)
     case _ =>
       EffectiveAddress(false)
 

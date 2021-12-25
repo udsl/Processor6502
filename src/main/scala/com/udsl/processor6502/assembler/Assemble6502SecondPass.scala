@@ -3,7 +3,7 @@ package com.udsl.processor6502.assembler
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.Utilities.{constructSourceLine, isLabel, isNumeric, numToByteString, numToWordString, numericValue}
-import com.udsl.processor6502.assembler.Assemble6502FirstPass.{processClear, setAddresses, setBytes, setWords}
+import com.udsl.processor6502.assembler.Assemble6502FirstPass.{logger, processClear, setAddresses, setBytes, setWords}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.logger
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.CpuInstructions.{getInstruction, isValidInstruction}
@@ -36,10 +36,11 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
         case SyntaxErrorToken( _, _ ) => // extends AssemblerTokenType("SyntaxErrorToken")
           logger.info("\tSyntaxErrorToken ")
         case ClearToken( _, _ ) =>
-          logger.info("\tClear Token")
-          processClear(token, tokenisedLine)
+          logger.info("\tClear Token - but we dont clear on 2nd pass!")
+        case OriginToken( _, _ ) =>
+          processOrigin(token)
 
-        case _ => logger.error(s"unsupported case ${token.value}")
+        case _ => logger.error(s"unsupported case ${token}")
       }
     NoTokenToken("", Array[String]())
 
@@ -58,7 +59,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
   def processOrigin(t: AssemblerToken): Unit =
     logger.info("\tOrigin Token 2nd pass")
     val value = Utilities.numericValue(t.fields.head)
-    if value > 0 then
+    if (0 to 65535 contains value) then
       AssembleLocation.setAssembleLoc(value)
 
 
@@ -102,81 +103,93 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       for mode: AddressingMode <- sortedModes do
         mode match {
           case Immediate =>
-            val operandValue = getOperandValue
-            if t.fields.head.charAt(0) == '#' && (0 to 255 contains operandValue) then
-              return (Immediate, operandValue)
+            if CpuInstructions.isAddressingModeValid(t.mnemonic, Immediate) then
+              val operandValue = getOperandValue
+              if t.fields.head.charAt(0) == '#' && (0 to 255 contains operandValue) then
+                return (Immediate, operandValue)
 
           case Absolute | ZeroPage =>
             val operandValue = getOperandValue
-            if operandValue > 255 then
+            if operandValue > 255 && CpuInstructions.isAddressingModeValid(t.mnemonic, Absolute) then
               return (Absolute, operandValue)
             else
               return (ZeroPage, operandValue)
 
           case ZeroPageX =>
-            val operandValue = getIndexedOperandValue
-            if (0 to 255 contains operandValue) then
-              return (ZeroPageX, operandValue)
-
-          case ZeroPageY =>
-            val operandValue = getIndexedOperandValue
-            if (0 to 255 contains operandValue) then
-              return (ZeroPageY, operandValue)
-
-          case AbsoluteX =>
-            if t.fields.head.toUpperCase.contains(",X") then
+            if t.fields.head.toUpperCase.contains(",X") && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageX) then
               val operandValue = getIndexedOperandValue
               if (0 to 255 contains operandValue) then
+                return (ZeroPageX, operandValue)
+
+          case ZeroPageY =>
+            if t.fields.head.toUpperCase.contains(",Y") && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageY) then
+              val operandValue = getIndexedOperandValue
+              if (0 to 255 contains operandValue) then
+                return (ZeroPageY, operandValue)
+
+          case AbsoluteX =>
+            if t.fields.head.toUpperCase.contains(",X") && CpuInstructions.isAddressingModeValid(t.mnemonic, AbsoluteX) then
+              val operandValue = getIndexedOperandValue
+              if (0 to 255 contains operandValue) && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageX) then
                 return (ZeroPageX, operandValue) // prediction was AbsoluteX but actually ZeroPageX, why labels need updating.
               else
                 return (AbsoluteX, operandValue)
 
           case AbsoluteY =>
-            if t.fields.head.toUpperCase.contains(",Y") then
+            if t.fields.head.toUpperCase.contains(",Y") && CpuInstructions.isAddressingModeValid(t.mnemonic, AbsoluteY) then
               val operandValue = getIndexedOperandValue
-              if (0 to 255 contains operandValue) then
+              if (0 to 255 contains operandValue) && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageY) then
                 return (ZeroPageY, operandValue) // prediction was AbsoluteX but actually ZeroPageX, why labels need updating.
               else
                 return (AbsoluteY, operandValue)
 
+
           case IndirectX =>
-            if t.fields.head.toUpperCase.contains(",X)") then
+            if t.fields.head.toUpperCase.contains(",X)") && CpuInstructions.isAddressingModeValid(t.mnemonic, IndirectX) then
               val operandValue = getIndirectOperandValue
               if (0 to 255 contains operandValue) then
                 return (IndirectX, operandValue)
 
           case IndirectY =>
-            if t.fields.head.toUpperCase.contains("),Y") then
+            if t.fields.head.toUpperCase.contains("),Y") && CpuInstructions.isAddressingModeValid(t.mnemonic, IndirectY) then
               val operandValue = getIndirectOperandValue
               if (0 to 255 contains operandValue) then
                 return (IndirectY, operandValue)
 
           case Indirect =>
-            if !t.fields.head.contains(",") then // if it has a comma then its not Indirect
+            if !t.fields.head.contains(",") && CpuInstructions.isAddressingModeValid(t.mnemonic, Indirect) then // if it has a comma then its not Indirect
               val operandValue = getIndirectOperandValue
               return (Indirect, operandValue)
 
-          case Implied | Accumulator =>
-            if t.fields.length == 0 then
+          case Implied =>
+            if t.fields.length == 0 && CpuInstructions.isAddressingModeValid(t.mnemonic, Implied) then
               return (Implied, -1) // there is no operand
 
+          case Accumulator =>
+            if "A".equals(t.fields.head.toUpperCase)  && CpuInstructions.isAddressingModeValid(t.mnemonic, Accumulator) then
+              return (Accumulator, -1) // there is no operand
+
           case Relative =>
-            // Target of branch can be a byte value or a label destination
-            val operandValue = getOperandValue
-            if isLabel(t.fields.head) then // its an address to branch to
-              val offset = operandValue - AssembleLocation.currentLocation
-              if offset > -128 && offset < 128 then
-                return (Relative, offset)
-            else
-              if operandValue > 0 && operandValue < 256 then
-                return (Relative, operandValue)
+            // check that mode is appropriate
+            if CpuInstructions.isAddressingModeValid(t.mnemonic, Relative) then
+              // Target of branch can be a byte value or a label destination
+              val operandValue = getOperandValue
+              if isLabel(t.fields.head) then // its an address to branch to
+                val offset = operandValue - AssembleLocation.currentLocation
+                if offset > -128 && offset < 128 then
+                  return (Relative, offset)
+              else
+                if operandValue > 0 && operandValue < 256 then
+                  return (Relative, operandValue)
 
           case _ =>
         }
       (Invalid, -1)
 
+    logger.info(s"assembleInstructionToken - ${t.mnemonic}")
     if isValidInstruction(t.mnemonic) then
       val (addrMode: AddressingMode, value: Int) = validateAddressingMode
+      logger.info(s"validateAddressingMode - $addrMode")
       addrMode match
         case Invalid =>
           return SyntaxErrorToken(s"Invalid addressing mode for '${t.mnemonic}'", t.fields)
@@ -197,6 +210,6 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
               // Absolute
               setMemoryAddress(value)
             case _ =>
-              throw new Exception("SYSTEM ERROR INVALID BYTES FOR INSTRUCTION!")
+              throw new Exception(s"SYSTEM ERROR INVALID BYTES FOR INSTRUCTION - ${t.mnemonic}")
     NoTokenToken("", Array[String]())
 
