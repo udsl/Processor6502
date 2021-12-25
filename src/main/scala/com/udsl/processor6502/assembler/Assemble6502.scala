@@ -222,7 +222,7 @@ object Assemble6502 extends StrictLogging :
 object AssemblyData extends StrictLogging:
   // labels defined in a base object so they common others
   // this enables multi file assembly
-  val labels = new mutable.HashMap[String, Int]()
+  val labels = new mutable.HashMap[String, (Int, Boolean)]()
   var references = new ListBuffer[Reference]()
 
   def clear(): Unit =
@@ -250,14 +250,21 @@ object AssemblyData extends StrictLogging:
     references += Reference(ref);
 
   def addLabel(name: String): Unit =
-    if (labels.contains(name))
-      throw new Exception(s"Label '$name' already defined")
-    labels.addOne(name, currentLocation)
+    labels.get(name) match
+      case Some((v, bool)) =>
+        labels.addOne(name, (currentLocation, true))
+      case None =>
+        labels.addOne(name, (-1, false))
 
-  def addLabel(name: String, value: String): Unit =
-    if (labels.contains(name))
-      throw new Exception(s"Label '$name' already defined")
-    labels.addOne(name, numericValue(value))
+  def addLabel(name: String, value: Int): Unit =
+    labels.get(name) match
+      case Some((v, bool)) =>
+        if bool && v != value then
+          throw new Exception(s"Label '$name' already defined")
+        else
+          labels.addOne(name, (value, true))
+      case None =>
+        labels.addOne(name, (value, true))
 
   def printRefs(): Unit =
     logger.info(
@@ -321,7 +328,7 @@ class Reference( val name: String):
   def hasValue: Boolean =
     Reference.hasValue(this)
 
-  def value : Option[Int] =
+  def value : Option[(Int, Boolean)] =
     Reference.getValue(this)
 
 
@@ -332,5 +339,5 @@ object Reference:
   def hasValue(instance: Reference): Boolean =
     AssemblyData.labels.contains(instance.name)
 
-  def getValue(instance: Reference) : Option[Int] =
+  def getValue(instance: Reference) : Option[(Int, Boolean)] =
     AssemblyData.labels.get(instance.name)

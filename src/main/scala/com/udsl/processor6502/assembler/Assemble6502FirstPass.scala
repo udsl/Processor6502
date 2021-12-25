@@ -79,36 +79,19 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
   def assembleInstructionToken(t: AssemblerToken) : Unit =
     logger.info(s"\tInstructionToken '${t}' - location: $currentLocation")
     // Do we have a valid instruction?
-    if !CpuInstructions.isValidInstruction(t.value) then
+    if !CpuInstructions.isValidInstruction(t.mnemonic) then
       logger.error(s"Invalid instruction ${t}")
     else
-      var insSize = 0
       // By this time we should have an idea of any foreword reference values so we can work out the actual addresing mode.
       if t.predictedAddressingModes.length == 1 then
-      // only 1 predicted mode so lets assume it right :)
-        insSize = t.predictedAddressingModes.head match
-          case Accumulator
-               | Implied  => 1
-          case Immediate
-               | ZeroPage
-               | Relative
-               | ZeroPageX
-               | ZeroPageY
-               | IndirectX
-               | IndirectY => 2
-          case Absolute
-               | Indirect
-               | AbsoluteX
-               | AbsoluteY => 3
-          case Invalid | Unknown | NotApplicable=> -1
-      // Is that addressing mode valid for the instruction?
-      // Now we can move the program counter along by the instruction size.
-      AssembleLocation.addInstructionSize(insSize)
+        // only 1 predicted mode so lets assume it right :)
+        // Now we can move the program counter along by the instruction size.
+        AssembleLocation.addInstructionSize(t.predictedAddressingModes.head.bytes)
 
 
   def processDefinition(t: AssemblerToken) : Unit =
     logger.info(s"\tDefinition of label ${t.value} with value ")
-    AssemblyData.addLabel(t.mnemonic, t.value)
+    AssemblyData.addLabel(t.mnemonic, t.intValue)
 
   def procesLabel(t: AssemblerToken) : Unit =
     logger.info(s"\tDefining label ${t.mnemonic} with value $currentLocation")

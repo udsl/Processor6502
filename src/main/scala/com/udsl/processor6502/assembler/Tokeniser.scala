@@ -53,10 +53,10 @@ object Tokeniser extends StrictLogging :
         tokenisedLine + token
       case _ =>
         // if we have a NoneCommentLine then must be either
-        //           operation operant + optional comment
+        //       nememic operand + optional comment
         //       or a command
         // lets deal with the potential comment first
-        val commentSplit = line.source.split(";")
+        val commentSplit = line.source.trim.split(";")
 
         // remove comment and split rest of line into fields using space though these this could also be seperated by ,
         val fields =
@@ -73,7 +73,7 @@ object Tokeniser extends StrictLogging :
           if !instruction.isEmpty then
             val tokenisedInstruction = processInstruction(instruction, tokenisedLine)
             if tokenisedInstruction.isInstanceOf[InstructionToken] then
-              processValue(instruction.tail, tokenisedLine, tokenisedInstruction)
+              processValue(tokenisedLine, tokenisedInstruction)
 
     tokenisedLine
 
@@ -81,8 +81,9 @@ object Tokeniser extends StrictLogging :
   private def processLabel(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String] =
     logger.debug(s"processLabel: ${text.mkString(" ")}")
     val head = text.head
-    if head.takeRight(1) == ":" then
-      val labelText = head.dropRight(1)
+    if head.substring(head.length - 1) == ":" then
+      val labelText = head.substring(0, head.length - 1)
+      AssemblyData.addLabel(labelText)
       val token = LabelToken(labelText, text.tail)
       tokenisedLine + token
       logger.debug(s"token added: $token")
@@ -172,17 +173,26 @@ object Tokeniser extends StrictLogging :
     logger.debug(s"processInstruction: ${text.mkString(" ")}")
     val instruction = text.head.toUpperCase()
     val token = if CpuInstructions.isValidInstruction(instruction) then
-      InstructionToken(instruction, text.tail)
+      val tail = text.tail
+      if tail.length > 1 then
+        val head = tail.head
+        val fields = if head.substring(head.length() - 1).equals(",") then
+          Array[String](tail.mkString)
+        else
+          text.tail
+        InstructionToken(instruction, fields)
+      else
+        InstructionToken(instruction, text.tail)
     else
       SyntaxErrorToken( s"Invalid instruction: $instruction", text)
     tokenisedLine + token
     token
 
-  def processValue(text: Array[String], tokenisedLine: TokenisedLine, token: AssemblerToken ): Unit = {
-    logger.debug(s"processValue: ${text.mkString(" ")}")
+  def processValue(tokenisedLine: TokenisedLine, token: AssemblerToken ): Unit = {
+    logger.debug(s"processValue: ${token.fields}")
 
     logger.debug(s"No operand for ${token}")
-    // Possible values and associated adressing mode:
+    // Possible values and associated addressing mode:
     //      missing - just the instruction them accumilator or implied
     //      numeric - starts with a digit or $ for hex - absolute or zero page
     //      label - starts with an alph but not ( absolute mode to label
@@ -191,10 +201,10 @@ object Tokeniser extends StrictLogging :
     //      nothing implied addressing
 
     // At this point we only need to tokenise the addressign mode not work out if its valid.
-    if text.length == 0 then // applied addrtessing mode
+    if token.fields.isEmpty then // applied addressing mode
       token.addPredictions(List(Accumulator, Implied))
-    else if text.length == 1 then
-      text(0) match {
+    else
+      token.fields.head match {
         case a if a.charAt(0) == '#' => token.addPrediction(Immediate)
         case b if b.charAt(0) == '$' => token.addPredictions(getPredictions(b.substring(1), 16))
         case c if c.charAt(0).isDigit => token.addPredictions(getPredictions(c, 10))

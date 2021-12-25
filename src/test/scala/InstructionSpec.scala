@@ -1,7 +1,7 @@
 
 import com.udsl.processor6502.assembler
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Relative, ZeroPage, ZeroPageX}
+import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Relative, ZeroPage, ZeroPageX, ZeroPageY}
 import org.scalatest.*
 import flatspec.*
 import matchers.*
@@ -204,6 +204,7 @@ val dataValidInstructionTest: List[TestData] = List(
   TestData("JSR", 0x20, 3, Absolute),
 
   TestData("LDX", 0xA6, 2, ZeroPage), //"$LL"
+  TestData("LDX", 0xB6, 2, ZeroPageY), //"$LL"
 )
 
 class InstructionSpec extends AnyFlatSpec, should.Matchers {

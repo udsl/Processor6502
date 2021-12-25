@@ -67,10 +67,12 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       if isNumeric(operand) then
         numericValue(operand)
       else // only other possibility is a label
-        val labelValue = AssemblyData.labels.getOrElse(operand, -1)
-        if labelValue < 0 then
-          tl.tokens.addOne(SyntaxErrorToken(s"Undefined label '$operand'", t.fields))
-        labelValue
+        AssemblyData.labels.get(operand) match
+          case Some((v, bool)) =>
+            v
+          case None =>
+            tl.tokens.addOne(SyntaxErrorToken(s"Undefined label '$operand'", t.fields))
+            -1
 
     def getOperandValue: Int =
       val operand = if t.fields.head.charAt(0) == '#' then
@@ -116,6 +118,11 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
             if (0 to 255 contains operandValue) then
               return (ZeroPageX, operandValue)
 
+          case ZeroPageY =>
+            val operandValue = getIndexedOperandValue
+            if (0 to 255 contains operandValue) then
+              return (ZeroPageY, operandValue)
+
           case AbsoluteX =>
             if t.fields.head.toUpperCase.contains(",X") then
               val operandValue = getIndexedOperandValue
@@ -127,7 +134,10 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
           case AbsoluteY =>
             if t.fields.head.toUpperCase.contains(",Y") then
               val operandValue = getIndexedOperandValue
-              return (AbsoluteY, operandValue) // no ZeroPageY
+              if (0 to 255 contains operandValue) then
+                return (ZeroPageY, operandValue) // prediction was AbsoluteX but actually ZeroPageX, why labels need updating.
+              else
+                return (AbsoluteY, operandValue)
 
           case IndirectX =>
             if t.fields.head.toUpperCase.contains(",X)") then
@@ -175,7 +185,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
           // Need details of the instruction for the disassembly byte string
           // mnemonic, value and number bytes
           val (opcode: Int, bytes:Int) = CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode)
-          setMemoryByte(opcode, constructSourceLine(t.mnemonic, addrMode, (value / 256, value % 256)))
+          setMemoryByte(opcode, constructSourceLine(t.mnemonic, addrMode, (value % 256, value / 256)))
           // now we know how long the instruction shoud be
           bytes match
             case 1 =>
