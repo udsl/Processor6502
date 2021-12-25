@@ -2,6 +2,7 @@ package com.udsl.processor6502.assembler
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
+import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.Assemble6502FirstPass.logger
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import com.udsl.processor6502.cpu.CpuInstructions
@@ -49,7 +50,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
   def processOrigin(t: AssemblerToken) : Unit =
     logger.info(s"\tOrigin Token '${t.mnemonic}'")
     if (t.fields.length == 1){
-      AssembleLocation.setAssembleLoc(Utilities.numericValue(t.fields.head))
+      AssembleLocation.setAssembleLoc(Utilities.numericValue(t.mnemonic))
     }
 
   def processValues(t: AssemblerToken) : Unit =
@@ -89,9 +90,18 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
         AssembleLocation.addInstructionSize(t.predictedAddressingModes.head.bytes)
 
 
+  /**
+   * For 2nd pass we just need to verify that the label is defined and that if the value is set verify its the same
+   * other wise update it.
+   *
+   * @param t
+   */
   def processDefinition(t: AssemblerToken) : Unit =
     logger.info(s"\tDefinition of label ${t.value} with value ")
-    AssemblyData.addLabel(t.mnemonic, t.intValue)
+    if AssemblyData.labelIsDefined(t.mnemonic) then
+      val v = AssemblyData.labelValue(t.mnemonic)
+      if v != t.intValue then
+        throw new Exception(s"Definition value changed om 2nd pass was ${t.intValue} now $v")
 
   def procesLabel(t: AssemblerToken) : Unit =
     logger.info(s"\tDefining label ${t.mnemonic} with value $currentLocation")
@@ -119,7 +129,13 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 
   def setAddresses(fields: Array[String]): Unit =
     logger.debug("setAddresses")
-    for (value <- fields)
-      setMemoryAddress(value.trim)
-
+    for (v <- fields)
+      val value = v.trim
+      if isNumeric(value) then
+        setMemoryAddress(numericValue(value))
+      else if isLabel(value) then
+        AssemblyData.labelIsDefined(value)
+        setMemoryAddress(AssemblyData.labelValue(value))
+      else
+        throw new Exception(s"Invalid value address '$value'")
 

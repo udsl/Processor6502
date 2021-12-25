@@ -121,7 +121,7 @@ object Tokeniser extends StrictLogging :
           // Now we have a value that wne split on , will be have no spaces.
           val values = data.mkString("")
           val token = CommandToken(head, values.split(","))
-          token.addPrediction(Unknown) //, data.mkString("")))
+          token.addPrediction(Unknown)
           tokenisedLine + token
           logger.debug(s"token added: $token")
           return true
@@ -133,9 +133,14 @@ object Tokeniser extends StrictLogging :
             if Utilities.isNumeric(str) then
               val token = OriginToken(str, value)
               tokenisedLine + token
-              logger.debug(s"token added: $token")
+              logger.info(s"Origin added from numeric literal $str")
+            else if Utilities.isLabel(str) && AssemblyData.labelIsDefined(str) then
+              val labelValue = AssemblyData.labelValue(str).toString
+              val token = OriginToken(labelValue, value)
+              tokenisedLine + token
+              logger.info(s"Origin added from defined label '$str")
             else
-              tokenisedLine + SyntaxErrorToken( "Value for ORIG not numeric", value)
+              tokenisedLine + SyntaxErrorToken( "Value for ORIG not numeric or defined label", value)
           else
             tokenisedLine + SyntaxErrorToken("Invalid ORIG command!", value)
           return true
@@ -151,17 +156,23 @@ object Tokeniser extends StrictLogging :
           return true
 
         case "DEF" =>
-          val value: Array[String] = text.tail
-          val head = value.head
+          val parts: Array[String] = text.tail
           // fist part must be the label being defined
           // 2nd is the value which must not be a label
-          if value.length > 2 || !isLabel(value.head) || !isNumeric(value.tail.head) then
-            tokenisedLine + SyntaxErrorToken(head, text.tail)
+          if parts.length != 2  then
+            tokenisedLine + SyntaxErrorToken("Bad DEF", text)
+          else if !isLabel(parts(0)) || !isNumeric(parts(1)) then
+            tokenisedLine + SyntaxErrorToken("DEF should be label number", text)
           else
-            val token = DefToken(value.head, value.tail)
-            token.value = value.tail.head
-            tokenisedLine + token
-            logger.debug(s"token added: $token")
+            val value = numericValue(parts(1))
+            if (0 to 65535 contains value) then
+              AssemblyData.addLabel(parts(0), value)
+              val token = DefToken(parts(0), Array[String](parts(1)))
+              token.value = parts(1)
+              tokenisedLine + token
+              logger.debug(s"token added: $token")
+            else
+              tokenisedLine + SyntaxErrorToken(s"Invalid defined value ${parts(0)} - ${parts(1)}", text)
           return true
 
         case _ =>

@@ -166,7 +166,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
               return (Implied, -1) // there is no operand
 
           case Accumulator =>
-            if "A".equals(t.fields.head.toUpperCase)  && CpuInstructions.isAddressingModeValid(t.mnemonic, Accumulator) then
+            if !t.fields.isEmpty && "A".equals(t.fields.head.toUpperCase)  && CpuInstructions.isAddressingModeValid(t.mnemonic, Accumulator) then
               return (Accumulator, -1) // there is no operand
 
           case Relative =>

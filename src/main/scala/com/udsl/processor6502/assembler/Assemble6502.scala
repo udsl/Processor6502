@@ -154,10 +154,10 @@ object AssembleLocation extends StrictLogging :
 
   def setAssembleLoc(l: Int):Unit =
     if l > 65535 || l < 0 then
-      throw new Exception(s"Bad assmbler Location $l ")
+      throw new Exception(s"Bad assembler Location $l ")
     else
       currentLocation = l
-      logger.debug(s" assmbler Location = $l ")
+      logger.debug(s" assembler Location = $l ")
 
   def setMemoryWord(v: Int): Unit =
     if v > 65535 || v < 0 then
@@ -256,6 +256,20 @@ object AssemblyData extends StrictLogging:
       case None =>
         labels.addOne(name, (-1, false))
 
+  def labelIsDefined(name: String): Boolean =
+    labels.get(name) match
+      case Some((v, bool)) =>
+        bool
+      case None =>
+        false
+
+  def labelValue(name: String): Int =
+    labels.get(name) match
+      case Some((v, bool)) =>
+        v
+      case None =>
+        -1
+
   def addLabel(name: String, value: Int): Unit =
     labels.get(name) match
       case Some((v, bool)) =>
@@ -304,10 +318,7 @@ object AssemblyData extends StrictLogging:
 trait Assemble6502PassBase:
 
   def setMemoryAddress(v: String): Unit =
-    AssembleLocation.setMemoryAddress( if v.charAt(0) == '$' then
-      Integer.parseInt(v.substring(1), 16)
-    else
-      Integer.parseInt(v))
+    AssembleLocation.setMemoryAddress( numericValue(v))
 
   def setMemoryAddress(v: Int): Unit =
     AssembleLocation.setMemoryAddress(v)

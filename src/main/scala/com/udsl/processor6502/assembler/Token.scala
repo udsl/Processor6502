@@ -1,5 +1,6 @@
 package com.udsl.processor6502.assembler
 
+import com.udsl.processor6502.Utilities.numericValue
 import com.udsl.processor6502.cpu.execution.AddressingMode
 
 import scala.collection.mutable.ListBuffer
@@ -9,7 +10,7 @@ trait AssemblerToken(val mnemonic: String, val fields: Array[String] ):
   var value: String = ""
   var source: String = ""
   
-  def intValue: Int = value.toInt
+  def intValue: Int = numericValue(value)
 
   def addPrediction(prediction: AddressingMode): Unit =
     predictedAddressingModes.addOne(prediction)

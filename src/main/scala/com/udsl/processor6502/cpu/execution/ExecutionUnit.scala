@@ -44,6 +44,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "LDX" => excuteLDX
       case "LDY" => excuteLDY
       case "DEX" => excuteDEX
+      case "BNE" => excuteBNE
       case _ => logger.info(s"${opcode.mnemonic} excution not implemented")
     }
 
@@ -92,7 +93,10 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val newPc = Processor.pc.inc(opcode.addressMode.bytes)
     logger.info(s"Updating PC -> $newPc")
 
-
+  def excuteBNE: Unit =
+    val offset = operand._1 & 255
+    if !Processor.sr.testFlag(StatusRegisterFlags.Zero) then
+      Processor.pc.inc(offset)
 
 object ExecutionUnit:
   def apply: ExecutionUnit =
