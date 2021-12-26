@@ -260,10 +260,34 @@ package com.udsl.processor6502.ui:
 
     override def setData(provider: List[ConfigDatum]): Unit = {
       logger.info("Providing to RegisterBox")
-      Processor.pc.addr = Integer.parseInt(getConfigValue(provider, "pc", Processor.pc.addr.toString))
-      Processor.sp.ebr = Integer.parseInt(getConfigValue(provider, "sp", Processor.sp.toString))
-      Processor.ac.ebr = Integer.parseInt(getConfigValue(provider, "ac", Processor.ac.toString))
-      Processor.ix.ebr = Integer.parseInt(getConfigValue(provider, "ix", Processor.ix.toString))
-      Processor.iy.ebr = Integer.parseInt(getConfigValue(provider, "iy", Processor.iy.toString))
+      getConfigValue(provider, "pc") match {
+        case Some(v) =>
+          Processor.pc.addr = Integer.parseInt(v)
+        case _ =>
+      }
+//      Processor.sp.ebr = Integer.parseInt(getConfigValue(provider, "sp", Processor.sp.toString))
+      getConfigValue(provider, "sp") match {
+        case Some(v) =>
+          Processor.sp.ebr = Integer.parseInt(v)
+        case _ =>
+      }
+//      Processor.ac.ebr = Integer.parseInt(getConfigValue(provider, "ac", Processor.ac.toString))
+      getConfigValue(provider, "ac") match {
+        case Some(v) =>
+          Processor.ac.ebr = Integer.parseInt(v)
+        case _ =>
+      }
+ //     Processor.ix.ebr = Integer.parseInt(getConfigValue(provider, "ix", Processor.ix.toString))
+      getConfigValue(provider, "ix") match {
+        case Some(v) =>
+          Processor.ix.ebr = Integer.parseInt(v)
+        case _ =>
+      }
+ //     Processor.iy.ebr = Integer.parseInt(getConfigValue(provider, "iy", Processor.iy.toString))
+      getConfigValue(provider, "iy") match {
+        case Some(v) =>
+          Processor.iy.ebr = Integer.parseInt(v)
+        case _ =>
+      }
     }
   }

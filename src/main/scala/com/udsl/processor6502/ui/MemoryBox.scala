@@ -1,12 +1,11 @@
 package com.udsl.processor6502.ui:
   
   import com.typesafe.scalalogging.StrictLogging
-  import com.udsl.processor6502.cpu.{MemoryCell, Processor}
+  import com.udsl.processor6502.cpu.{Memory, MemoryCell, Processor}
   import com.udsl.processor6502.NumericFormatType
   import com.udsl.processor6502.ui.popups.{Executor, LineAssemblerPopup}
   import com.udsl.processor6502.assembler.CodeEditor
   import com.udsl.processor6502.cpu.MemoryCell.*
-  import com.udsl.processor6502.cpu.Processor.saveMemoryImage
   import com.udsl.processor6502.disassembler.Disassembler
   import javafx.collections.FXCollections
   import javafx.scene.input.ContextMenuEvent
@@ -17,11 +16,11 @@ package com.udsl.processor6502.ui:
   import scalafx.scene.input.{KeyEvent, MouseEvent}
   import scalafx.scene.layout.{HBox, StackPane, VBox}
   import com.udsl.processor6502.Utilities.numericValue
+
   import scala.language.implicitConversions
   
   class MemoryBox extends VBox, StrictLogging {
 
-  
     implicit def toShort(x: Int): Short = x.toShort
 
     val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
@@ -37,7 +36,7 @@ package com.udsl.processor6502.ui:
     }
   
     val memoryView: ListView[MemoryCell] = new ListView[MemoryCell] {
-      items = Processor.getMemory
+      items = Memory.getMemory
       orientation = Orientation.Vertical
     }
   
@@ -129,7 +128,7 @@ package com.udsl.processor6502.ui:
       val saveMemoryImageButton: Button = new Button {
         text = "Save Image"
         onAction = _ => {
-          saveMemoryImage
+          Memory.saveMemoryImage()
         }
       }
       saveMemoryImageButton.setTooltip(new Tooltip("Save a memory image"))

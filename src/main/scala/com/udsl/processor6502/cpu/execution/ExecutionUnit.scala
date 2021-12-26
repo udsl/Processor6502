@@ -57,7 +57,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   def excuteLDX: Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     val value = if effectiveAddr.hasValue then
-      Processor.getMemoryByte(effectiveAddr.address)
+      memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
       operand._1
     Processor.sr.updateFlag(StatusRegisterFlags.Negative, value > 127)
@@ -69,7 +69,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   def excuteLDY: Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     val value = if effectiveAddr.hasValue then
-      Processor.getMemoryByte(effectiveAddr.address)
+      memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
       operand._1
     Processor.sr.updateFlag(StatusRegisterFlags.Negative, value > 127)
@@ -94,9 +94,11 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     logger.info(s"Updating PC -> $newPc")
 
   def excuteBNE: Unit =
-    val offset = operand._1 & 255
     if !Processor.sr.testFlag(StatusRegisterFlags.Zero) then
-      Processor.pc.inc(offset)
+      val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+      Processor.pc.addr = effectiveAddr.address
+    else
+      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
 
 object ExecutionUnit:
   def apply: ExecutionUnit =
@@ -109,8 +111,17 @@ object ExecutionUnit:
     opcode.addressMode match
     case Accumulator | Implied | Immediate =>
       EffectiveAddress(false)
-    case ZeroPage | Relative =>
+    case ZeroPage =>
       EffectiveAddress(true, operand._1)
+    case Relative =>
+      // Relative addressing is used in branch instructions
+      // In a real 6502 the PC is incremented on each memory fetch
+      // so the PC will be pointing to the instruction following
+      // As we dont inc the PC till the instruction is completed we get..
+      // convert offset to signed byte value
+      val offset = operand._1.toByte
+      // then add 2 that the real 6502 would have added on each fetch
+      EffectiveAddress(true, Processor.pc.addr + offset + 2)
     case ZeroPageX =>
       //TODO verify what happens when $LL + index exceeds 255
       EffectiveAddress(true, operand._1 + Processor.ix.ebr)
@@ -118,17 +129,17 @@ object ExecutionUnit:
       //TODO verify what happens when $LL + index exceeds 255
       EffectiveAddress(true, operand._1 + Processor.iy.ebr)
     case IndirectX =>
-      val loByte = Processor.getMemoryByte(operand._1)
-      val hiByte = Processor.getMemoryByte(operand._1 + 1)
+      val loByte = memoryAccess.getMemoryByte(operand._1)
+      val hiByte = memoryAccess.getMemoryByte(operand._1 + 1)
       EffectiveAddress(true, loByte + (hiByte * 256) + Processor.ix.ebr)
     case IndirectY =>
-      val loByte = Processor.getMemoryByte(operand._1)
-      val hiByte = Processor.getMemoryByte(operand._1 + 1)
+      val loByte = memoryAccess.getMemoryByte(operand._1)
+      val hiByte = memoryAccess.getMemoryByte(operand._1 + 1)
       EffectiveAddress(true, loByte + (hiByte * 256) + Processor.iy.ebr)
     case Indirect =>
       val indirectAddr = operand._1 + (operand._2 * 256)
-      val loByte = Processor.getMemoryByte(indirectAddr)
-      val hiByte = Processor.getMemoryByte(indirectAddr + 1)
+      val loByte = memoryAccess.getMemoryByte(indirectAddr)
+      val hiByte = memoryAccess.getMemoryByte(indirectAddr + 1)
       EffectiveAddress(true, loByte + (hiByte * 256))
     case Absolute =>
       EffectiveAddress(true, operand._1 + (operand._2 * 256))

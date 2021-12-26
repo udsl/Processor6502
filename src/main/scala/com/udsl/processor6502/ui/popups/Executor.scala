@@ -5,6 +5,7 @@ package com.udsl.processor6502.ui.popups:
   import com.udsl.processor6502.{Main, Observer}
   import com.udsl.processor6502.cpu.execution.ExecutionUnit
   import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
+  import com.udsl.processor6502.ui.popups.Executor.executor
   import scalafx.application.JFXApp
   import scalafx.scene.Scene
   import scalafx.scene.control.{Button, Label, TextField}
@@ -41,7 +42,11 @@ package com.udsl.processor6502.ui.popups:
     val pcSubscription: Subscription = Processor.pc._addr.onChange {
       (_, oldValue, newValue) => {
         logger.info(s"PC subscription fired - ${oldValue}, ${newValue}")
-        currentInsLabel.text = Executor.executionUnit.get.decodeInstruction()
+        Executor.executor match
+          case Some(_) =>
+            currentInsLabel.text = Executor.executionUnit.get.decodeInstruction()
+          case _ =>
+            // No executor
       }
     }
 

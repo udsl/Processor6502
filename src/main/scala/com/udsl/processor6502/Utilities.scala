@@ -116,12 +116,12 @@ object Utilities {
       case None => false
     }
 
-  def getConfigValue(lines: List[ConfigDatum], configKey: String, default: String): String = {
+  def getConfigValue(lines: List[ConfigDatum], configKey: String): Option[String] = {
     val datum = lines.find(_.key == configKey)
 
     datum match {
-      case Some(datum) => datum.value
-      case None => default
+      case Some(datum) => Option[String](datum.value)
+      case None => None
     }
   }
 

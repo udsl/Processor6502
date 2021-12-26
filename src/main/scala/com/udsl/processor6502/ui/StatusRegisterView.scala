@@ -110,9 +110,8 @@ package com.udsl.processor6502.ui:
     override def setData( provider: List[ConfigDatum]): Unit = {
       logger.info("Providing to StatusFlag")
       update(
-        getConfigValue(provider, statusName, currentValue.toString) match {
-          case "true" => true
-          case "false" => false
+        getConfigValue(provider, statusName) match {
+          case Some(b) => b.equals("true")
           case _ => false
         }
       )

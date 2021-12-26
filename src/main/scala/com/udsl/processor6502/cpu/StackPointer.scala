@@ -9,14 +9,14 @@ class StackPointer(name: String) extends EightBitRegister(name: String), StrictL
     logger.info(s"Pushing byte $byt")
     // write byte to memory offset by sp value
     val addr = 256 + ebr
-    Processor.setMemoryByte(addr, byt)
+    StackPointer.memoryAccess.setMemoryByte(addr, byt)
     decrement()
   }
 
   def popByte(): Int ={
     increment()
     val addr = 255 + ebr
-    val byt: Int = Processor.getMemoryByte(addr)
+    val byt: Int = StackPointer.memoryAccess.getMemoryByte(addr)
     logger.info(s"Popping byte $byt")
     byt
   }
@@ -32,6 +32,8 @@ class StackPointer(name: String) extends EightBitRegister(name: String), StrictL
 
 
 object StackPointer {
+  val memoryAccess: Memory = Memory.apply
+
   def apply(): StackPointer ={
     val s_ = new StackPointer("Stack pointer")
     s_.ebr = MAX_VALUE

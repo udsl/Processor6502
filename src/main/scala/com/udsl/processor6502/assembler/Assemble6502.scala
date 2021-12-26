@@ -2,7 +2,7 @@ package com.udsl.processor6502.assembler
 
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import com.udsl.processor6502.assembler.{BlankLineToken, CommentLineToken, ExceptionToken, LabelToken, ReferenceToken, SyntaxErrorToken}
-import com.udsl.processor6502.cpu.{CpuInstructions, Processor}
+import com.udsl.processor6502.cpu.{CpuInstructions, Memory, Processor}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -151,6 +151,7 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
 object AssembleLocation extends StrictLogging :
   // The point in memery we are assembling to.
   var currentLocation: Int = 0
+  val memoryAccess = Memory.apply
 
   def setAssembleLoc(l: Int):Unit =
     if l > 65535 || l < 0 then
@@ -172,29 +173,18 @@ object AssembleLocation extends StrictLogging :
       val errorMessage = s"Bad address value $adr"
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
-    setMemoryByte(adr % 256)
-    setMemoryByte(adr / 256)
+    memoryAccess.setMemoryToAddress(currentLocation, adr)
 
   def setMemoryByte(v: Int, disassembly: String): Unit =
-    if v > 256 || v < -127 then
-      throw new Exception(s"Not a byt value: $v")
-    if v < 0 then
-      Processor.setMemoryByte(currentLocation, v & 255, disassembly)
-    else
-      Processor.setMemoryByte(currentLocation, v, disassembly)
+    memoryAccess.setMemoryByte(currentLocation, v, disassembly)
     currentLocation += 1
 
   def setMemoryByte(v: Int): Unit =
-    if v > 256 || v < -127 then
-      throw new Exception(s"Not a byt value: $v")
-    if v < 0 then
-      Processor.setMemoryByte(currentLocation, v & 255)
-    else
-      Processor.setMemoryByte(currentLocation, v)
+    memoryAccess.setMemoryByte(currentLocation, v)
     currentLocation += 1
 
   def getMemoryByte(v: Int): Int =
-    Processor.getMemoryByte(v)
+    memoryAccess.getMemoryByte(v)
 
   def addInstructionSize(insSize: Int) : Unit =
     if insSize < 1 || insSize > 3 then

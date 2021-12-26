@@ -175,9 +175,15 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
               // Target of branch can be a byte value or a label destination
               val operandValue = getOperandValue
               if isLabel(t.fields.head) then // its an address to branch to
+                // This offset should be from the following instraction because the 6502 would have increament the PC on each fetch
+                // so if we are going backwards need those extra 2 bytes bit if going wards
+                // pc is already incremented by 2 so need an offset that is 2 less.
                 val offset = operandValue - AssembleLocation.currentLocation
-                if offset > -128 && offset < 128 then
-                  return (Relative, offset)
+                if offset < 0 && (offset - 2 > -128) then
+                  return (Relative, offset - 2)
+                if offset > 0 && offset > 130 then
+                  return (Relative, offset + 2)
+                logger.info(s"Relative address out of range ${t.mnemonic}")
               else
                 if operandValue > 0 && operandValue < 256 then
                   return (Relative, operandValue)

@@ -37,7 +37,11 @@ class FooterBox extends GridPane, StrictLogging{
       logger.info(s"Load Button pressed")
       val lines = readConfigFile
       if !lines.isEmpty then
-        updateDisplay(getConfigValue(lines, "format", "Dec"))
+        updateDisplay(
+          getConfigValue(lines, "format") match
+            case Some(value) => value
+            case _ => "DEC"
+        )
         provideData(lines)
     }
   }

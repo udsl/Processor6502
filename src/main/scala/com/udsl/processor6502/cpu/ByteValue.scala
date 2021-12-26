@@ -32,7 +32,8 @@ class ByteValue {
 }
 
 object ByteValue {
-    val MAX_BYTE_VALUE: Int = 256
+    val MAX_BYTE_VALUE: Int = 255
+    val MIN_BYTE_VALUE: Int = -127
 
     def apply: ByteValue = {
         val b_ = new ByteValue
@@ -40,20 +41,21 @@ object ByteValue {
         b_
     }
 
+    // Byte values are signed or unsigned but always stored as unsigned
     def apply(b: Int): ByteValue = {
         val b_ = new ByteValue
-        b_.byte = b
+        b_.byte = if b < 0 then b & 255 else b
         b_
     }
 
     def apply(b: Int, theDisassembly: String): ByteValue = {
         val b_ = new ByteValue
-        b_.byte = b
+        b_.byte = if b < 0 then b & 255 else b
         b_.setDisassembly(theDisassembly)
         b_
     }
 
     def validate( b: Int) = {
-        if (b < 0 || b > MAX_BYTE_VALUE) throw new Exception(s"Value out of range for BYTE: ${b}.")
+        if (b < MIN_BYTE_VALUE || b > MAX_BYTE_VALUE) throw new Exception(s"Value out of range for BYTE: ${b}.")
     }
 }
