@@ -8,6 +8,7 @@ import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegisterFlags.{Break, Carry, Decimal, Interrupt, Negative, Overflow, Zero}
 import com.udsl.processor6502.disassembler.Disassembler
 import com.udsl.processor6502.ui.popups.Executor
+import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
 
 /**
@@ -22,6 +23,7 @@ import scalafx.event.subscriptions.Subscription
 class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   var opcode: OpcodeValue = NULL(NotApplicable)
   var operand: (Int, Int) = (0, 0)
+  var runMode: RunMode = RunMode.Stopped
 
   val pcSubscription: Subscription = Processor.pc._addr.onChange {
     (_, oldValue, newValue) => {
@@ -33,10 +35,31 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   }
 
   def singleStep(): Unit ={
+    runMode = RunMode.SingleStepping
     // Execute the current instruction
     executeIns
     logger.info(s"Next instruction $opcode, operand ${operand}")
   }
+
+  def startSlow(): Unit =
+    runMode = RunMode.RunningSlow
+    Processor.reset
+    run()
+
+  def start(): Unit =
+    runMode = RunMode.Running
+    Processor.reset
+    run()
+
+  def run(): Unit =
+    // Execute the current instruction
+    while runMode == RunMode.Running || runMode == RunMode.RunningSlow do
+      executeIns
+      if runMode == RunMode.RunningSlow then
+        Thread.sleep(500)
+      logger.info(s"Next instruction $opcode, operand ${operand}")
+
+
 
   def executeIns: Unit =
     logger.info(s"Executing instruction ${opcode.mnemonic}, operand ${operand}")
@@ -45,14 +68,20 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "LDY" => excuteLDY
       case "DEX" => excuteDEX
       case "BNE" => excuteBNE
-      case _ => logger.info(s"${opcode.mnemonic} excution not implemented")
+      case "BRK" => excuteBRK
+      case _ => logger.info(s"${opcode.mnemonic} execution not implemented")
     }
+
 
   def decodeInstruction(): String =
     opcode match
       case NULL(_) => ""
       case _ =>
         constructSourceLine(opcode.mnemonic, opcode.addressMode, operand)
+
+  def excuteBRK: Unit =
+    if runMode == RunMode.Running || runMode == RunMode.RunningSlow then
+      runMode = RunMode.SingleStepping
 
   def excuteLDX: Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -158,3 +187,9 @@ object EffectiveAddress:
 
   def apply(hasValue: Boolean, address: Int): EffectiveAddress =
     new EffectiveAddress(hasValue, address)
+
+enum RunMode:
+  case Stopped
+  case SingleStepping
+  case Running
+  case RunningSlow

@@ -55,12 +55,33 @@ package com.udsl.processor6502.ui.popups:
 
     scene = new Scene {
       root = {
-        val pushButton: Button = new Button {
-          text = "Step"
-          onAction = _ => {
-            logger.info("Executing STEP!")
-            Executor.executionUnit.get.singleStep()
+        val pushButtons = new HBox {
+          spacing = 20
+          val stepButton: Button = new Button {
+            text = "Step"
+            onAction = _ => {
+              logger.info("Executing STEP!")
+              Executor.executionUnit.get.singleStep()
+            }
           }
+
+          val startButton: Button = new Button {
+            text = "Run"
+            onAction = _ => {
+              logger.info("Executing START!")
+              Executor.executionUnit.get.start()
+            }
+          }
+
+          val runSlowButton: Button = new Button {
+            text = "Run slow"
+            onAction = _ => {
+              logger.info("Executing START!")
+              Executor.executionUnit.get.startSlow()
+            }
+          }
+
+          children = List(startButton, runSlowButton, stepButton)
         }
 
         def togle(flag: StatusRegisterFlags) = {
@@ -100,7 +121,7 @@ package com.udsl.processor6502.ui.popups:
           padding = Insets(20)
           top = currentInsBox
 //          left = registersBox
-          right = pushButton
+          right = pushButtons
           bottom = flagTest
         }
       }

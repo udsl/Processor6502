@@ -10,8 +10,9 @@ package com.udsl.processor6502.cpu:
         val _addr: IntegerProperty = IntegerProperty(0)
 
         def addr_= (a: Int): Unit = {
-            validate( a )
-            _addr.value = a
+            if a != _addr.value then
+                validate( a )
+                _addr.value = a
         }
 
         def addr: Int = _addr.value
