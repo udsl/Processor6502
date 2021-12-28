@@ -21,5 +21,6 @@ CLR - clear all defined labels etc. Only valid as first line.
 
 symbolname: - a symbolic reference (label) to the current location
 
-##**Main Screen**
+##Main Screen
+
 <img width="518" alt="screenshot" src="screenshot.PNG">
