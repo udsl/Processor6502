@@ -52,7 +52,7 @@ package com.udsl.processor6502.cpu:
          * @return  higher 8 bits of 16 bit address as a positive value in a short
          */
         def getHi: Short = {
-            ((_addr.value.abs / 256) % 256).toShort
+            ((_addr.value.abs / 256) % 255).toShort
         }
     }
 

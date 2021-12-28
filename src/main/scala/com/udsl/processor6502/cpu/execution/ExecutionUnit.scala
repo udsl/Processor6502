@@ -3,6 +3,7 @@ package com.udsl.processor6502.cpu.execution
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Subject
 import com.udsl.processor6502.Utilities.constructSourceLine
+import com.udsl.processor6502.cpu.Memory.INTERRUPT_VECTOR
 import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
 import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegisterFlags.{Break, Carry, Decimal, Interrupt, Negative, Overflow, Zero}
@@ -64,11 +65,12 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   def executeIns: Unit =
     logger.info(s"Executing instruction ${opcode.mnemonic}, operand ${operand}")
     opcode.mnemonic match {
-      case "LDX" => excuteLDX
-      case "LDY" => excuteLDY
-      case "DEX" => excuteDEX
-      case "BNE" => excuteBNE
-      case "BRK" => excuteBRK
+      case "LDX" => executeLDX()
+      case "LDY" => executeLDY()
+      case "DEX" => executeDEX()
+      case "BNE" => executeBNE()
+      case "BRK" => executeBRK()
+      case "TXS" => executeTXS()
       case _ => logger.info(s"${opcode.mnemonic} execution not implemented")
     }
 
@@ -79,11 +81,24 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case _ =>
         constructSourceLine(opcode.mnemonic, opcode.addressMode, operand)
 
-  def excuteBRK: Unit =
+  def executeTXS(): Unit =
+    Processor.sr.ebr = Processor.ix.ebr
+    Processor.pc.inc(opcode.addressMode.bytes)
+    
+  def executeBRK(): Unit =
     if runMode == RunMode.Running || runMode == RunMode.RunningSlow then
-      runMode = RunMode.SingleStepping
+      if operand._1 == 255 then
+        runMode = RunMode.SingleStepping
+    Processor.sr.setFlag(StatusRegisterFlags.Interrupt)
+    // now do a jsr to the irq routine ith return address set to byte after break instruction + 1
+    val returnAdr = Processor.pc.addr + 2
+    Processor.sp.pushByte(((returnAdr / 256) % 256).toShort)
+    Processor.sp.pushByte((returnAdr % 255).toShort)
+    // get address at INTERRUPT_VECTOR
+    Processor.pc.addr = memoryAccess.getMemoryAsAddress(INTERRUPT_VECTOR)
 
-  def excuteLDX: Unit =
+
+  def executeLDX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
@@ -95,7 +110,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val newPc = Processor.pc.inc(opcode.addressMode.bytes)
     logger.info(s"Updating PC -> $newPc")
 
-  def excuteLDY: Unit =
+  def executeLDY(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
@@ -107,7 +122,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val newPc = Processor.pc.inc(opcode.addressMode.bytes)
     logger.info(s"Updating PC -> $newPc")
 
-  def excuteDEX: Unit =
+  def executeDEX(): Unit =
     val currentIx = Processor.ix.ebr.##
     if currentIx == 0 then
       Processor.ix.ebr = 255
@@ -122,7 +137,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val newPc = Processor.pc.inc(opcode.addressMode.bytes)
     logger.info(s"Updating PC -> $newPc")
 
-  def excuteBNE: Unit =
+  def executeBNE(): Unit =
     if !Processor.sr.testFlag(StatusRegisterFlags.Zero) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address

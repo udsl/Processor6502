@@ -90,6 +90,9 @@ package com.udsl.processor6502.cpu:
         case StatusRegisterFlags.Carry => ebr = ebr & (255 ^ CARRY_FLAG_MASK)
       }
     }
+    
+    def reset(): Unit =
+      ebr = 32
 
   
   object StatusRegister {
@@ -104,7 +107,7 @@ package com.udsl.processor6502.cpu:
   
     def apply() : StatusRegister = {
       val sr_ = new StatusRegister("Status Register")
-      sr_.ebr = 32
+      sr_.reset()
       sr_
     }
   }
@@ -118,15 +121,3 @@ package com.udsl.processor6502.cpu:
     case Zero extends StatusRegisterFlags("Zero")
     case Carry extends StatusRegisterFlags("Carry")
   
-  
-  //object StatusRegisterFlags extends Enumeration {
-  //  val Negative: StatusRegisterFlags.Value = Value("Negative")
-  //  val Overflow: StatusRegisterFlags.Value = Value("Overflow")
-  //  val Break: StatusRegisterFlags.Value = Value("Break")
-  //  val Decimal: StatusRegisterFlags.Value = Value("Decimal")
-  //  val Interrupt: StatusRegisterFlags.Value = Value("Interrupt")
-  //  val Zero: StatusRegisterFlags.Value = Value("Zero")
-  //  val Carry: StatusRegisterFlags.Value = Value("Carry")
-  //}
-  //
-  //case class StatusRegisterFlags()

@@ -43,9 +43,8 @@ package com.udsl.processor6502.cpu:
     }
 
     def reset = {
-      pushPc
-      //        Push SR.
       //        Set IRQ disable in status.
+      sr.reset()
       //        PC is loaded
       pc.addr = resetVector
     }
@@ -88,9 +87,10 @@ package com.udsl.processor6502.cpu:
     }
 
     private def pushSr = {
+      sp.pushByte(sr.ebr)
     }
 
-    private def pushByte(byt: Int) = {
-
-    }
+//    private def pushByte(byt: Int) = {
+//
+//    }
   }
