@@ -8,6 +8,8 @@ def reset $FFFC
 orig 512
 
 start:
+LDX #$ff
+TXS        ;Initialise stack pointer
 LDX #$08
 decrement:
   DEX
