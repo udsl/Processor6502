@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Dialogues.errorAlert
 import com.udsl.processor6502.Utilities.numericValue
 import com.udsl.processor6502.assembler.Assemble6502.logger
-import com.udsl.processor6502.assembler.Assemble6502FirstPass.{assembleCommandToken, assembleCommentLineToken, assembleInstructionToken, logger, procesLabel, processClear, setAddresses, setBytes, setWords}
+import com.udsl.processor6502.assembler.Assemble6502FirstPass.{assembleCommandToken, assembleCommentLineToken, assembleInstructionToken, logger, procesLabel, processClear, advanceAssemLocForAddresses, advanceAssemLocForBytes, advanceAssemLocForWords}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.assemble
 import com.udsl.processor6502.cpu.execution.OpcodeValue
 
@@ -166,7 +166,9 @@ object AssembleLocation extends StrictLogging :
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
     setMemoryByte(v / 256)
+    currentLocation += 1
     setMemoryByte(v % 256)
+    currentLocation += 1
 
   def setMemoryAddress(adr: Int): Unit =
     if adr > 65535 || adr < 0 then
@@ -174,6 +176,7 @@ object AssembleLocation extends StrictLogging :
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
     memoryAccess.setMemoryToAddress(currentLocation, adr)
+    currentLocation += 2
 
   def setMemoryByte(v: Int, disassembly: String): Unit =
     memoryAccess.setMemoryByte(currentLocation, v, disassembly)
@@ -322,8 +325,8 @@ trait Assemble6502PassBase:
   def setMemoryByte(v: Int): Unit =
     AssembleLocation.setMemoryByte(v)
 
-  def setMemoryByte(v: Int, disassenmbly: String): Unit =
-    AssembleLocation.setMemoryByte(v, disassenmbly)
+  def setMemoryByte(v: Int, disassembly: String): Unit =
+    AssembleLocation.setMemoryByte(v, disassembly)
 
 class Reference( val name: String):
   def hasValue: Boolean =

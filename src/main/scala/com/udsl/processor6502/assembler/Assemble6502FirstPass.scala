@@ -50,7 +50,14 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
   def processOrigin(t: AssemblerToken) : Unit =
     logger.info(s"\tOrigin Token '${t.mnemonic}'")
     if (t.fields.length == 1){
-      AssembleLocation.setAssembleLoc(Utilities.numericValue(t.mnemonic))
+      if isNumeric(t.mnemonic) then
+        AssembleLocation.setAssembleLoc(Utilities.numericValue(t.mnemonic))
+      else
+        if isLabel(t.mnemonic) && AssemblyData.labelIsDefined(t.mnemonic) then
+          val labelValue = AssemblyData.labelValue(t.mnemonic)
+          AssembleLocation.setAssembleLoc(labelValue)
+        else
+          throw new Exception("Label or ORIG not defined.")
     }
 
   def processValues(t: AssemblerToken) : Unit =
@@ -65,9 +72,9 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
   def assembleCommandToken(t: AssemblerToken) : Unit =
     logger.info(s"\tCommandToken '${t.mnemonic}' - ")
     t.mnemonic.toUpperCase() match
-      case "BYT" => setBytes(t.fields)
-      case "WRD" => setWords(t.fields)
-      case "ADDR" => setAddresses(t.fields)
+      case "BYT" => advanceAssemLocForBytes(t.fields)
+      case "WRD" => advanceAssemLocForWords(t.fields)
+      case "ADDR" => advanceAssemLocForAddresses(t.fields)
       case _ => logger.info(s"\tInvalid command ${t} ")
 
   def processClear(t: AssemblerToken, tl: TokenisedLine) : Unit =
@@ -107,35 +114,18 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
     logger.info(s"\tDefining label ${t.mnemonic} with value $currentLocation")
     AssemblyData.addLabel(t.mnemonic)
 
-  def setBytes(fields: Array[String]): Unit =
-    logger.debug("setBytes")
+  def advanceAssemLocForBytes(fields: Array[String]): Unit =
+    logger.debug("advance current assembly location for each byte")
     for (value <- fields)
-      setMemoryByte(value.trim)
+      AssembleLocation.addInstructionSize(1)
 
-  def setWords(fields: Array[String]): Unit =
-    logger.debug("setWords")
+  def advanceAssemLocForWords(fields: Array[String]): Unit =
+    logger.debug("advance current assembly location by 2 for each word")
     for (value <- fields)
-      setMemoryWord(value.trim)
+      AssembleLocation.addInstructionSize(2)
 
-  def setMemoryWord(v: String): Unit =
-    if v.charAt(0).isLetter then // a label
-      AssemblyData.addReference(v)
-      AssembleLocation.setMemoryWord(0x6363) // word value for 99, 99 decimal
-    else
-      AssembleLocation.setMemoryWord(if v.charAt(0) == '$' then
-        Integer.parseInt(v.substring(1), 16)
-      else
-        Integer.parseInt(v))
-
-  def setAddresses(fields: Array[String]): Unit =
-    logger.debug("setAddresses")
+  def advanceAssemLocForAddresses(fields: Array[String]): Unit =
+    logger.debug("advance current assembly location by 2 for each address")
     for (v <- fields)
-      val value = v.trim
-      if isNumeric(value) then
-        setMemoryAddress(numericValue(value))
-      else if isLabel(value) then
-        AssemblyData.labelIsDefined(value)
-        setMemoryAddress(AssemblyData.labelValue(value))
-      else
-        throw new Exception(s"Invalid value address '$value'")
+      AssembleLocation.addInstructionSize(2)
 

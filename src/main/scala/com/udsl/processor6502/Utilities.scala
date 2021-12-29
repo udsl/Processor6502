@@ -40,6 +40,9 @@ object Utilities {
       case NumericFormatType.DEC => s"${value.toString}"
     }
 
+  def byteToHexString(value: Int): String =
+    numToByteString(value, NumericFormatType.HEX)
+    
   def numToByteString(value: Int, format: NumericFormatType): String =
     format match {
       case NumericFormatType.HEX =>

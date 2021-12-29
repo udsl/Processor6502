@@ -212,10 +212,11 @@ object Tokeniser extends StrictLogging :
     //      nothing implied addressing
 
     // At this point we only need to tokenise the addressign mode not work out if its valid.
-    if token.fields.isEmpty then // applied addressing mode
-      token.addPredictions(List(Accumulator, Implied))
+    if token.fields.isEmpty then // Implied addressing mode
+      token.addPredictions(List(Implied))
     else
       token.fields.head match {
+        case l if l.toUpperCase == "A"=> token.addPrediction(Accumulator)
         case a if a.charAt(0) == '#' => token.addPrediction(Immediate)
         case b if b.charAt(0) == '$' => token.addPredictions(getPredictions(b.substring(1), 16))
         case c if c.charAt(0).isDigit => token.addPredictions(getPredictions(c, 10))

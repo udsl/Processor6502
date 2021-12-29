@@ -3,7 +3,7 @@ package com.udsl.processor6502.assembler
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.Utilities.{constructSourceLine, isLabel, isNumeric, numToByteString, numToWordString, numericValue}
-import com.udsl.processor6502.assembler.Assemble6502FirstPass.{logger, processClear, setAddresses, setBytes, setWords}
+import com.udsl.processor6502.assembler.Assemble6502FirstPass.{logger, processClear, advanceAssemLocForAddresses, advanceAssemLocForBytes, advanceAssemLocForWords}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.logger
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.CpuInstructions.{getInstruction, isValidInstruction}
@@ -50,7 +50,6 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
   def assembleCommandToken(t: AssemblerToken): Unit =
     logger.info(s"\tassembleCommandToken '${t}' - ")
     t.mnemonic.toUpperCase() match
-      case "ORIG" => AssembleLocation.setAssembleLoc(t.intValue)
       case "BYT" => setBytes(t.fields)
       case "WRD" => setWords(t.fields)
       case "ADDR" => setAddresses(t.fields)
@@ -58,7 +57,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
   def processOrigin(t: AssemblerToken): Unit =
     logger.info("\tOrigin Token 2nd pass")
-    val value = Utilities.numericValue(t.fields.head)
+    val value = Utilities.numericValue(t.mnemonic)
     if (0 to 65535 contains value) then
       AssembleLocation.setAssembleLoc(value)
 
@@ -219,3 +218,34 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
               throw new Exception(s"SYSTEM ERROR INVALID BYTES FOR INSTRUCTION - ${t.mnemonic}")
     NoTokenToken("", Array[String]())
 
+  def setBytes(fields: Array[String]): Unit =
+    logger.debug("setBytes")
+    for (value <- fields)
+      setMemoryByte(value.trim)
+
+  def setWords(fields: Array[String]): Unit =
+    logger.debug("setWords")
+    for (value <- fields)
+      setMemoryWord(value.trim)
+
+  def setMemoryWord(v: String): Unit =
+    if v.charAt(0).isLetter then // a label
+      AssemblyData.addReference(v)
+      AssembleLocation.setMemoryWord(0x6363) // word value for 99, 99 decimal
+    else
+      AssembleLocation.setMemoryWord(if v.charAt(0) == '$' then
+        Integer.parseInt(v.substring(1), 16)
+      else
+        Integer.parseInt(v))
+
+  def setAddresses(fields: Array[String]): Unit =
+    logger.debug("setAddresses")
+    for (v <- fields)
+      val value = v.trim
+      if isNumeric(value) then
+        setMemoryAddress(numericValue(value))
+      else if isLabel(value) then
+        AssemblyData.labelIsDefined(value)
+        setMemoryAddress(AssemblyData.labelValue(value))
+      else
+        throw new Exception(s"Invalid value address '$value'")

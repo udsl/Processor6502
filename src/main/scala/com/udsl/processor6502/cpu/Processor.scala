@@ -31,21 +31,22 @@ package com.udsl.processor6502.cpu:
       pushPc
       //        Push SR.
       //        Set IRQ disable in status.
-      //        PC is loaded
+      //        PC is loaded from NMI vector
       pc.addr = nmiVector
     }
 
     def irq = {
       pushPc
       //        Push SR.
-      //        PC is loaded
+      //        Push PC.
+      //        PC is loaded from IRQ vector
       pc.addr = irqVector
     }
 
     def reset = {
-      //        Set IRQ disable in status.
+      // Set status.
       sr.reset()
-      //        PC is loaded
+      // load pc from vector
       pc.addr = resetVector
     }
 
@@ -82,15 +83,11 @@ package com.udsl.processor6502.cpu:
       val msb = sp.popByte()
       // Pop LSB
       val lsb = sp.popByte()
-      val poped = (msb * 256) + lsb
-      pc.addr = poped
+      val popped = (msb * 256) + lsb
+      pc.addr = popped
     }
 
     private def pushSr = {
       sp.pushByte(sr.ebr)
     }
-
-//    private def pushByte(byt: Int) = {
-//
-//    }
   }
