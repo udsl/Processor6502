@@ -38,7 +38,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   def singleStep(): Unit ={
     runMode = RunMode.SingleStepping
     // Execute the current instruction
-    executeIns
+    executeIns()
     logger.info(s"Next instruction $opcode, operand ${operand}")
   }
 
@@ -64,7 +64,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val thread = new Thread {
       override def run =
         while runMode == RunMode.Running || runMode == RunMode.RunningSlow do
-          executeIns
+          executeIns()
           Thread.`yield`()
           if runMode == RunMode.RunningSlow then
             Thread.sleep(50) // slow the loop down a bit
@@ -74,7 +74,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 
 
 
-  def executeIns: Unit =
+  def executeIns(): Unit =
     logger.info(s"Executing instruction ${opcode.mnemonic}, operand (${byteToHexString(operand._1)}, ${byteToHexString(operand._2)}) at ${Processor.pc.addr}")
     opcode.mnemonic match {
       case "LDX" => executeLDX()

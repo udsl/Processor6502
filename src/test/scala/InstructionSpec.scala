@@ -203,8 +203,130 @@ val dataValidInstructionTest: List[TestData] = List(
 
   TestData("JSR", 0x20, 3, Absolute),
 
-  TestData("LDX", 0xA6, 2, ZeroPage), //"$LL"
-  TestData("LDX", 0xB6, 2, ZeroPageY), //"$LL"
+  /**
+   * LDA Load Accumulator with Memory
+   *
+   * immediate	LDA #oper	      A9	2
+   * zeropage	LDA oper	        A5	2
+   * zeropage,X	LDA oper,X	    B5	2
+   * absolute	LDA oper	        AD	3
+   * absolute,X	LDA oper,X	    BD	3
+   * absolute,Y	LDA oper,Y	    B9	3
+   * (indirect,X)	LDA (oper,X)	A1	2
+   * (indirect),Y	LDA (oper),Y	B1	2
+   */
+  TestData("LDA", 0xA9, 2, Immediate),
+  TestData("LDA", 0xA5, 2, ZeroPage),
+  TestData("LDA", 0xB5, 2, ZeroPageX),
+  TestData("LDA", 0xAD, 3, Absolute),
+  TestData("LDA", 0xBD, 3, AbsoluteX),
+  TestData("LDA", 0xB9, 3, AbsoluteY),
+  TestData("LDA", 0xA1, 2, IndirectX),
+  TestData("LDA", 0xB1, 2, IndirectY),
+
+  /**
+   * LDX Load Index X with Memory
+   *
+   * immediate	LDX #oper	  A2	2
+   * zeropage	LDX oper	    A6	2
+   * zeropage,Y	LDX oper,Y	B6	2
+   * absolute	LDX oper	    AE	3
+   * absolute,Y	LDX oper,Y	BE	3
+   */
+  TestData("LDX", 0xA2, 2, Immediate),
+  TestData("LDX", 0xA6, 2, ZeroPage),
+  TestData("LDX", 0xB6, 2, ZeroPageY),
+  TestData("LDX", 0xAE, 3, Absolute),
+  TestData("LDX", 0xBE, 3, AbsoluteY),
+
+  /**
+   * LDY Load Index Y with Memory
+   *
+   * immediate	LDY #oper	  A0	2
+   * zeropage	LDY oper	    A4	2
+   * zeropage,Y	LDY oper,Y	B4	2
+   * absolute	LDY oper	    Ac	3
+   * absolute,Y	LDY oper,Y	Bc	3
+   */
+  TestData("LDY", 0xA0, 2, Immediate),
+  TestData("LDY", 0xA4, 2, ZeroPage),
+  TestData("LDY", 0xB4, 2, ZeroPageX),
+  TestData("LDY", 0xAC, 3, Absolute),
+  TestData("LDY", 0xBC, 3, AbsoluteX),
+
+  /**
+   * LSR Shift One Bit Right (Memory or Accumulator)
+   *
+   * accumulator	LSR A	    4A	1
+   * zeropage	LSR oper	    46	2
+   * zeropage,X	LSR oper,X	56	2
+   * absolute	LSR oper	    4E	3
+   * absolute,X	LSR oper,X	5E	3
+   */
+  TestData("LSR", 0x4A, 1, Accumulator),
+  TestData("LSR", 0x46, 2, ZeroPage),
+  TestData("LSR", 0x56, 2, ZeroPageX),
+  TestData("LSR", 0x4E, 2, Absolute),
+  TestData("LSR", 0x5E, 2, AbsoluteX),
+
+  /**
+   * NOP No Operation
+   *
+   * implied	NOP	EA	1
+   */
+  TestData("NOP", 0xEA, 1, Implied),
+
+
+  /**
+   * ORA Load Accumulator with Memory
+   *
+   * immediate	ORA #oper	      09	2
+   * zeropage	ORA oper	        05	2
+   * zeropage,X	ORA oper,X	    15	2
+   * absolute	ORA oper	        0D	3
+   * absolute,X	ORA oper,X	    1D	3
+   * absolute,Y	ORA oper,Y	    19	3
+   * (indirect,X)	ORA (oper,X)	01	2
+   * (indirect),Y	ORA (oper),Y	11	2
+   */
+  TestData("ORA", 0x09, 2, Immediate),
+  TestData("ORA", 0x05, 2, ZeroPage),
+  TestData("ORA", 0x15, 2, ZeroPageX),
+  TestData("ORA", 0x0D, 3, Absolute),
+  TestData("ORA", 0x1D, 3, AbsoluteX),
+  TestData("ORA", 0x19, 3, AbsoluteY),
+  TestData("ORA", 0x01, 2, IndirectX),
+  TestData("ORA", 0x11, 2, IndirectY),
+
+  /**
+   * PHA Push Accumulator on Stack
+   *
+   * implied	PHA	48	1
+   */
+  TestData("PHA", 0x48, 1, Implied),
+
+  /**
+   * PHP Push Processor Status on Stack
+   *
+   * implied	PHA	08	1
+   */
+  TestData("PHP", 0x08, 1, Implied),
+
+  /**
+   * PLA Pull Accumulator from Stack
+   *
+   * implied	PLA	68	1
+   */
+  TestData("PLA", 0x68, 1, Implied),
+
+  /**
+   * PLP Pull Processor Status from Stack
+   *
+   * implied	PLP	28	1
+   */
+  TestData("PLP", 0x28, 1, Implied),
+
+
 )
 
 class InstructionSpec extends AnyFlatSpec, should.Matchers {

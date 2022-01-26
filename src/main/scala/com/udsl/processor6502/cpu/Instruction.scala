@@ -215,10 +215,10 @@ case class LDY() extends CpuInstruction(Map(Immediate -> insData( 0xA0, 2),
   override def name() = "LDY"
 
 
-case class LSR() extends CpuInstruction(Map(Accumulator -> insData( 0x4A, 2),
+case class LSR() extends CpuInstruction(Map(Accumulator -> insData( 0x4A, 1),
   ZeroPage -> insData( 0x46, 2),
   ZeroPageX -> insData( 0x56, 2),
-  Absolute -> insData( 0xAE, 2),
+  Absolute -> insData( 0x4E, 2),
   AbsoluteX -> insData( 0x5E, 2))):
   override def name() = "LSR"
 
