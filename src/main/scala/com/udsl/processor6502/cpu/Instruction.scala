@@ -218,8 +218,8 @@ case class LDY() extends CpuInstruction(Map(Immediate -> insData( 0xA0, 2),
 case class LSR() extends CpuInstruction(Map(Accumulator -> insData( 0x4A, 1),
   ZeroPage -> insData( 0x46, 2),
   ZeroPageX -> insData( 0x56, 2),
-  Absolute -> insData( 0x4E, 2),
-  AbsoluteX -> insData( 0x5E, 2))):
+  Absolute -> insData( 0x4E, 3),
+  AbsoluteX -> insData( 0x5E, 3))):
   override def name() = "LSR"
 
 
@@ -311,7 +311,7 @@ case class STA() extends CpuInstruction(Map(ZeroPage -> insData( 0x85, 2),
 
 
 case class STX() extends CpuInstruction(Map(ZeroPage -> insData( 0x86, 2),
-  ZeroPageX -> insData( 0x96, 2),
+  ZeroPageY -> insData( 0x96, 2),
   Absolute -> insData( 0x8E, 3))):
   override def name() = "STX"
 
@@ -352,7 +352,7 @@ object CpuInstructions :
   val validInstructions = LazyList(ADC(),AND(),ASL(),BCC(),BCS(),BEQ(),BIT(),BMI(),BNE(),BPL(),BRK(),BVC(),BVS(),CLC(),
     CLD(), CLI(),CLV(),CMP(),CPX(),CPY(),DEC(),DEX(),DEY(),EOR(),INC(),INX(),INY(),JMP(),JSR(),LDA(),LDX(),LDY(),LSR(),
     NOP(),ORA(),PHA(),PHP(),PLA(),PLP(),ROL(),ROR(),RTI(),RTS(),SBC(),SEC(),SED(),SEI(),STA(),STX(),STY(),TAX(),TAY(),
-    TXA(),TXS(),TYA())
+    TSX(),TXA(),TXS(),TYA())
 
   def isValidInstruction(ins: String): Boolean =
     val x = validInstructions.filter(a => a.name().equals(ins.toUpperCase()))

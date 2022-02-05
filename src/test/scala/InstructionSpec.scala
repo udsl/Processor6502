@@ -266,8 +266,8 @@ val dataValidInstructionTest: List[TestData] = List(
   TestData("LSR", 0x4A, 1, Accumulator),
   TestData("LSR", 0x46, 2, ZeroPage),
   TestData("LSR", 0x56, 2, ZeroPageX),
-  TestData("LSR", 0x4E, 2, Absolute),
-  TestData("LSR", 0x5E, 2, AbsoluteX),
+  TestData("LSR", 0x4E, 3, Absolute),
+  TestData("LSR", 0x5E, 3, AbsoluteX),
 
   /**
    * NOP No Operation
@@ -326,6 +326,175 @@ val dataValidInstructionTest: List[TestData] = List(
    */
   TestData("PLP", 0x28, 1, Implied),
 
+  /**
+   * ROL Rotate One Bit Left (Memory or Accumulator)
+   *
+   * accumulator	ROL A	      2A	1
+   * zeropage	    ROL oper	  26	2
+   * zeropage,X	  ROL oper,X	36	2 
+   * absolute	    ROL oper	  2E	3
+   * absolute,X	  ROL oper,X	3E	3
+   */
+  TestData("ROL", 0x2A, 1, Accumulator),
+  TestData("ROL", 0x26, 2, ZeroPage),
+  TestData("ROL", 0x36, 2, ZeroPageX),
+  TestData("ROL", 0x2E, 3, Absolute),
+  TestData("ROL", 0x3E, 3, AbsoluteX),
+
+
+  /**
+   * ROR Rotate One Bit Right (Memory or Accumulator)
+   *
+   * accumulator	ROR A	      6A	1
+   * zeropage	    ROR oper	  66	2
+   * zeropage,X	  ROR oper,X	76	2
+   * absolute	    ROR oper	  6E	3
+   * absolute,X	  ROR oper,X	7E	3
+   */
+  TestData("ROR", 0x6A, 1, Accumulator),
+  TestData("ROR", 0x66, 2, ZeroPage),
+  TestData("ROR", 0x76, 2, ZeroPageX),
+  TestData("ROR", 0x6E, 3, Absolute),
+  TestData("ROR", 0x7E, 3, AbsoluteX),
+
+  /**
+   * RTI Return from Interrupt
+   *
+   * implied	RTI	40	1
+   */
+  TestData("RTI", 0x40, 1, Implied),
+
+  /**
+   * RTS Return from Subroutine
+   *
+   * implied	RTI	60	1
+   */
+  TestData("RTS", 0x60, 1, Implied),
+
+  /**
+   * SBC Subtract Memory from Accumulator with Borrow
+   *
+   * immediate	SBC #oper	      E9	2
+   * zeropage	SBC oper	        E5	2
+   * zeropage,X	SBC oper,X	    F5	2
+   * absolute	SBC oper	        ED	3
+   * absolute,X	SBC oper,X	    FD	3
+   * absolute,Y	SBC oper,Y	    F9	3
+   * (indirect,X)	SBC (oper,X)	E1	2
+   * (indirect),Y	SBC (oper),Y	F1	2
+   */
+  TestData("SBC", 0xE9, 2, Immediate),
+  TestData("SBC", 0xE5, 2, ZeroPage),
+  TestData("SBC", 0xF5, 2, ZeroPageX),
+  TestData("SBC", 0xED, 3, Absolute),
+  TestData("SBC", 0xFD, 3, AbsoluteX),
+  TestData("SBC", 0xF9, 3, AbsoluteY),
+  TestData("SBC", 0xE1, 2, IndirectX),
+  TestData("SBC", 0xF1, 2, IndirectY),
+
+  /**
+   * SEC Set Carry Flag
+   *
+   * implied	SEC	38	1
+   */
+  TestData("SEC", 0x38, 1, Implied),
+
+  /**
+   * SED Set Decimal Flag
+   *
+   * implied	SED	38	1
+   */
+  TestData("SED", 0xF8, 1, Implied),
+
+  /**
+   * SEI Set Interrupt Disable Status
+   *
+   * implied	SEI	78	1
+   */
+  TestData("SEI", 0x78, 1, Implied),
+
+  /**
+   * STA Store Accumulator in Memory
+   *
+   * zeropage	STA oper	        85	2
+   * zeropage,X	STA oper,X	    95	2
+   * absolute	STA oper	        8D	3
+   * absolute,X	STA oper,X	    9D	3
+   * absolute,Y	STA oper,Y	    99	3
+   * (indirect,X)	STA (oper,X)	81	2
+   * (indirect),Y	STA (oper),Y	91	2
+   */
+  TestData("STA", 0x85, 2, ZeroPage),
+  TestData("STA", 0x95, 2, ZeroPageX),
+  TestData("STA", 0x8D, 3, Absolute),
+  TestData("STA", 0x9D, 3, AbsoluteX),
+  TestData("STA", 0x99, 3, AbsoluteY),
+  TestData("STA", 0x81, 2, IndirectX),
+  TestData("STA", 0x91, 2, IndirectY),
+  
+  /**
+   * STX Store X in Memory
+   *
+   * zeropage	STX oper	        86	2
+   * zeropage,Y	STX oper,Y	    96	2
+   * absolute	STX oper	        8E	3
+   */
+  TestData("STX", 0x86, 2, ZeroPage),
+  TestData("STX", 0x96, 2, ZeroPageY),
+  TestData("STX", 0x8E, 3, Absolute),
+
+  /**
+   * STY Store Y in Memory
+   *
+   * zeropage	STY oper	        84	2
+   * zeropage,X	STY oper,X	    94	2
+   * absolute	STY oper	        8C	3
+   */
+  TestData("STY", 0x84, 2, ZeroPage),
+  TestData("STY", 0x94, 2, ZeroPageX),
+  TestData("STY", 0x8C, 3, Absolute),
+
+  /**
+   * TAX Transfer Accumulator to Index X
+   *
+   * implied	TAX	AA	1
+   */
+  TestData("TAX", 0xAA, 1, Implied),
+
+  /**
+   * TAY Transfer Accumulator to Index Y
+   *
+   * implied	TAY	A8	1
+   */
+  TestData("TAY", 0xA8, 1, Implied),
+
+  /**
+   * TSX Transfer Stack Pointer to Index X
+   *
+   * implied	TSX	BA	1
+   */
+  TestData("TSX", 0xBA, 1, Implied),
+
+  /**
+   * TXA Transfer Index X to Accumulator
+   *
+   * implied	TXA	8A	1
+   */
+  TestData("TXA", 0x8A, 1, Implied),
+
+  /**
+   * TXS Transfer Index X to Stack Register
+   *
+   * implied	TXS	9A	1
+   */
+  TestData("TXS", 0x9A, 1, Implied),
+
+  /**
+   * TYA Transfer Index Y to Accumulator
+   *
+   * implied	TYA	98	1
+   */
+  TestData("TYA", 0x98, 1, Implied),
 
 )
 
