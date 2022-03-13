@@ -45,7 +45,7 @@ package com.udsl.processor6502.ui:
       val selected = memoryView.selectionModel.apply().getSelectedItems.get(0)
       logger.info(s"menu action - '${selected}'")
 //      logger.info(selected.getLocation())
-      val lineAssembler = new LineAssemblerPopup(selected.getLocation())
+      val lineAssembler = new LineAssemblerPopup(selected.getLocation)
       lineAssembler.showAndWait()
     }
   

@@ -16,7 +16,6 @@ class Memory extends StrictLogging:
   }
 
   def setMemoryByte(location: Int, value: Int, disassembly: String): Unit = {
-    logger.info(s"Updating $location to $value with disassembly '$disassembly'")
     Memory.setMemoryByte(location, value, disassembly)
   }
 
@@ -70,7 +69,7 @@ object Memory extends StrictLogging:
   }
 
   private def getMemoryByte(location: Int): Int = {
-    memory(location).getValue()
+    memory(location).getValue
   }
 
   private def notifyVectorChangeListeners(vectorName: String, newValue: Int): Unit ={
@@ -101,7 +100,7 @@ object Memory extends StrictLogging:
       val file = java.io.File("mem.dmp")
       val bw = new BufferedWriter(new FileWriter(file))
 
-      val cells = memory.toList.map[Int](f => f.getValue())
+      val cells = memory.toList.map[Int](f => f.getValue)
       val memoryImage = new ListBuffer[String]()
       val image = new StringBuilder()
       var count = 0
@@ -127,11 +126,11 @@ class MemoryCell(private val location: Address, private var value: ByteValue = B
   override def toString: String =
     s"[${location.toAddressString(MemoryCell.currentMemoryFormat)}] ${value.toDisplayString(MemoryCell.currentMemoryFormat)} ${value.getDisassembly}"
 
-  def getValue(): Int = {
+  def getValue: Int = {
     value._byte.value
   }
 
-  def getLocation(): Int = {
+  def getLocation: Int = {
     location.addr
   }
 }

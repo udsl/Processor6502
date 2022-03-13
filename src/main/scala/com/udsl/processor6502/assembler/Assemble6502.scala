@@ -151,7 +151,7 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
 object AssembleLocation extends StrictLogging :
   // The point in memery we are assembling to.
   var currentLocation: Int = 0
-  val memoryAccess = Memory.apply
+  val memoryAccess: Memory = Memory.apply
 
   def setAssembleLoc(l: Int):Unit =
     if l > 65535 || l < 0 then
@@ -166,9 +166,8 @@ object AssembleLocation extends StrictLogging :
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
     setMemoryByte(v / 256)
-    currentLocation += 1
     setMemoryByte(v % 256)
-    currentLocation += 1
+
 
   def setMemoryAddress(adr: Int): Unit =
     if adr > 65535 || adr < 0 then
@@ -189,6 +188,11 @@ object AssembleLocation extends StrictLogging :
   def getMemoryByte(v: Int): Int =
     memoryAccess.getMemoryByte(v)
 
+  /**
+   * Update the current assemble location by the size of the instruction that was assembled.
+   * 
+   * @param insSize the size of the instruction 1, 2 0r 3 bytes only
+   */
   def addInstructionSize(insSize: Int) : Unit =
     if insSize < 1 || insSize > 3 then
       throw new Exception(s"No instruction with size $insSize")
