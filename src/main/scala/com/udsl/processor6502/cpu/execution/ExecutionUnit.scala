@@ -28,7 +28,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 
   val pcSubscription: Subscription = Processor.pc._addr.onChange {
     (_, oldValue, newValue) => {
-      logger.info(s"PC subscription fired - ${oldValue}, ${newValue}")
+      logger.info(s"PC subscription fired - $oldValue, ${newValue}")
       opcode = getInstruction(newValue.##)
       operand = getInstructionOperand(newValue.##)
       notifyObservers()
@@ -39,7 +39,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     runMode = RunMode.SingleStepping
     // Execute the current instruction
     executeIns()
-    logger.info(s"Next instruction $opcode, operand ${operand}")
+    logger.info(s"Next instruction $opcode, operand $operand")
   }
 
   def startSlow(): Unit =
@@ -77,6 +77,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   def executeIns(): Unit =
     logger.info(s"Executing instruction ${opcode.mnemonic}, operand (${byteToHexString(operand._1)}, ${byteToHexString(operand._2)}) at ${Processor.pc.addr}")
     opcode.mnemonic match {
+      case "ADC" => executeADC()
       case "LDX" => executeLDX()
       case "STX" => executeSTX()
       case "LDY" => executeLDY()
@@ -122,6 +123,34 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
         Processor.pc.addr = memoryAccess.getMemoryAsAddress(INTERRUPT_VECTOR)
       })
 
+
+  def executeADC(): Unit =
+
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+
+    def doRun(): Unit =
+      val accVal = Processor.ac.value
+      val resVal = accVal + value
+      // is accumulator and value +ve and result > 126 then overflow
+      val overflow = accVal < 127 && value < 127 && resVal > 126
+      Processor.sr.updateFlag(StatusRegisterFlags.Overflow, overflow)
+      Processor.sr.updateFlag(StatusRegisterFlags.Negative, resVal % 255 > 127)
+      Processor.sr.updateFlag(StatusRegisterFlags.Zero, resVal % 255 == 0)
+      Processor.ac.value = resVal % 255
+      Processor.pc.inc(opcode.addressMode.bytes)
+
+    if Platform.isFxApplicationThread then
+      Platform.runLater(new Runnable {
+        def run(): Unit = {
+          doRun
+        }
+      })
+    else
+      doRun
 
   def executeLDX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)

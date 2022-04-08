@@ -29,6 +29,7 @@ object AddrBytWrdToken:
  * opcode is the HEX value the token should compile to
  * loByte & hiByte the optional bytes that follow the instruction in memory - depends on addressing mode. -1 = byte not valid.
  */
+
 val dataValidTokensTest: List[(InstructionToken, Int, Int, Int)] = List(
   (Token("LDA", Array[String]("#$20"), List(Immediate)), 0xA9, 32, -1),
   (Token("LDA", Array[String]("$10"), List(ZeroPage)), 0xA5, 16, -1),
@@ -37,7 +38,7 @@ val dataValidTokensTest: List[(InstructionToken, Int, Int, Int)] = List(
   (Token("LDA", Array[String]("$3456,X"), List(AbsoluteX)), 0xBD, 0x56, 0x34),
   (Token("LDA", Array[String]("$3456,Y"), List(AbsoluteY)), 0xB9, 0x56, 0x34),
   (Token("LDA", Array[String]("($34,X)"), List(IndirectX)), 0xA1, 0x34, -1),
-  (Token("LDA", Array[String]("($56),Y"), List(IndirectY)), 0xB1, 0x56, -1),
+  (Token("LDA", Array[String]("($56),Y"), List(IndirectY)), 0xB1, 0x56, -1)
 )
 
 val dataAddrBytWrdTokensTest: List[(AddrBytWrdToken, Int, Int)] = List(
@@ -52,6 +53,7 @@ does not update any memory, the value could be used do do that else where!
 */
 
 class AssembleSpec extends AnyFlatSpec, should.Matchers {
+  
   "Given a valid instruction token" should "should assemble to the correct opcode and value" in {
     for ((token, opcode, loByte, hiByte) <- dataValidTokensTest) {
       // get the current assembly location
@@ -92,4 +94,5 @@ class AssembleSpec extends AnyFlatSpec, should.Matchers {
         assert(lowByte + (highByte * 256) == value)
     }
   }
+
 }
