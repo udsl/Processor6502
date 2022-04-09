@@ -39,7 +39,7 @@ val dataValidInstructionTest: List[TestData] = List(
   TestData("ADC", 0x71, 2, IndirectY), //"($LL),Y"
 
   /*
- AND - Add Memory to Accumulator with Carry
+ AND - AND Memory to Accumulator
  immediate	  AND #oper	    29	2
  zeropage	    AND oper	    25	2
  zeropage,X	  AND oper,X	  35	2
