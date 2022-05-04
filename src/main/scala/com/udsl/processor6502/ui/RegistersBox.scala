@@ -28,7 +28,7 @@ package com.udsl.processor6502.ui:
 
     val pcSubscription: Subscription = Processor.pc._addr.onChange {
       (_, oldValue, newValue) => {
-        logger.info(s"PC subscription fired - ${oldValue}, ${newValue}")
+        logger.debug(s"PC subscription fired - ${oldValue}, ${newValue}")
         updateDisplayedValues()
       }
     }

@@ -41,7 +41,7 @@ package com.udsl.processor6502.ui.popups:
 
     val pcSubscription: Subscription = Processor.pc._addr.onChange {
       (_, oldValue, newValue) => {
-        logger.info(s"PC subscription fired - ${oldValue}, ${newValue}")
+        logger.debug(s"PC subscription fired - ${oldValue}, ${newValue}")
         Executor.executor match
           case Some(_) =>
             currentInsLabel.text = Executor.executionUnit.get.decodeInstruction()

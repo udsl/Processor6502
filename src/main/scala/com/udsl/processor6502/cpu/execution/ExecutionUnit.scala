@@ -28,7 +28,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 
   val pcSubscription: Subscription = Processor.pc._addr.onChange {
     (_, oldValue, newValue) => {
-      logger.info(s"PC subscription fired - $oldValue, ${newValue}")
+      logger.debug(s"PC subscription fired - $oldValue, ${newValue}")
       opcode = getInstruction(newValue.##)
       operand = getInstructionOperand(newValue.##)
       notifyObservers()
@@ -39,7 +39,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     runMode = RunMode.SingleStepping
     // Execute the current instruction
     executeIns()
-    logger.info(s"Next instruction $opcode, operand $operand")
+    logger.debug(s"Next instruction $opcode, operand $operand")
   }
 
   def startSlow(): Unit =
@@ -76,15 +76,16 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     def notImplmented() : Unit =
       logger.info(s"${opcode.mnemonic} execution not implemented")
 
-    logger.info(s"Executing instruction ${opcode.mnemonic}, operand (${byteToHexString(operand._1)}, ${byteToHexString(operand._2)}) at ${Processor.pc.addr}")
+    logger.info(s"Executing instruction ${opcode.mnemonic}, operand (${byteToHexString(operand._1)}, ${byteToHexString(operand._2)}) at ${Processor.pc.addr}\nAccumulator ${Processor.ac}")
     val execute: Unit =  opcode.mnemonic match {
       case "ADC" => { executeADC() }
-      case "LDX" => { executeLDX() }
-      case "STX" => { executeSTX() }
-      case "LDY" => { executeLDY() }
-      case "DEX" => { executeDEX() }
+      case "AND" => { executeAND() }
       case "BNE" => { executeBNE() }
       case "BRK" => { executeBRK() }
+      case "DEX" => { executeDEX() }
+      case "LDX" => { executeLDX() }
+      case "LDY" => { executeLDY() }
+      case "STX" => { executeSTX() }
       case "TXS" => { executeTXS() }
       case _ => { notImplmented() }
     }
@@ -142,6 +143,21 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     Processor.ac.value = resVal % 255
     Processor.pc.inc(opcode.addressMode.bytes)
 
+  def executeAND(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    val accVal = Processor.ac.value
+    val resVal = accVal & value
+    // is accumulator and value +ve and result > 126 then overflow
+    val overflow = accVal < 127 && value < 127 && resVal > 126
+    Processor.sr.updateFlag(StatusRegisterFlags.Overflow, overflow)
+    Processor.sr.updateFlag(StatusRegisterFlags.Negative, resVal % 255 > 127)
+    Processor.sr.updateFlag(StatusRegisterFlags.Zero, resVal % 255 == 0)
+    Processor.ac.value = resVal % 255
+    Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeLDX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
