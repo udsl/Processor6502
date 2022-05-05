@@ -239,9 +239,10 @@ object ExecutionUnit:
       //TODO verify what happens when $LL + index exceeds 255
       EffectiveAddress(true, operand._1 + Processor.iy.ebr)
     case IndirectX =>
-      val loByte = memoryAccess.getMemoryByte(operand._1)
-      val hiByte = memoryAccess.getMemoryByte(operand._1 + 1)
-      EffectiveAddress(true, loByte + (hiByte * 256) + Processor.ix.ebr)
+      val zeroPgaeAddr = operand._1 + Processor.ix.ebr
+      val loByte = memoryAccess.getMemoryByte(zeroPgaeAddr)
+      val hiByte = memoryAccess.getMemoryByte(zeroPgaeAddr + 1)
+      EffectiveAddress(true, loByte + (hiByte * 256))
     case IndirectY =>
       val loByte = memoryAccess.getMemoryByte(operand._1)
       val hiByte = memoryAccess.getMemoryByte(operand._1 + 1)
