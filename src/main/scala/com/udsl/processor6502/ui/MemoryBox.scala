@@ -66,26 +66,27 @@ package com.udsl.processor6502.ui:
           memoryView.scrollTo(Processor.pc.addr)
         }
       }
-      viewPcButton.setTooltip(new Tooltip("Click to view PC location"))
+      viewPcButton.setTooltip(new Tooltip("Click to view PC location."))
   
       val viewLocationButton: Button = new Button {
         text = "View "
         onAction = _ => {
-          logger.info(s"Viewing location ${toView.text}!")
+          logger.info(s"Viewing location ${toView.text.value}!")
           val loc: Int =
             numericValue(toView.text.value)
           memoryView.scrollTo(loc)
         }
       }
-      viewPcButton.setTooltip(new Tooltip("Click to view this location"))
-  
+
       val toView: TextField = new TextField {
         text = Processor.sp.toString
         prefColumnCount = 6
       }
+      viewLocationButton.setTooltip(new Tooltip(s"Click to view given location."))
+      toView.setTooltip(new Tooltip(s"The location to view."))
       children = List( viewPcButton, viewLocationButton, toView)
     }
-  
+
     val codeButtons = new HBox{
       spacing = 20
   

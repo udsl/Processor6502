@@ -36,7 +36,7 @@ class DisassembleSpec extends AnyFlatSpec, should.Matchers {
   "Given an invalid opcode" should "disassemble to an undefined instruction without an applicable addressing mode" in {
     for ((opcode) <- undefinedInstructionTestData) {
       val disassembled = disassemble(opcode)
-      assert(disassembled.equals(Illegal))
+      assert(disassembled.equals(Illegal(NotApplicable)))
     }
   }
 

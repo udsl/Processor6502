@@ -177,6 +177,9 @@ class CodeEditor extends Stage {
     CodeEditor.toFront()
   }
 
+  /**
+   * Perform assembly of the text in the code editor
+   */
   def assemble(): Unit = {
     val asm = Assemble6502.apply(textArea.text.value)
     asm.assemble()

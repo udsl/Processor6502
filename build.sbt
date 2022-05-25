@@ -6,15 +6,15 @@ scalaVersion := "3.1.0"
 
 
 // https://mvnrepository.com/artifact/org.scalafx/scalafx
-libraryDependencies += "org.scalafx" %% "scalafx" % "16.0.0-R24"
+libraryDependencies += "org.scalafx" %% "scalafx" % "16.0.0-R25"
 
 // https://mvnrepository.com/artifact/org.scalacheck/scalacheck
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.4" % Test
 
 // https://mvnrepository.com/artifact/org.scalactic/scalactic
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.10"
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.12"
 // https://mvnrepository.com/artifact/org.scalatest/scalatest
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % Test
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % Test
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"

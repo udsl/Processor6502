@@ -174,6 +174,7 @@ object AssembleLocation extends StrictLogging :
       val errorMessage = s"Bad address value $adr"
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
+    
     memoryAccess.setMemoryToAddress(currentLocation, adr)
     currentLocation += 2
 
@@ -201,6 +202,11 @@ object AssembleLocation extends StrictLogging :
 
 object Assemble6502 extends StrictLogging :
 
+  /**
+   * Assemble the code
+   * @param source lines of text to assemble \n terminated
+   * @return an assembler instance, initialised with tokenised source lines 
+   */
   def apply(source: String): Assemble6502 =
     logger.info("\n\n***** Starting Assembly *****\n\n")
     val allLines = for ((str, index) <- source.split("\n").zipWithIndex)
