@@ -2,113 +2,65 @@ package com.udsl.processor6502.assembler
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
-import com.udsl.processor6502.Utilities.*
-import com.udsl.processor6502.cpu.execution.*
+import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
+import com.udsl.processor6502.assembler.Tokeniser.{getIndirectPredictions, getLabelPredictions, getPredictions, logger, processCommand, processInstruction, processLabel, processValue}
 import com.udsl.processor6502.cpu.CpuInstructions
-import com.udsl.processor6502.cpu.execution.{Absolute, AddressingMode, ZeroPage}
-import com.udsl.processor6502.assembler.{AssemblerToken, BlankLineToken, ClearToken, CommandToken, InstructionToken, LabelToken, OriginToken, SyntaxErrorToken}
+import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Relative, Unknown, ZeroPage, ZeroPageX, ZeroPageY}
 
-import scala.collection.mutable.ListBuffer
-
-object Tokeniser extends StrictLogging :
-
-  def Tokenise(allLines: Array[UntokenisedLine]): List[TokenisedLine] =
-    logger.info(
-      """
-        |**************************
-        |*                        *
-        |*   Start Tokenisation   *
-        |*                        *
-        |**************************
-        |
-        |""".stripMargin)
-    val tokenisedLines = new ListBuffer[TokenisedLine]()
-    for lineToTokenise <- allLines do
-      try
-        tokenisedLines.addOne(tokeniseLine(lineToTokenise))
-      catch
-        case e: Exception =>  addExceptionToken(tokenisedLines, lineToTokenise, s"${e.getMessage}\nOn line ${lineToTokenise.lineNumber}")
-        case a => addExceptionToken(tokenisedLines, lineToTokenise, s"${a.getMessage}\nOn line ${lineToTokenise.lineNumber}")
-    val f = java.io.File("code.tock")
-    writeToFile( f, tokenisedLines.toList)
-    tokenisedLines.toList
-
-  private def addExceptionToken(tokenisedLines: ListBuffer[TokenisedLine], source: UntokenisedLine, exceptionMessage: String): Unit =
-    val tokenisedLine = TokenisedLine(source)
-    tokenisedLine.tokens.addOne(ExceptionToken(exceptionMessage, Array[String]()))
-    tokenisedLines.addOne(tokenisedLine)
-
-  def tokeniseLine(line: UntokenisedLine): TokenisedLine =
-    logger.debug(s"\ntokeniseLine: $line")
+object Parser extends StrictLogging :
+  def parse(line: String, lineNumber: Int) : ParsedLine =
+    logger.debug(s"\nparsing line: $line")
     // determine basic line type
-    val tokenisedLine = TokenisedLine(line)
-    val token: AssemblerToken = line.source.trim match {
+    val parsedLine = ParsedLine(line, lineNumber)
+    val token: AssemblerToken = line.trim match {
       case "" => BlankLineToken( "", Array[String]())
-      case a if a.charAt(0) == ';' => CommentLineToken(line.source.trim, Array[String]())
-      case _ => NoneCommentLine(line.source.trim, Array[String]())
+      case a if a.charAt(0) == ';' => CommentLineToken(line.trim, Array[String]())
+      case _ => NoneCommentLine(line.trim, Array[String]())
     }
 
     token match
       case BlankLineToken( _, _ ) |  CommentLineToken( _, _ ) =>
-        tokenisedLine + token
+        parsedLine + token
       case _ =>
         // if we have a NoneCommentLine then must be either
         //       nememic operand + optional comment
         //       or a command
         // lets deal with the potential comment first
-        val commentSplit = line.source.trim.split(";")
+        val commentSplit = line.trim.split(";")
 
         // remove comment and split rest of line into fields using space though these this could also be seperated by ,
         val fields =
           if commentSplit.length > 1 then
             // we have split so must be a ; and therefore a comment which should be at the end of the line
-            tokenisedLine + LineComment(commentSplit.tail.mkString, commentSplit)
+            parsedLine + LineComment(commentSplit.tail.mkString, commentSplit)
             commentSplit.head.split("\\s+")
           else
-            line.source.split("\\s+")
+            line.split("\\s+")
 
         // command | command value | command value[ ],[ ]value | Label |  Label instruction
-        if !processCommand(fields, tokenisedLine) then
-          val instruction = processLabel(fields, tokenisedLine)
+        if !parseCommand(fields, parsedLine) then
+          val instruction = parseLabel(fields, parsedLine)
           if !instruction.isEmpty then
-            val tokenisedInstruction = processInstruction(instruction, tokenisedLine)
+            val tokenisedInstruction = parseInstruction(instruction, parsedLine)
             if tokenisedInstruction.isInstanceOf[InstructionToken] then
-              processValue(tokenisedLine, tokenisedInstruction)
+              parseValue(parsedLine, tokenisedInstruction)
 
-    tokenisedLine
+    parsedLine
 
-
-  private def processLabel(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String] =
+  private def parseLabel(text: Array[String], parsedLine: ParsedLine ) : Array[String] =
     logger.debug(s"processLabel: ${text.mkString(" ")}")
     val head = text.head
     if head != "" && head.substring(head.length - 1) == ":" then
       val labelText = head.substring(0, head.length - 1)
       AssemblyData.addLabel(labelText)
       val token = LabelToken(labelText, text.tail)
-      tokenisedLine + token
+      parsedLine + token
       logger.debug(s"token added: $token")
       text.tail
     else
       text
 
-
-  private def processCommand(text: Array[String], tokenisedLine: TokenisedLine ) : Boolean =
-
-//    def getReferenceToken( value: String ): AssemblerToken =
-//      logger.debug(s"value - $value")
-//      if value == null || value.isEmpty then
-//        SyntaxErrorToken( "Value not given")
-//      else
-//        if isLable(value) then
-//          // is a label so a reference value
-//          ReferenceToken( value)
-//        else
-//          if isNumeric(value) then
-//            ValueToken( value)
-//          else
-//            SyntaxErrorToken( value)
-
-
+  private def parseCommand(text: Array[String], parsedLine: ParsedLine  ) : Boolean =
     logger.debug(s"processCommand: ${text.mkString(" ")}")
     if !text.isEmpty then
       val head = text.head.toUpperCase
@@ -122,7 +74,7 @@ object Tokeniser extends StrictLogging :
           val values = data.mkString("")
           val token = CommandToken(head, values.split(","))
           token.addPrediction(Unknown)
-          tokenisedLine + token
+          parsedLine + token
           logger.debug(s"token added: $token")
           return true
 
@@ -132,25 +84,25 @@ object Tokeniser extends StrictLogging :
             val str = value(0).trim
             if Utilities.isNumeric(str) then
               val token = OriginToken(str, value)
-              tokenisedLine + token
+              parsedLine + token
               logger.info(s"Origin added from numeric literal $str")
             else if Utilities.isLabel(str) && AssemblyData.labelIsDefined(str) then
               val labelValue = AssemblyData.labelValue(str).toString
               val token = OriginToken(labelValue, value)
-              tokenisedLine + token
+              parsedLine + token
               logger.info(s"Origin added from defined label '$str")
             else
-              tokenisedLine + SyntaxErrorToken( "Value for ORIG not numeric or defined label", value)
+              parsedLine + SyntaxErrorToken( "Value for ORIG not numeric or defined label", value)
           else
-            tokenisedLine + SyntaxErrorToken("Invalid ORIG command!", value)
+            parsedLine + SyntaxErrorToken("Invalid ORIG command!", value)
           return true
 
         // clr only valid on the first line
         case "CLR" =>
           val token = ClearToken(head, text.tail)
-          tokenisedLine + token
-          if tokenisedLine.sourceLine.lineNumber > 1 then
-            tokenisedLine + SyntaxErrorToken(head, text.tail)
+          parsedLine + token
+          if parsedLine.lineNumber > 1 then
+            parsedLine + SyntaxErrorToken(head, text.tail)
           AssemblyData.clear()
           logger.debug(s"token added: $token")
           return true
@@ -160,27 +112,26 @@ object Tokeniser extends StrictLogging :
           // fist part must be the label being defined
           // 2nd is the value which must not be a label
           if parts.length != 2  then
-            tokenisedLine + SyntaxErrorToken("Bad DEF", text)
+            parsedLine + SyntaxErrorToken("Bad DEF", text)
           else if !isLabel(parts(0)) || !isNumeric(parts(1)) then
-            tokenisedLine + SyntaxErrorToken("DEF should be label number", text)
+            parsedLine + SyntaxErrorToken("DEF should be label number", text)
           else
             val value = numericValue(parts(1))
             if (0 to 65535 contains value) then
               AssemblyData.addLabel(parts(0), value)
               val token = DefToken(parts(0), Array[String](parts(1)))
               token.value = parts(1)
-              tokenisedLine + token
+              parsedLine + token
               logger.debug(s"token added: $token")
             else
-              tokenisedLine + SyntaxErrorToken(s"Invalid defined value ${parts(0)} - ${parts(1)}", text)
+              parsedLine + SyntaxErrorToken(s"Invalid defined value ${parts(0)} - ${parts(1)}", text)
           return true
 
         case _ =>
       }
     false
 
-
-  def processInstruction(text: Array[String], tokenisedLine: TokenisedLine ) : AssemblerToken =
+  def parseInstruction(text: Array[String], parsedLine: ParsedLine ) : AssemblerToken =
     logger.debug(s"processInstruction: ${text.mkString(" ")}")
     val instruction = text.head.toUpperCase()
     val token = if CpuInstructions.isValidInstruction(instruction) then
@@ -196,10 +147,10 @@ object Tokeniser extends StrictLogging :
         InstructionToken(instruction, text.tail)
     else
       SyntaxErrorToken( s"Invalid instruction: $instruction", text)
-    tokenisedLine + token
+    parsedLine + token
     token
 
-  def processValue(tokenisedLine: TokenisedLine, token: AssemblerToken ): Unit = {
+  def parseValue(parsedLine: ParsedLine, token: AssemblerToken ): Unit =
     logger.debug(s"processValue: ${token.fields}")
 
     logger.debug(s"No operand for ${token}")
@@ -224,26 +175,6 @@ object Tokeniser extends StrictLogging :
         case e if e.charAt(0) == '(' => token.addPredictions(getIndirectPredictions(e))
         case _ => token.addPrediction(Unknown)
       }
-  }
-
-  /**
-   * ind	indirect	OPC ($LLHH)	operand is address; effective address is contents of word at address: C.w($HHLL)
-   * X,ind	X-indexed, indirect	OPC ($LL,X)	operand is zeropage address; effective address is word in (LL + X, LL + X + 1), inc. without carry: C.w($00LL + X)
-   * ind,Y	indirect, Y-indexed	OPC ($LL),Y	operand is zeropage address; effective address is word in (LL, LL + 1) incremented by Y with carry: C.w($00LL) + Y
-   *
-   * @param t the string representing the operand
-   * @return a prediction of the real addressing mode, we only need a prediction. The 2nd pass will have to do the full calc anyway.
-   *         The prediction just goves it a starting point saves a bit of time.
-   *
-   */
-  def getIndirectPredictions(t: String) : List[AddressingMode] =
-    // lastChar should be ) or Y
-    val lastChar = t.substring(t.length() - 1).toUpperCase()
-    lastChar match {
-      case ")" => List(Indirect, IndirectX)
-      case "Y" => List(IndirectY)
-      case _ => List(Unknown)
-    }
 
   /**
    * The operand starts with a letter so it could be almost anny mode with the address being defined with a DEF later in the file
@@ -265,7 +196,7 @@ object Tokeniser extends StrictLogging :
    *
    *
    * @param t the string representing the operand (label)
-   * @returna prediction of the real addressing mode, we only need a prediction. The 2nd pass will have to do the full calc anyway.
+   * @return prediction of the real addressing mode, we only need a prediction. The 2nd pass will have to do the full calc anyway.
    *         The prediction just gives it a starting point saves a bit of time.
    */
   def getLabelPredictions(t: String) : List[AddressingMode] =
@@ -314,5 +245,3 @@ object Tokeniser extends StrictLogging :
         case ",X" => List(ZeroPageX)
         case ",Y" => List(ZeroPageY)
         case _ => List(ZeroPage, Relative)
-
-

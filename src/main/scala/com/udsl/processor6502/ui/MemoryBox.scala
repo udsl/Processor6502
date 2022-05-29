@@ -87,42 +87,6 @@ package com.udsl.processor6502.ui:
       children = List( viewPcButton, viewLocationButton, toView)
     }
 
-    val codeButtons = new HBox{
-      spacing = 20
-  
-      val viewCodeEditorButton: Button = new Button {
-        text = "Edit Code"
-        onAction = _ => {
-          logger.info("Editing code!")
-          CodeEditor.showCodeEditor()
-        }
-      }
-      viewCodeEditorButton.setTooltip(new Tooltip("Open code window"))
-  
-      val disassembleButton: Button = new Button {
-        text = "Disassemble "
-        disable = true
-  
-        onAction = _ => {
-          val loc: Int = Integer.parseInt(disassembleLocation.text.value)
-          logger.info(s"Disassembling location ${loc}!")
-          memoryView.scrollTo(loc)
-        }
-      }
-  
-      disassembleButton.setTooltip(new Tooltip("Disassemble from location"))
-  
-      val disassembleLocation: TextField = new TextField {
-        prefColumnCount = 6
-  
-         onKeyTyped = e => {
-          disassembleButton.disable = text.value.isEmpty
-        }
-      }
-  
-      children = List( viewCodeEditorButton, disassembleButton, disassembleLocation)
-    }
-
     val memoryButtons = new HBox{
       spacing = 20
 
@@ -139,6 +103,6 @@ package com.udsl.processor6502.ui:
 
     padding = Insets(20)
     spacing = 8
-    children = List(memoryBoxCaption, st, memoryButtons, viewButtons, codeButtons)
+    children = List(memoryBoxCaption, st, memoryButtons, viewButtons)
   }
   

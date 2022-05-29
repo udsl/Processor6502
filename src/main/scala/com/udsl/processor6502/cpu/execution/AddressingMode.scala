@@ -2,9 +2,9 @@ package com.udsl.processor6502.cpu.execution:
 
   import com.udsl.processor6502.cpu.execution
 
-  sealed trait AddressingMode{
+  sealed trait AddressingMode:
     def bytes: Int
-  }
+  
 
   case object Accumulator extends AddressingMode {
     override def toString: String = "A accumulator"

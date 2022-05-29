@@ -33,7 +33,7 @@ package com.udsl.processor6502:
           root =
             val memoryBox = new MemoryBox()
 
-            val footer = new FooterBox()
+            val footer = new FooterBox(memoryBox)
 
             new BorderPane {
               maxWidth = 400
