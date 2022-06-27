@@ -44,6 +44,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       }
     NoTokenToken("", Array[String]())
 
+  
   def procesLabel(token: AssemblerToken): Unit =
     logger.info("\tprocesLabel ")
 

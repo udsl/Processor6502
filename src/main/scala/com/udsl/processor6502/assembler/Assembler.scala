@@ -23,6 +23,12 @@ class SourceFileAssembler(val sourceFile: File) extends Assembler, StrictLogging
       Assembler.processLine(line)
     }
     bufferedSource.close
+    doSecondPass()
+
+  def doSecondPass(): Unit =
+    for (tokisedLine <- Assembler.tokenisedList) {
+      Assemble6502SecondPass.assemble(tokisedLine)
+    }
 
 class SourceAssembler(val source: String) extends Assembler, StrictLogging:
   def startAssembly(): Unit =
@@ -61,3 +67,4 @@ object Assembler extends StrictLogging :
     val tokisedLine = Tokeniser.tokeniseLine(lineToTokenise)
     tokenisedList += tokisedLine
     Assemble6502FirstPass.assemble(tokisedLine)
+

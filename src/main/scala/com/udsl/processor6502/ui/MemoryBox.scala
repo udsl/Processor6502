@@ -4,7 +4,6 @@ package com.udsl.processor6502.ui:
   import com.udsl.processor6502.cpu.{Memory, MemoryCell, Processor}
   import com.udsl.processor6502.NumericFormatType
   import com.udsl.processor6502.ui.popups.{Executor, LineAssemblerPopup}
-  import com.udsl.processor6502.assembler.CodeEditor
   import com.udsl.processor6502.cpu.MemoryCell.*
   import com.udsl.processor6502.disassembler.Disassembler
   import javafx.collections.FXCollections

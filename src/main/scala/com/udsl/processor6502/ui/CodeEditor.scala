@@ -1,18 +1,19 @@
-package com.udsl.processor6502.assembler
+package com.udsl.processor6502.ui
 
 import com.udsl.processor6502.Dialogues.{confirmation, selectSourceFileToLoad}
+import com.udsl.processor6502.assembler.{Assemble6502}
 import com.udsl.processor6502.{Main, Utilities}
 import scalafx.application.JFXApp
 import scalafx.event.EventHandler
+import scalafx.event.EventIncludes.eventClosureWrapperWithZeroParam
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
-import scalafx.scene.control.{Button, Label, MenuButton, MenuItem, TextArea}
+import scalafx.scene.control.*
 import scalafx.scene.layout.{BorderPane, GridPane, HBox, VBox}
 import scalafx.stage.{Modality, Stage}
 
 import java.io.{BufferedWriter, File, FileWriter}
 import scala.io.Source
-import scalafx.event.EventIncludes.eventClosureWrapperWithZeroParam
 
 
 class CodeEditor extends Stage {

@@ -2,9 +2,8 @@ package com.udsl.processor6502:
 
   import com.typesafe.scalalogging.StrictLogging
   import com.udsl.processor6502.Dialogues.theStage
-  import com.udsl.processor6502.assembler.CodeEditor
   import com.udsl.processor6502.ui.popups.Executor
-  import com.udsl.processor6502.ui.{FooterBox, MemoryBox, NumericFormatSelector, RegistersBox}
+  import com.udsl.processor6502.ui.{CodeEditor, FooterBox, MemoryBox, NumericFormatSelector, RegistersBox}
   import javafx.beans.value.ChangeListener
   import javafx.event.ActionEvent
   import scalafx.application.JFXApp3
