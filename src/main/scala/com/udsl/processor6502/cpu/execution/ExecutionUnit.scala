@@ -6,6 +6,7 @@ import com.udsl.processor6502.Utilities.{byteToHexString, constructSourceLine, n
 import com.udsl.processor6502.cpu.Memory.INTERRUPT_VECTOR
 import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
 import com.udsl.processor6502.cpu.Processor.{getNextInstruction, *}
+import com.udsl.processor6502.cpu.StatusRegister.CARRY_FLAG_MASK
 import com.udsl.processor6502.cpu.StatusRegisterFlags.{Break, Carry, Decimal, Interrupt, Negative, Overflow, Zero}
 import com.udsl.processor6502.disassembler.Disassembler
 import com.udsl.processor6502.ui.popups.Executor
@@ -40,7 +41,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     // Do we have the instruction
     opcode match {
       case NULL(NotApplicable) => getNextInstruction()
-      case _ => () 
+      case _ => ()
     }
     executeIns()
     logger.debug(s"Next instruction $opcode, operand $operand")
@@ -66,7 +67,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case NULL(NotApplicable) => getNextInstruction()
       case _ => ()
     }
-    
+
     val thread = new Thread {
       override def run =
         while runMode == RunMode.Running || runMode == RunMode.RunningSlow do
@@ -86,6 +87,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val execute: Unit =  opcode.mnemonic match {
       case "ADC" => { executeADC() }
       case "AND" => { executeAND() }
+      case "ASL" => { executeASL() }
       case "BNE" => { executeBNE() }
       case "BRK" => { executeBRK() }
       case "DEX" => { executeDEX() }
@@ -103,7 +105,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       })
     else
       execute
-  
+
   def decodeInstruction(): String =
     opcode match
       case NULL(_) => ""
@@ -160,6 +162,29 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     Processor.sr.updateFlag(StatusRegisterFlags.Zero, resVal % 255 == 0)
     Processor.ac.value = resVal % 255
     Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeASL(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    if effectiveAddr.hasValue then
+      val value: Int = memoryAccess.getMemoryByte(effectiveAddr.address)
+      if (value & 255) >= 128 then
+        Processor.sr.setFlag(StatusRegisterFlags.Carry)
+      else
+        Processor.sr.clearFlag(StatusRegisterFlags.Carry)
+      val writeBack = (value << 1) & 0xFE
+      if writeBack == 0 then
+        Processor.sr.setFlag(StatusRegisterFlags.Zero)
+      memoryAccess.setMemoryByte(effectiveAddr.address, writeBack)
+    else // must be accumulator if no effective address as no immediate for ASL
+        val accVal = Processor.ac.value
+        if (accVal & 255) >= 128 then
+          Processor.sr.setFlag(StatusRegisterFlags.Carry)
+        else
+          Processor.sr.clearFlag(StatusRegisterFlags.Carry)
+        Processor.ac.value = (accVal << 1) & 0xFE
+        if Processor.ac.value == 0 then
+          Processor.sr.setFlag(StatusRegisterFlags.Zero)
+
 
   def executeLDX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)

@@ -30,6 +30,10 @@ class Memory extends StrictLogging:
     Memory.getMemoryAsAddress(location)
   }
 
+  def getMemoryWrd(location: Int): Int = {
+    Memory.getMemoryAsAddress(location)
+  }
+
 
 trait VectorChangeListener:
   def vectorChange( changeList: (String, Int)): Unit

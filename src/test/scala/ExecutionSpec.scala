@@ -4,13 +4,12 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.assembler.AssembleLocation.logger
 import com.udsl.processor6502.assembler.{AssembleLocation, InstructionToken}
 import com.udsl.processor6502.cpu.Memory.NMI_VECTOR
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Immediate, IndirectX, IndirectY, ZeroPage, ZeroPageX}
+import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, ExecutionUnit, Immediate, IndirectX, IndirectY, ZeroPage, ZeroPageX}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
-import com.udsl.processor6502.cpu.execution.ExecutionUnit
-import com.udsl.processor6502.cpu.StatusRegister.{NEGATIVE_FLAG_MASK, OVERFLOW_FLAG_MASK, UNUSED_FLAG_MASK, ZERO_FLAG_MASK}
+import com.udsl.processor6502.cpu.StatusRegister.{CARRY_FLAG_MASK, NEGATIVE_FLAG_MASK, OVERFLOW_FLAG_MASK, UNUSED_FLAG_MASK, ZERO_FLAG_MASK}
 
 trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean )
 
@@ -71,41 +70,57 @@ object InsData extends StrictLogging:
 case class InsSourceData(opcode: Int, data: InsData)
 case class InsResultData(ac: Int, ix: Int, iy: Int, sr: Int = UNUSED_FLAG_MASK)
 
+trait ResultMemData( val loc:Int, val value: Int, byte: Boolean)
+
+case class memByteResult(override val loc:Int, override val value: Int ) extends ResultMemData(loc, value, true)
+case class memWrdResult(override val loc:Int, override val value: Int ) extends ResultMemData(loc, value, false)
+case class memVoidResult() extends ResultMemData(0, 0, false)
+
 // ADC add with carry
 val dataAdcInstructionTest = List(
-  (InsSourceData(0x69, InsData(10, AccValue(100))), InsResultData(110,0,0)), // ADC immediate 10
-  (InsSourceData(0x69, InsData(126, AccValue(100))), InsResultData(226,0,0,OVERFLOW_FLAG_MASK | NEGATIVE_FLAG_MASK)), // ADC immediate 126
-  (InsSourceData(0x65, InsData(101, AccValue(100))), InsResultData(106, 0, 0)), // ADC zer0 page 101 contains 6
-  (InsSourceData(0x75, InsData(101, AccValue(100))), InsResultData(106, 0, 0)), //  Token("ADC", 0x75, 2, ZeroPageX), // $LL,X
-  (InsSourceData(0x6D, InsData(101, AccValue(100))), InsResultData(106, 0, 0)), //  Token("ADC", 0x6D, 3, Absolute),  // $LLLL
-  (InsSourceData(0x7D, InsData(101, AccValue(100))), InsResultData(106, 0, 0)), //  Token("ADC", 0x7D, 3, AbsoluteX), // $LL,X
-  (InsSourceData(0x79, InsData(101, AccValue(100))), InsResultData(106, 0, 0)), //  Token("ADC", 0x79, 3, AbsoluteY), // $LL,Y
+  ("ADC 1", InsSourceData(0x69, InsData(10, AccValue(100))), InsResultData(110,0,0), memVoidResult()), // ADC immediate 10
+  ("ADC 2", InsSourceData(0x69, InsData(126, AccValue(100))), InsResultData(226,0,0,OVERFLOW_FLAG_MASK | NEGATIVE_FLAG_MASK), memVoidResult()), // ADC immediate 126
+  ("ADC 3", InsSourceData(0x65, InsData(101, AccValue(100))), InsResultData(106, 0, 0), memVoidResult()), // ADC zer0 page 101 contains 6
+  ("ADC 4", InsSourceData(0x75, InsData(101, AccValue(100))), InsResultData(106, 0, 0), memVoidResult()), //  Token("ADC", 0x75, 2, ZeroPageX), // $LL,X
+  ("ADC 5", InsSourceData(0x6D, InsData(101, AccValue(100))), InsResultData(106, 0, 0), memVoidResult()), //  Token("ADC", 0x6D, 3, Absolute),  // $LLLL
+  ("ADC 6", InsSourceData(0x7D, InsData(101, AccValue(100))), InsResultData(106, 0, 0), memVoidResult()), //  Token("ADC", 0x7D, 3, AbsoluteX), // $LL,X
+  ("ADC 7", InsSourceData(0x79, InsData(101, AccValue(100))), InsResultData(106, 0, 0), memVoidResult()), //  Token("ADC", 0x79, 3, AbsoluteY), // $LL,Y
   // Zeropage 100 set to 0x638 by data initialisation
-  (InsSourceData(0x61, InsData(100, AccValue(100))), InsResultData(101, 0, 0)), //  Token("ADC", 0x61, 2, IndirectX), // ($LL,X)
-  (InsSourceData(0x61, InsData(100, AccValue(105))), InsResultData(106, 0, 0)), //  Token("ADC", 0x61, 2, IndirectX), // ($LL,X)
+  ("ADC 8", InsSourceData(0x61, InsData(100, AccValue(100))), InsResultData(101, 0, 0), memVoidResult()), //  Token("ADC", 0x61, 2, IndirectX), // ($LL,X)
+  ("ADC 9", InsSourceData(0x61, InsData(100, AccValue(105))), InsResultData(106, 0, 0), memVoidResult()), //  Token("ADC", 0x61, 2, IndirectX), // ($LL,X)
 /*
 Execute instruction with opcode 0x71 at 2000, operand 100 with ac= 99, ix=0, iy=1.
 Zeropage 100 contains address 0x638 which has been initialised with byts 1,2,3,4
 so result will be 99 + 2 = 101.
 */
-  (InsSourceData(0x71, InsData(100, AccIyValue(99, 1))), InsResultData(101, 0, 1, UNUSED_FLAG_MASK)) //  Token("ADC", 0x71, 2, IndirectY), //"($LL),Y"
+  ("ADC 10", InsSourceData(0x71, InsData(100, AccIyValue(99, 1))), InsResultData(101, 0, 1, UNUSED_FLAG_MASK), memVoidResult()) //  Token("ADC", 0x71, 2, IndirectY), //"($LL),Y"
 )
 
 // AND and (with accumulator)
 val dataAndInstructionTest = List(
-  (InsSourceData(0x29, InsData(0xF4, AccValue(100))), InsResultData(100, 0, 0, UNUSED_FLAG_MASK)), // And acc (0x64) immediate with 0xF4 result should be 0x64
-  (InsSourceData(0x25, InsData(101, AccValue(100))), InsResultData(4, 0, 0, UNUSED_FLAG_MASK)), // And acc (0x64) zero page 101 value 6 result should be 4
-  (InsSourceData(0x35, InsData(99, AccIxValue(0x66, 2))), InsResultData(6, 2, 0, UNUSED_FLAG_MASK)), // And acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 6
-  (InsSourceData(0x35, InsData(99, AccIxValue(0x88, 2))), InsResultData(0, 2, 0, UNUSED_FLAG_MASK | ZERO_FLAG_MASK)), // And acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 0
-  (InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xE1, 2))), InsResultData(0x21, 2, 0, UNUSED_FLAG_MASK)), //  TestData("AND", 0x2D, 3, Absolute),  // $LLLL
-  (InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xCC, 2))), InsResultData(0, 2, 0, UNUSED_FLAG_MASK | ZERO_FLAG_MASK)), //  TestData("AND", 0x2D, 3, Absolute),  // $LLLL
-  (InsSourceData(0x3D, InsData(absTestLocation, AccIxValue(0xCC, 1))), InsResultData(0xCC, 1, 0, UNUSED_FLAG_MASK | NEGATIVE_FLAG_MASK)), //  TestData("AND", 0x3D, 3, AbsoluteX), // $LL,X
-  (InsSourceData(0x39, InsData(absTestLocation, AccIyValue(0xCC, 2))), InsResultData(0, 0, 2, UNUSED_FLAG_MASK | ZERO_FLAG_MASK)), //  TestData("AND", 0x39, 3, AbsoluteY), // $LL,Y
-  (InsSourceData(0x21, InsData(100, AccIxValue(0x66, 2))), InsResultData(0x60, 2, 0)), //  TestData("AND", 0x21, 2, IndirectX), // ($LL,X)
-  (InsSourceData(0x31, InsData(100, AccIyValue(0x66, 3))), InsResultData(0x04, 0, 3))//  TestData("AND", 0x31, 2, IndirectY), //"($LL),Y"
+  ("AND 1", InsSourceData(0x29, InsData(0xF4, AccValue(100))), InsResultData(100, 0, 0), memVoidResult()), // And acc (0x64) immediate with 0xF4 result should be 0x64
+  ("AND 2", InsSourceData(0x25, InsData(101, AccValue(100))), InsResultData(4, 0, 0), memVoidResult()), // And acc (0x64) zero page 101 value 6 result should be 4
+  ("AND 3", InsSourceData(0x35, InsData(99, AccIxValue(0x66, 2))), InsResultData(6, 2, 0), memVoidResult()), // And acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 6
+  ("AND 4", InsSourceData(0x35, InsData(99, AccIxValue(0x88, 2))), InsResultData(0, 2, 0, ZERO_FLAG_MASK), memVoidResult()), // And acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 0
+  ("AND 5", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xE1, 2))), InsResultData(0x21, 2, 0), memVoidResult()), //  TestData("AND", 0x2D, 3, Absolute),  // $LLLL
+  ("AND 6", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xCC, 2))), InsResultData(0, 2, 0, ZERO_FLAG_MASK), memVoidResult()), //  TestData("AND", 0x2D, 3, Absolute),  // $LLLL
+  ("AND 7", InsSourceData(0x3D, InsData(absTestLocation, AccIxValue(0xCC, 1))), InsResultData(0xCC, 1, 0, NEGATIVE_FLAG_MASK), memVoidResult()), //  TestData("AND", 0x3D, 3, AbsoluteX), // $LL,X
+  ("AND 8", InsSourceData(0x39, InsData(absTestLocation, AccIyValue(0xCC, 2))), InsResultData(0, 0, 2, ZERO_FLAG_MASK), memVoidResult()), //  TestData("AND", 0x39, 3, AbsoluteY), // $LL,Y
+  ("AND 9", InsSourceData(0x21, InsData(100, AccIxValue(0x66, 2))), InsResultData(0x60, 2, 0), memVoidResult()), //  TestData("AND", 0x21, 2, IndirectX), // ($LL,X)
+  ("AND 10", InsSourceData(0x31, InsData(100, AccIyValue(0x66, 3))), InsResultData(0x04, 0, 3), memVoidResult())//  TestData("AND", 0x31, 2, IndirectY), //"($LL),Y"
 )
 
 // ASL arithmetic shift left
+val dataAslInstructionTest = List(
+//  ("ASL 1.0 accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x20))), InsResultData(0x40, 0, 0), memVoidResult()), //  TestData("ASL", 0x0A, 1, Accumulator), // #
+//  ("ASL 1.1 accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x80))), InsResultData(0x00, 0, 0, CARRY_FLAG_MASK | ZERO_FLAG_MASK), memVoidResult()), //  TestData("ASL", 0x0A, 1, Accumulator), // #
+//  ("ASL 1.2 accumulator", InsSourceData(0x0A, InsData(0x7F, AccValueWithCarry(0x3F))), InsResultData(0x7E, 0, 0), memVoidResult()), //  TestData("ASL", 0x0A, 1, Accumulator), // #
+  ("ASL 2.0 zeropage ", InsSourceData(0x06, InsData(0x66, ZeroValues())), InsResultData(0, 0, 0), memByteResult(0x66, 0x7E)), //  TestData("ASL", 0x06, 2, ZeroPage),  // $LL
+//  TestData("ASL", 0x16, 2, ZeroPageX), // $LL,X
+//  TestData("ASL", 0x0E, 3, Absolute),  // $LLLL
+//  TestData("ASL", 0x1E, 3, AbsoluteX), // $LL,X
+)
+
 // BCC branch on carry clear
 // BCS branch on carry set
 // BEQ branch on equal (zero set)
@@ -165,34 +180,50 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
   "Given a valid ADC instruction token" should "should execute to the correct opcode and value" in {
     val executionUnit = ExecutionUnit.apply
     ExecutionSpec.initFixedValuesForTest()
-    for ((insData, resData) <- dataAdcInstructionTest) {
+    for ((title, insData, resData, memRes) <- dataAdcInstructionTest) {
+      logger.info(s"\nStarting test: ${title}")
       ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"\nSingle stepping instruction 0x${insData.opcode.toHexString} at ${Processor.pc.addr}")
+      logger.info(s"\nSingle stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
       executionUnit.singleStep()
       logger.info(s"Result verification.")
-      ExecutionSpec.checkRes(resData)
+      ExecutionSpec.checkRes(resData, memRes)
     }
   }
 
   "Given a valid AND instruction token" should "should execute to the correct opcode and value" in {
     val executionUnit = ExecutionUnit.apply
     ExecutionSpec.initFixedValuesForTest()
-    for ((insData, resData) <- dataAndInstructionTest) {
+    for ((title, insData, resData, memRes) <- dataAndInstructionTest) {
+      logger.info(s"\nStarting test: ${title}")
       ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"\nSingle stepping instruction 0x${insData.opcode.toHexString} at ${Processor.pc.addr}")
+      logger.info(s"\nSingle stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
       executionUnit.singleStep()
       logger.info(s"Result verification.")
-      ExecutionSpec.checkRes(resData)
+      ExecutionSpec.checkRes(resData, memRes)
+    }
+  }
+
+  "Given a valid ASL instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataAslInstructionTest) {
+      logger.info(s"\nStarting test: ${title}")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      executionUnit.singleStep()
+      logger.info(s"Result verification.")
+      ExecutionSpec.checkRes(resData, memRes)
     }
   }
 
 object ExecutionSpec extends StrictLogging:
+
   var fixedValuesInitialised = false
   val testLocation = 2000
   val absTestLocation = 2500
   val absTestLocation2 = 2600
 
-  def checkRes(resData: InsResultData): Unit =
+  def checkRes(resData: InsResultData, memRes: ResultMemData): Unit =
     assert(Processor.ac.value == resData.ac, s"AC = ${Processor.ac.value} required ${resData.ac} - ${resData}")
     assert(Processor.ix.value == resData.ix, s"IX = ${Processor.ix.value} required ${resData.ix} - ${resData}")
     assert(Processor.iy.value == resData.iy, s"IY = ${Processor.iy.value} required ${resData.iy} - ${resData}")
@@ -202,14 +233,28 @@ object ExecutionSpec extends StrictLogging:
 
     assert(Processor.sr.value == requiredMask, s"SR = ${Processor.sr.value} required ${requiredMask} - ${resData}")
 
+    memRes.match {
+      case memByteResult =>
+        // checking memory byte
+        val checkByte = memoryAccess.getMemoryByte(memRes.loc)
+        assert(checkByte == memRes.value,s"Memory byte at = ${memRes.loc} (0x${memRes.loc.toHexString.toUpperCase()}) is $checkByte (0x${checkByte.toHexString.toUpperCase()}) required ${memRes.value} " +
+          s"(0x${memRes.value.toHexString.toUpperCase()})")
+      case memWrdResult =>
+        // checking memory wrd
+        val checkWrd = memoryAccess.getMemoryWrd(memRes.loc)
+        assert(checkWrd == memRes.value,s"Memory word at = ${memRes.loc} (0x${memRes.loc.toHexString.toUpperCase()}) is $checkWrd (0x${checkWrd.toHexString.toUpperCase()}) required ${memRes.value} " +
+          s"(0x${memRes.value.toHexString.toUpperCase()})")
+      case memVoidResult => ()
+    }
   /**
    * Initialise memory and registers for test
    */
   def initFixedValuesForTest() : Unit =
     if !fixedValuesInitialised then
       AssembleLocation.setAssembleLoc(100) // zero page location
-      AssembleLocation.setMemoryByte(56) // set the byte to 56
-      AssembleLocation.setMemoryByte(6) // and the following byte to 6
+      AssembleLocation.setMemoryByte(0x38) // 100 (0x64) = 56
+      AssembleLocation.setMemoryByte(6) // 101 (0x65) =6
+      AssembleLocation.setMemoryByte(0x3F) // 102 (0x66) = 63
       AssembleLocation.setMemoryAddress(absTestLocation2)
 
       AssembleLocation.setAssembleLoc(0x638) // set current location to ins location
