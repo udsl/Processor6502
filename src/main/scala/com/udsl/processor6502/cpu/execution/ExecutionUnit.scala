@@ -5,7 +5,7 @@ import com.udsl.processor6502.Subject
 import com.udsl.processor6502.Utilities.{byteToHexString, constructSourceLine, numToByteString}
 import com.udsl.processor6502.cpu.Memory.INTERRUPT_VECTOR
 import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
-import com.udsl.processor6502.cpu.Processor.*
+import com.udsl.processor6502.cpu.Processor.{getNextInstruction, *}
 import com.udsl.processor6502.cpu.StatusRegisterFlags.{Break, Carry, Decimal, Interrupt, Negative, Overflow, Zero}
 import com.udsl.processor6502.disassembler.Disassembler
 import com.udsl.processor6502.ui.popups.Executor
@@ -37,10 +37,18 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 
   def singleStep(): Unit ={
     runMode = RunMode.SingleStepping
-    // Execute the current instruction
+    // Do we have the instruction
+    opcode match {
+      case NULL(NotApplicable) => getNextInstruction()
+      case _ => () 
+    }
     executeIns()
     logger.debug(s"Next instruction $opcode, operand $operand")
   }
+
+  def getNextInstruction(): Unit =
+    opcode = Processor.getNextInstruction
+    operand = getNextInstructionOperand
 
   def startSlow(): Unit =
     runMode = RunMode.RunningSlow
@@ -53,14 +61,12 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     run()
 
   def run(): Unit =
-    // Execute the current instruction
-//    while runMode == RunMode.Running || runMode == RunMode.RunningSlow do
-//      executeIns
-//      if runMode == RunMode.RunningSlow then
-//        Thread.sleep(500)
-//        Thread.`yield`()
-//      logger.info(s"Next instruction $opcode, operand ${operand}")
-
+    // make sure we have a current instruction
+    opcode match {
+      case NULL(NotApplicable) => getNextInstruction()
+      case _ => ()
+    }
+    
     val thread = new Thread {
       override def run =
         while runMode == RunMode.Running || runMode == RunMode.RunningSlow do
@@ -97,9 +103,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       })
     else
       execute
-
-
-
+  
   def decodeInstruction(): String =
     opcode match
       case NULL(_) => ""
@@ -124,8 +128,6 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       Processor.sp.pushByte((returnAdr % 255).toShort)
       // get address at INTERRUPT_VECTOR
       Processor.pc.addr = memoryAccess.getMemoryAsAddress(INTERRUPT_VECTOR)
-
-
 
   def executeADC(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -213,8 +215,6 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 object ExecutionUnit:
   def apply: ExecutionUnit =
     val eu = new ExecutionUnit()
-    eu.opcode = getNextInstruction
-    eu.operand = getNextInstructionOperand
     eu
 
   def getEffectiveAddress(opcode: OpcodeValue, operand: (Int, Int)): EffectiveAddress =

@@ -18,7 +18,7 @@ package com.udsl.processor6502.cpu.execution:
     val bbbMask: Int = Integer.parseInt("00011100", 2)
     val ccMask: Int = Integer.parseInt("00000011", 2)
     val groupMask: Int = Integer.parseInt("00010000", 2)
-
+      
     def disassemble(opcode: Int): Opcode = {
       val code: OpcodeValue = {
         cc(opcode) match {
@@ -30,7 +30,7 @@ package com.udsl.processor6502.cpu.execution:
       }
       new Opcode(code)
     }
-
+    
     def cc(i: Int): Int = {
       i & ccMask
     }
