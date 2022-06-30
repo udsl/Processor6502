@@ -1,3 +1,5 @@
+package com.udsl.processor6502.test
+
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.assembleInstructionToken
 import com.udsl.processor6502.assembler.{AssembleLocation, AssemblerToken, InstructionToken, TokenisedLine}
 import com.udsl.processor6502.cpu.execution.*

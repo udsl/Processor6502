@@ -26,7 +26,7 @@
         <appender-ref ref="TOKEN" />
     </logger>
 
-    <logger name="com.udsl.processor6502.assembler.AssembleLocation$" level="debug"/>
+    <logger name="com.udsl.processor6502.assembler.AssembleLocation$" level="info"/>
 
     <root level="info">
         <appender-ref ref="FILE" />

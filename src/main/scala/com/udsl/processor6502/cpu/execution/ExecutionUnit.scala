@@ -38,16 +38,13 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 
   def singleStep(): Unit ={
     runMode = RunMode.SingleStepping
-    // Do we have the instruction
-    opcode match {
-      case NULL(NotApplicable) => getNextInstruction()
-      case _ => ()
-    }
+    // Always get the next instruction
+    getInstructionAtPc()
     executeIns()
     logger.debug(s"Next instruction $opcode, operand $operand")
   }
 
-  def getNextInstruction(): Unit =
+  def getInstructionAtPc(): Unit =
     opcode = Processor.getNextInstruction
     operand = getNextInstructionOperand
 
@@ -64,7 +61,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   def run(): Unit =
     // make sure we have a current instruction
     opcode match {
-      case NULL(NotApplicable) => getNextInstruction()
+      case NULL(NotApplicable) => getInstructionAtPc()
       case _ => ()
     }
 
@@ -83,7 +80,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     def notImplmented() : Unit =
       logger.info(s"${opcode.mnemonic} execution not implemented")
 
-    logger.info(s"Executing instruction ${opcode.mnemonic}, operand (${byteToHexString(operand._1)}, ${byteToHexString(operand._2)}) at ${Processor.pc.addr}\nAccumulator ${Processor.ac}")
+    logger.info(s"Executing instruction ${opcode.mnemonic}, operand (${byteToHexString(operand._1)}, ${byteToHexString(operand._2)}) at ${Processor.pc.addr} Accumulator ${Processor.ac}")
     val execute: Unit =  opcode.mnemonic match {
       case "ADC" => { executeADC() }
       case "AND" => { executeAND() }
@@ -138,13 +135,13 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     else // has no effective address so it must be immediate
       operand._1
     val accVal = Processor.ac.value
-    val resVal = accVal + value
+    val writeBack = (accVal + value) & 0xFF
     // is accumulator and value +ve and result > 126 then overflow
-    val overflow = accVal < 127 && value < 127 && resVal > 126
+    val overflow = accVal < 127 && value < 127 && writeBack > 127
     Processor.sr.updateFlag(StatusRegisterFlags.Overflow, overflow)
-    Processor.sr.updateFlag(StatusRegisterFlags.Negative, resVal % 255 > 127)
-    Processor.sr.updateFlag(StatusRegisterFlags.Zero, resVal % 255 == 0)
-    Processor.ac.value = resVal % 255
+    Processor.sr.updateFlag(StatusRegisterFlags.Negative, writeBack > 127)
+    Processor.sr.updateFlag(StatusRegisterFlags.Zero, writeBack == 0)
+    Processor.ac.value = writeBack
     Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeAND(): Unit =
@@ -153,37 +150,29 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
       operand._1
-    val accVal = Processor.ac.value
-    val resVal = accVal & value
-    // is accumulator and value +ve and result > 126 then overflow
-    val overflow = accVal < 127 && value < 127 && resVal > 126
-    Processor.sr.updateFlag(StatusRegisterFlags.Overflow, overflow)
-    Processor.sr.updateFlag(StatusRegisterFlags.Negative, resVal % 255 > 127)
-    Processor.sr.updateFlag(StatusRegisterFlags.Zero, resVal % 255 == 0)
-    Processor.ac.value = resVal % 255
+    val writeBack = Processor.ac.value & value
+    Processor.sr.updateFlag(StatusRegisterFlags.Zero, writeBack == 0)
+    Processor.sr.updateFlag(StatusRegisterFlags.Negative, writeBack > 127)
+    Processor.ac.value = writeBack
     Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeASL(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     if effectiveAddr.hasValue then
       val value: Int = memoryAccess.getMemoryByte(effectiveAddr.address)
-      if (value & 255) >= 128 then
-        Processor.sr.setFlag(StatusRegisterFlags.Carry)
-      else
-        Processor.sr.clearFlag(StatusRegisterFlags.Carry)
+      Processor.sr.updateFlag(StatusRegisterFlags.Carry, (value & 255) >= 128)
       val writeBack = (value << 1) & 0xFE
-      if writeBack == 0 then
-        Processor.sr.setFlag(StatusRegisterFlags.Zero)
+      Processor.sr.updateFlag(StatusRegisterFlags.Zero, writeBack == 0)
+      Processor.sr.updateFlag(StatusRegisterFlags.Negative, writeBack > 127)
       memoryAccess.setMemoryByte(effectiveAddr.address, writeBack)
     else // must be accumulator if no effective address as no immediate for ASL
-        val accVal = Processor.ac.value
-        if (accVal & 255) >= 128 then
-          Processor.sr.setFlag(StatusRegisterFlags.Carry)
-        else
-          Processor.sr.clearFlag(StatusRegisterFlags.Carry)
-        Processor.ac.value = (accVal << 1) & 0xFE
-        if Processor.ac.value == 0 then
-          Processor.sr.setFlag(StatusRegisterFlags.Zero)
+      val accVal = Processor.ac.value
+      Processor.sr.updateFlag(StatusRegisterFlags.Carry, (accVal & 255) >= 128)
+      val writeBack =  (accVal << 1) & 0xFE
+      Processor.ac.value = writeBack
+      Processor.sr.updateFlag(StatusRegisterFlags.Zero, writeBack == 0)
+      Processor.sr.updateFlag(StatusRegisterFlags.Negative, writeBack > 127)
+    Processor.pc.inc(opcode.addressMode.bytes)
 
 
   def executeLDX(): Unit =

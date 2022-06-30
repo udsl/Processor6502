@@ -1,10 +1,12 @@
+package com.udsl.processor6502.test
+
 
 import com.udsl.processor6502.assembler
+import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Relative, ZeroPage, ZeroPageX, ZeroPageY}
 import org.scalatest.*
-import flatspec.*
-import matchers.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
 
 
 class TestData(val code: String, val opcode: Int, val insLength: Int, val addMode: AddressingMode){
