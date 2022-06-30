@@ -14,7 +14,7 @@ package com.udsl.processor6502.cpu:
 
   object Processor extends StrictLogging{
 
-    val memoryAccess = Memory.apply
+    val memoryAccess: Memory = Memory.apply
 
     val pc: Address = Address(0)
     val sp: StackPointer = StackPointer.apply()
@@ -23,11 +23,11 @@ package com.udsl.processor6502.cpu:
     val ac: Accumulator = Accumulator.apply()
     val sr: StatusRegister = StatusRegister.apply()
 
-    def resetVector = memoryAccess.getMemoryAsAddress(RESET_VECTOR)
-    def nmiVector = memoryAccess.getMemoryAsAddress(NMI_VECTOR)
-    def irqVector = memoryAccess.getMemoryAsAddress(INTERRUPT_VECTOR)
+    def resetVector: Int = memoryAccess.getMemoryAsAddress(RESET_VECTOR)
+    def nmiVector: Int = memoryAccess.getMemoryAsAddress(NMI_VECTOR)
+    def irqVector: Int = memoryAccess.getMemoryAsAddress(INTERRUPT_VECTOR)
 
-    def nmi = {
+    def nmi(): Unit = {
       pushPc
       //        Push SR.
       //        Set IRQ disable in status.
@@ -35,7 +35,7 @@ package com.udsl.processor6502.cpu:
       pc.addr = nmiVector
     }
 
-    def irq = {
+    def irq(): Unit = {
       pushPc
       //        Push SR.
       //        Push PC.
@@ -43,7 +43,7 @@ package com.udsl.processor6502.cpu:
       pc.addr = irqVector
     }
 
-    def reset = {
+    def reset(): Unit = {
       // Set status.
       sr.reset()
       // load pc from vector
@@ -61,9 +61,9 @@ package com.udsl.processor6502.cpu:
       (memoryAccess.getMemoryByte(pc.addr + 1), memoryAccess.getMemoryByte(pc.addr + 2))
 
     /**
-     * Used to update executer on PC change
-     * @param address
-     * @return
+     * Used to update executor on PC change
+     * @param address the location in memory of the instruction to retrieve
+     * @return the retrieved instruction
      */
     def getInstruction(address: Int): OpcodeValue =
       Opcode.disassemble(memoryAccess.getMemoryByte(address)).v

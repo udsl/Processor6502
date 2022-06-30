@@ -36,12 +36,18 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     }
   }
 
-  def singleStep(): Unit ={
+  /**
+   * Get the current instruction from the PC location and execute it.
+   * @return returns the OpcodeValue of the instruction executed
+   */
+  def singleStep(): OpcodeValue ={
     runMode = RunMode.SingleStepping
     // Always get the next instruction
     getInstructionAtPc()
+    val executing = opcode
     executeIns()
     logger.debug(s"Next instruction $opcode, operand $operand")
+    executing
   }
 
   def getInstructionAtPc(): Unit =
@@ -50,12 +56,12 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 
   def startSlow(): Unit =
     runMode = RunMode.RunningSlow
-    Processor.reset
+    Processor.reset()
     run()
 
   def start(): Unit =
     runMode = RunMode.Running
-    Processor.reset
+    Processor.reset()
     run()
 
   def run(): Unit =
@@ -85,6 +91,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "ADC" => { executeADC() }
       case "AND" => { executeAND() }
       case "ASL" => { executeASL() }
+      case "BCC" => { executeBCC() }
       case "BNE" => { executeBNE() }
       case "BRK" => { executeBRK() }
       case "DEX" => { executeDEX() }
@@ -218,6 +225,13 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       Processor.ix.ebr = newIx
    Processor.pc.inc(opcode.addressMode.bytes)
 
+
+  def executeBCC(): Unit =
+    if !Processor.sr.testFlag(StatusRegisterFlags.Carry) then
+      val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+      Processor.pc.addr = effectiveAddr.address
+    else
+      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeBNE(): Unit =
     if !Processor.sr.testFlag(StatusRegisterFlags.Zero) then

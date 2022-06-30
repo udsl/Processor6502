@@ -209,7 +209,7 @@ package com.udsl.processor6502.ui:
         text = "Reset"
         onAction = _ => {
           logger.info("Resetting!")
-          Processor.reset
+          Processor.reset()
         }
       }
       resetButton.setTooltip(new Tooltip("Perform the reset operation"))
@@ -218,7 +218,7 @@ package com.udsl.processor6502.ui:
         text = "NMI"
         onAction = _ => {
           logger.info("NMI!")
-          Processor.nmi
+          Processor.nmi()
         }
       }
       nmiButton.setTooltip(new Tooltip("Perform the NMI operation"))
@@ -227,7 +227,7 @@ package com.udsl.processor6502.ui:
         text = "IRQ"
         onAction = _ => {
           logger.info("IRQ!")
-          Processor.irq
+          Processor.irq()
         }
       }
       irqButton.setTooltip(new Tooltip("Perform the IRQ operation"))
