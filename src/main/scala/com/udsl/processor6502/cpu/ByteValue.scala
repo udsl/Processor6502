@@ -22,6 +22,9 @@ class ByteValue {
     def getDisassembly: String =
         disassembly
 
+    def asSignedValue:Int =
+        ByteValue.asSignedValue(_byte.value)
+          
     def byte: Int = _byte.value
 
     override def toString: String =
@@ -55,7 +58,15 @@ object ByteValue {
         b_
     }
 
-    def validate( b: Int) = {
+    def validate( b: Int): Unit = {
         if (b < MIN_BYTE_VALUE || b > MAX_BYTE_VALUE) throw new Exception(s"Value out of range for BYTE: ${b}.")
     }
+
+    def asSignedValue(value: Int):Int =
+        validate(value)
+        if value > 128 then
+            -(256 - value)
+        else
+            value
+
 }

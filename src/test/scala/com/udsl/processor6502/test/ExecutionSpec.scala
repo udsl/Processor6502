@@ -8,7 +8,7 @@ import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
-import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger}
+import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger, testLocation}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -143,8 +143,9 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
 
 // BCC branch on carry clear
   val dataBccInstructionTest = List(
-    ("BCC 1.0 relative carry clear", InsSourceData(0x90, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, 4), memVoidResult()),
-    ("BCC 1.0 relative carry set", InsSourceData(0x90, InsData(0x4, AccValueWithCarry(0x20))), AccSrResData(0x20, CARRY_FLAG_MASK), memVoidResult())
+    ("BCC 1.0 relative carry clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0x90, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation + 6), memVoidResult()),
+    ("BCC 1.0 relative carry set", InsSourceData(0x90, InsData(0x4, AccValueWithCarry(0x20))), AccSrResData(0x20, CARRY_FLAG_MASK), memVoidResult()),
+    ("BCC 1.0 relative carry clear -ve offset", InsSourceData(0x90, InsData(0xFC, AccValue(0x20))), AccPcResData(0x20, testLocation -2), memVoidResult())
   )
 
 // BCS branch on carry set
@@ -257,6 +258,9 @@ object ExecutionSpec extends StrictLogging:
   val absTestLocation = 2500
   val absTestLocation2 = 2600
 
+  def asHexStr( v: Int): String =
+    s"0x${v.toHexString.toUpperCase()}"
+
   def checkRes(resData: ResultData, memRes: ResultMemData, title: String, opcodeExecuted: OpcodeValue): Unit =
     logger.info(s"Checking results for $title")
     assert(Processor.ac.value == resData.ac, s"AC = ${Processor.ac.value} required ${resData.ac} - $resData")
@@ -268,20 +272,19 @@ object ExecutionSpec extends StrictLogging:
 
     assert(Processor.sr.value == requiredMask, s"SR = ${Processor.sr.value} required $requiredMask - $resData")
 
-    val insSize = opcodeExecuted.addressMode.bytes
-    val pc = Processor.pc
-    val expectedPc = testLocation + insSize + resData.pc
-    assert(Processor.pc.addr == expectedPc, s"PC = 0x${Processor.pc.addr.toHexString.toUpperCase()} expected 0x${expectedPc.toHexString.toUpperCase()}")
+    if resData.pc > 0 then // include PC check
+      val pc = Processor.pc.addr
+      assert(pc == resData.pc, s"PC = ${asHexStr(pc)} expected ${asHexStr(resData.pc)}")
 
     if memRes.byte then
       // checking memory byte
       val checkByte = memoryAccess.getMemoryByte(memRes.loc)
-      assert(checkByte == memRes.value,s"Memory byte at = ${memRes.loc} (0x${memRes.loc.toHexString.toUpperCase()}) is $checkByte (0x${checkByte.toHexString.toUpperCase()}) required ${memRes.value} " +
+      assert(checkByte == memRes.value,s"Memory byte at = ${memRes.loc} (${asHexStr(memRes.loc)}) is $checkByte (${asHexStr(checkByte)}) required ${memRes.value} " +
         s"(0x${memRes.value.toHexString.toUpperCase()})")
     else if memRes.loc > 0 then // testing location zer0 makes no sense
       // checking memory wrd
       val checkWrd = memoryAccess.getMemoryWrd(memRes.loc)
-      assert(checkWrd == memRes.value,s"Memory word at = ${memRes.loc} (0x${memRes.loc.toHexString.toUpperCase()}) is $checkWrd (0x${checkWrd.toHexString.toUpperCase()}) required ${memRes.value} " +
+      assert(checkWrd == memRes.value,s"Memory word at = ${memRes.loc} (${asHexStr(memRes.loc)}) is $checkWrd (${asHexStr(checkWrd)}) required ${memRes.value} " +
         s"(0x${memRes.value.toHexString.toUpperCase()})")
 
   /**

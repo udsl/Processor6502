@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Subject
 import com.udsl.processor6502.Utilities.{byteToHexString, constructSourceLine, numToByteString}
 import com.udsl.processor6502.cpu.Memory.INTERRUPT_VECTOR
-import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
+import com.udsl.processor6502.cpu.{ByteValue, Processor, StatusRegisterFlags}
 import com.udsl.processor6502.cpu.Processor.{getNextInstruction, *}
 import com.udsl.processor6502.cpu.StatusRegister.CARRY_FLAG_MASK
 import com.udsl.processor6502.cpu.StatusRegisterFlags.{Break, Carry, Decimal, Interrupt, Negative, Overflow, Zero}
@@ -257,7 +257,7 @@ object ExecutionUnit:
       // so the PC will be pointing to the instruction following
       // As we dont inc the PC till the instruction is completed we get..
       // convert offset to signed byte value
-      val offset = operand._1.toByte
+      val offset = ByteValue.asSignedValue(operand._1.toByte)
       // then add 2 that the real 6502 would have added on each fetch
       EffectiveAddress(true, Processor.pc.addr + offset + 2)
     case ZeroPageX =>
