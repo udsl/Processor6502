@@ -2,14 +2,14 @@ name := "Processor6502"
 
 version := "0.1"
 
-scalaVersion := "3.1.0"
+scalaVersion := "3.1.3"
 
 
 // https://mvnrepository.com/artifact/org.scalafx/scalafx
-libraryDependencies += "org.scalafx" %% "scalafx" % "16.0.0-R25"
+libraryDependencies += "org.scalafx" %% "scalafx" % "18.0.1-R27"
 
 // https://mvnrepository.com/artifact/org.scalacheck/scalacheck
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.4" % Test
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.16.0" % Test
 
 // https://mvnrepository.com/artifact/org.scalactic/scalactic
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.12"
