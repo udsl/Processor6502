@@ -9,7 +9,7 @@ import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest}
+import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -58,6 +58,18 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
     val executionUnit = ExecutionUnit.apply
     ExecutionSpec.initFixedValuesForTest()
     for ((title, insData, resData, memRes) <- dataBccInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid BCS instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataBcsInstructionTest) {
       logger.info(s"\nStarting test: $title")
       ExecutionSpec.initValuesForTest(insData)
       logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")

@@ -92,6 +92,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "AND" => { executeAND() }
       case "ASL" => { executeASL() }
       case "BCC" => { executeBCC() }
+      case "BCS" => { executeBCS() }
       case "BNE" => { executeBNE() }
       case "BRK" => { executeBRK() }
       case "DEX" => { executeDEX() }
@@ -224,10 +225,16 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       Processor.sr.updateFlag(StatusRegisterFlags.Zero, newIx == 0)
       Processor.ix.ebr = newIx
    Processor.pc.inc(opcode.addressMode.bytes)
-
-
+  
   def executeBCC(): Unit =
     if !Processor.sr.testFlag(StatusRegisterFlags.Carry) then
+      val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+      Processor.pc.addr = effectiveAddr.address
+    else
+      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeBCS(): Unit =
+    if Processor.sr.testFlag(StatusRegisterFlags.Carry) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else

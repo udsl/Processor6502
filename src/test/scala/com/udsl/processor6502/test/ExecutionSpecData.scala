@@ -85,6 +85,8 @@ case class IxSrResData(override val ix: Int, override val sr: Int) extends Resul
 case class IxResData(override val ix: Int) extends ResultData(0, ix, 0, 0, 0)
 case class SrResData(override val sr: Int) extends ResultData(0, 0, 0, sr, 0)
 case class AccPcResData(override val ac: Int, override val pc: Int) extends ResultData(ac, 0, 0, 0, pc)
+case class AccSrPcResData(override val ac: Int, override val pc: Int, override val sr: Int) extends ResultData(ac, 0, 0, sr, pc)
+
 
 trait ResultMemData( val loc:Int, val value: Int, val byte: Boolean)
 
@@ -144,12 +146,15 @@ object ExecutionSpecData:
   // BCC branch on carry clear
   val dataBccInstructionTest = List(
     ("BCC 1.0 relative carry clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0x90, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation + 6), memVoidResult()),
-    ("BCC 1.0 relative carry set", InsSourceData(0x90, InsData(0x4, AccValueWithCarry(0x20))), AccSrResData(0x20, CARRY_FLAG_MASK), memVoidResult()),
-    ("BCC 1.0 relative carry clear -ve offset", InsSourceData(0x90, InsData(0xFC, AccValue(0x20))), AccPcResData(0x20, testLocation -2), memVoidResult())
-  )
+    ("BCC 1.1 relative carry clear -ve offset", InsSourceData(0x90, InsData(0xFC, AccValue(0x20))), AccPcResData(0x20, testLocation -2), memVoidResult()),
+    ("BCC 2.0 relative carry set", InsSourceData(0x90, InsData(0x4, AccValueWithCarry(0x20))), AccSrResData(0x20, CARRY_FLAG_MASK), memVoidResult())
+   )
 
   // BCS branch on carry set
   val dataBcsInstructionTest = List(
+    ("BCS 1.0 relative carry set PC + 6 = 4 branch + 2 fetch", InsSourceData(0xB0, InsData(0x4, AccValueWithCarry(0x20))), AccSrPcResData(0x20, testLocation + 6, CARRY_FLAG_MASK), memVoidResult()),
+    ("BCS 1.1 relative carry set -ve offset", InsSourceData(0xB0, InsData(0xFC, AccValueWithCarry(0x20))), AccSrPcResData(0x20, testLocation -2, CARRY_FLAG_MASK), memVoidResult()),
+    ("BCS 2.0 relative carry clear", InsSourceData(0xB0, InsData(0x4, AccValue(0x20))), AccResData(0x20), memVoidResult())
   )
 
   // BEQ branch on equal (zero set)
