@@ -7,7 +7,7 @@ import com.udsl.processor6502.cpu.Memory.NMI_VECTOR
 import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.execution.*
-import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
+import com.udsl.processor6502.cpu.{Processor, StatusFlag}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger, testLocation}
 import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
@@ -168,7 +168,7 @@ object ExecutionSpec extends StrictLogging:
     Processor.iy.value = regData.regValues.iy
     Processor.sr.reset()
     if regData.regValues.withCarry then
-      Processor.sr.setFlag(StatusRegisterFlags.Carry)
+      Processor.sr.setFlag(StatusFlag.Carry)
 
 
 

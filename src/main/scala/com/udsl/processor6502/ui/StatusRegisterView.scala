@@ -4,7 +4,7 @@ package com.udsl.processor6502.ui:
   import com.udsl.processor6502.Utilities.getConfigValue
   import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
   import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}
-  import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
+  import com.udsl.processor6502.cpu.{Processor, StatusFlag}
   import com.udsl.processor6502.cpu.StatusRegister.{BREAK_FLAG_MASK, CARRY_FLAG_MASK, DECIMAL_FLAG_MASK, INTERRUPT_FLAG_MASK, NEGATIVE_FLAG_MASK, OVERFLOW_FLAG_MASK, ZERO_FLAG_MASK}
   import scalafx.event.subscriptions.Subscription
   import scalafx.geometry.Insets
@@ -23,23 +23,23 @@ package com.udsl.processor6502.ui:
     }
 
     def updateDisplayedValues(newValue: Int): Unit ={
-      setFlag( StatusRegisterFlags.Negative, (NEGATIVE_FLAG_MASK & newValue) > 0)
-      setFlag( StatusRegisterFlags.Overflow, (OVERFLOW_FLAG_MASK & newValue) > 0)
-      setFlag( StatusRegisterFlags.Break, (BREAK_FLAG_MASK & newValue) > 0)
-      setFlag( StatusRegisterFlags.Decimal, (DECIMAL_FLAG_MASK & newValue) > 0)
-      setFlag( StatusRegisterFlags.Interrupt, (INTERRUPT_FLAG_MASK & newValue) > 0)
-      setFlag( StatusRegisterFlags.Zero, (ZERO_FLAG_MASK & newValue) > 0)
-      setFlag( StatusRegisterFlags.Carry, (CARRY_FLAG_MASK & newValue) > 0)
+      setFlag( StatusFlag.Negative, (NEGATIVE_FLAG_MASK & newValue) > 0)
+      setFlag( StatusFlag.Overflow, (OVERFLOW_FLAG_MASK & newValue) > 0)
+      setFlag( StatusFlag.Break, (BREAK_FLAG_MASK & newValue) > 0)
+      setFlag( StatusFlag.Decimal, (DECIMAL_FLAG_MASK & newValue) > 0)
+      setFlag( StatusFlag.Interrupt, (INTERRUPT_FLAG_MASK & newValue) > 0)
+      setFlag( StatusFlag.Zero, (ZERO_FLAG_MASK & newValue) > 0)
+      setFlag( StatusFlag.Carry, (CARRY_FLAG_MASK & newValue) > 0)
     }
 
-    val neg = new StatusFlag("Negative")
-    val ovr = new StatusFlag("Overflow")
-    val u = new StatusFlag("Unused", true, true)
-    val brk = new StatusFlag("Break")
-    val dec = new StatusFlag("Decimal")
-    val inter = new StatusFlag("Interrupt")
-    val zero = new StatusFlag("Zero")
-    val carry = new StatusFlag("Carry")
+    val neg = new StatusFlagControl("Negative")
+    val ovr = new StatusFlagControl("Overflow")
+    val u = new StatusFlagControl("Unused", true, true)
+    val brk = new StatusFlagControl("Break")
+    val dec = new StatusFlagControl("Decimal")
+    val inter = new StatusFlagControl("Interrupt")
+    val zero = new StatusFlagControl("Zero")
+    val carry = new StatusFlagControl("Carry")
 
     val display = new StackPane:
       val titleBox = new HBox {
@@ -66,20 +66,20 @@ package com.udsl.processor6502.ui:
     padding = Insets(18, 18, 18, 0)
     children = List(display)
 
-    private def setFlag(flag: StatusRegisterFlags, value: Boolean): Unit ={
+    private def setFlag(flag: StatusFlag, value: Boolean): Unit ={
       flag match{
-        case StatusRegisterFlags.Negative => neg.update(value)
-        case StatusRegisterFlags.Overflow => ovr.update(value)
-        case StatusRegisterFlags.Break => brk.update(value)
-        case StatusRegisterFlags.Decimal => dec.update(value)
-        case StatusRegisterFlags.Interrupt => inter.update(value)
-        case StatusRegisterFlags.Zero => zero.update(value)
-        case StatusRegisterFlags.Carry => carry.update(value)
+        case StatusFlag.Negative => neg.update(value)
+        case StatusFlag.Overflow => ovr.update(value)
+        case StatusFlag.Break => brk.update(value)
+        case StatusFlag.Decimal => dec.update(value)
+        case StatusFlag.Interrupt => inter.update(value)
+        case StatusFlag.Zero => zero.update(value)
+        case StatusFlag.Carry => carry.update(value)
       }
     }
   }
 
-  class StatusFlag( statusName: String, initalValue: Boolean = false, readOnly: Boolean = false) extends HBox, DataProvider, DataConsumer, StrictLogging{
+  class StatusFlagControl(statusName: String, initalValue: Boolean = false, readOnly: Boolean = false) extends HBox, DataProvider, DataConsumer, StrictLogging{
 
     registerDataSource( this)
 

@@ -1,8 +1,8 @@
 package com.udsl.processor6502.cpu.execution:
 
   import com.typesafe.scalalogging.StrictLogging
-  import com.udsl.processor6502.cpu.StatusRegisterFlags
-  import com.udsl.processor6502.cpu.StatusRegisterFlags.*
+  import com.udsl.processor6502.cpu.StatusFlag
+  import com.udsl.processor6502.cpu.StatusFlag.*
 
   class Opcode( private val code: OpcodeValue) extends StrictLogging{
     def v: OpcodeValue = { code }
@@ -347,7 +347,7 @@ package com.udsl.processor6502.cpu.execution:
   sealed trait OpcodeValue:
     val addressMode: AddressingMode
     def mnemonic: String  = ""
-    def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags]()
+    def flagsEffected: Array[StatusFlag] = Array[StatusFlag]()
     override def toString: String = s"$mnemonic - $addressMode"
   
   case class NULL(addressMode: AddressingMode) extends OpcodeValue {
@@ -360,7 +360,7 @@ package com.udsl.processor6502.cpu.execution:
   
   case class ORA(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "ORA"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative, StatusRegisterFlags.Zero)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Zero)
   }
 
   case class JSR(addressMode: AddressingMode) extends OpcodeValue {
@@ -377,23 +377,23 @@ package com.udsl.processor6502.cpu.execution:
 
   case class SEC(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "SEC"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Carry)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Carry)
   }
 
   case class AND(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "AND"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative, StatusRegisterFlags.Zero)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Zero)
   }
   
   case class EOR(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "EOR"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative, StatusRegisterFlags.Zero)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Zero)
   }
   
   case class ADC(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "ADC"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Zero, StatusRegisterFlags.Carry, StatusRegisterFlags.Overflow)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
+      StatusFlag.Zero, StatusFlag.Carry, StatusFlag.Overflow)
   }
   
   case class STA(addressMode: AddressingMode) extends OpcodeValue {
@@ -402,42 +402,42 @@ package com.udsl.processor6502.cpu.execution:
   
   case class LDA(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "LDA"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative)
   }
   
   case class CMP(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "CMP"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative, StatusRegisterFlags.Carry)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Carry)
   }
   
   case class SBC(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "SBC"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Zero, StatusRegisterFlags.Carry, StatusRegisterFlags.Overflow)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
+      StatusFlag.Zero, StatusFlag.Carry, StatusFlag.Overflow)
   }
   
   case class ASL(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "ASL"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Zero, StatusRegisterFlags.Carry)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
+      StatusFlag.Zero, StatusFlag.Carry)
   }
   
   case class ROL(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "ROL"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Zero, StatusRegisterFlags.Carry)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
+      StatusFlag.Zero, StatusFlag.Carry)
   }
   
   case class LSR(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "LSR"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Zero, StatusRegisterFlags.Carry)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
+      StatusFlag.Zero, StatusFlag.Carry)
   }
   
   case class ROR(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "ROR"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Zero, StatusRegisterFlags.Carry)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
+      StatusFlag.Zero, StatusFlag.Carry)
   }
   
   case class STX(addressMode: AddressingMode) extends OpcodeValue {
@@ -446,19 +446,19 @@ package com.udsl.processor6502.cpu.execution:
   
   case class LDX(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "LDX"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative, StatusRegisterFlags.Zero)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Zero)
   }
   
   case class DEC(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "DEC"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Zero)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
+      StatusFlag.Zero)
   }
   
   case class INC(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "INC"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Zero)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
+      StatusFlag.Zero)
   }
 
   /**
@@ -468,13 +468,13 @@ package com.udsl.processor6502.cpu.execution:
    */
   case class BIT(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "BIT"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Zero, StatusRegisterFlags.Overflow)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
+      StatusFlag.Zero, StatusFlag.Overflow)
   }
 
   case class BRK(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "BRK"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Interrupt)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Interrupt)
   }
 
   case class PHP(addressMode: AddressingMode) extends OpcodeValue {
@@ -487,7 +487,7 @@ package com.udsl.processor6502.cpu.execution:
 
   case class CLC(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "CLC"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Carry)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Carry)
   }
 
   case class JMP(addressMode: AddressingMode) extends OpcodeValue {
@@ -500,19 +500,19 @@ package com.udsl.processor6502.cpu.execution:
   
   case class LDY(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "LDY"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
   
   case class CPY(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "CPY"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Carry)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative,
+      StatusFlag.Carry)
   }
   
   case class CPX(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "CPX"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative,
-      StatusRegisterFlags.Carry)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative,
+      StatusFlag.Carry)
   }
 
   /**
@@ -534,7 +534,7 @@ package com.udsl.processor6502.cpu.execution:
 
   case class CLI(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "CLI"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Interrupt)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Interrupt)
   }
 
   case class RTS(addressMode: AddressingMode) extends OpcodeValue {
@@ -543,7 +543,7 @@ package com.udsl.processor6502.cpu.execution:
 
   case class PLA(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "PLA"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
 
   case class BVS(addressMode: AddressingMode) extends OpcodeValue {
@@ -552,12 +552,12 @@ package com.udsl.processor6502.cpu.execution:
 
   case class SEI(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "SEI"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Interrupt)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Interrupt)
   }
 
   case class DEY(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "DEY"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
 
   case class BCC(addressMode: AddressingMode) extends OpcodeValue {
@@ -566,12 +566,12 @@ package com.udsl.processor6502.cpu.execution:
 
   case class TAY(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "TAY"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
 
   case class INY(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "INY"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
 
   case class BNE(addressMode: AddressingMode) extends OpcodeValue {
@@ -580,12 +580,12 @@ package com.udsl.processor6502.cpu.execution:
 
   case class CLD(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "CLD"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Decimal)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Decimal)
   }
 
   case class INX(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "INX"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
 
   case class BEQ(addressMode: AddressingMode) extends OpcodeValue {
@@ -598,17 +598,17 @@ package com.udsl.processor6502.cpu.execution:
 
   case class CLV(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "CLV"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Overflow)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Overflow)
   }
 
   case class SED(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "SED"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Decimal)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Decimal)
   }
 
   case class TXA(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "TXA"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
 
   case class TXS(addressMode: AddressingMode) extends OpcodeValue {
@@ -617,7 +617,7 @@ package com.udsl.processor6502.cpu.execution:
 
   case class TAX(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "TAX"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
 
   case class TSX(addressMode: AddressingMode) extends OpcodeValue {
@@ -626,7 +626,7 @@ package com.udsl.processor6502.cpu.execution:
 
   case class DEX(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "DEX"
-    override def flagsEffected: Array[StatusRegisterFlags] = Array[StatusRegisterFlags](StatusRegisterFlags.Zero, StatusRegisterFlags.Negative)
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
 
   case class NOP(addressMode: AddressingMode) extends OpcodeValue {

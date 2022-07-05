@@ -4,7 +4,7 @@ package com.udsl.processor6502.ui.popups:
   import com.typesafe.scalalogging.StrictLogging
   import com.udsl.processor6502.{Main, Observer}
   import com.udsl.processor6502.cpu.execution.ExecutionUnit
-  import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
+  import com.udsl.processor6502.cpu.{Processor, StatusFlag}
   import com.udsl.processor6502.ui.popups.Executor.executor
   import scalafx.application.JFXApp
   import scalafx.scene.Scene
@@ -84,7 +84,7 @@ package com.udsl.processor6502.ui.popups:
           children = List(startButton, runSlowButton, stepButton)
         }
 
-        def togle(flag: StatusRegisterFlags) = {
+        def togle(flag: StatusFlag) = {
           logger.info(flag.toString)
           val state = Processor.sr.testFlag(flag)
           logger.info(s"  $state")
@@ -98,13 +98,13 @@ package com.udsl.processor6502.ui.popups:
               logger.info("Executing toggle!")
               val c = toToggle.text.value.toString.toUpperCase().take(1)
               c match {
-                case "N" => togle(StatusRegisterFlags.Negative)
-                case "O" => togle(StatusRegisterFlags.Overflow)
-                case "B" => togle(StatusRegisterFlags.Break)
-                case "D" => togle(StatusRegisterFlags.Decimal)
-                case "I" => togle(StatusRegisterFlags.Interrupt)
-                case "Z" => togle(StatusRegisterFlags.Zero)
-                case "C" => togle(StatusRegisterFlags.Carry)
+                case "N" => togle(StatusFlag.Negative)
+                case "O" => togle(StatusFlag.Overflow)
+                case "B" => togle(StatusFlag.Break)
+                case "D" => togle(StatusFlag.Decimal)
+                case "I" => togle(StatusFlag.Interrupt)
+                case "Z" => togle(StatusFlag.Zero)
+                case "C" => togle(StatusFlag.Carry)
                 case _ => logger.info("WTF!")
               }
             }

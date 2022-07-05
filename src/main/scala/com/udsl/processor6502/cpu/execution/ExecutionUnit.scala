@@ -4,10 +4,10 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Subject
 import com.udsl.processor6502.Utilities.{byteToHexString, constructSourceLine, numToByteString}
 import com.udsl.processor6502.cpu.Memory.INTERRUPT_VECTOR
-import com.udsl.processor6502.cpu.{ByteValue, Processor, StatusRegisterFlags}
+import com.udsl.processor6502.cpu.{ByteValue, Processor, StatusFlag}
 import com.udsl.processor6502.cpu.Processor.{getNextInstruction, *}
 import com.udsl.processor6502.cpu.StatusRegister.CARRY_FLAG_MASK
-import com.udsl.processor6502.cpu.StatusRegisterFlags.{Break, Carry, Decimal, Interrupt, Negative, Overflow, Zero}
+import com.udsl.processor6502.cpu.StatusFlag.{Break, Carry, Decimal, Interrupt, Negative, Overflow, Zero}
 import com.udsl.processor6502.disassembler.Disassembler
 import com.udsl.processor6502.ui.popups.Executor
 import scalafx.application.Platform
@@ -130,7 +130,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       // This is a break to single step, need to step over to the next instruction
       Processor.pc.inc(2)
     else
-      Processor.sr.setFlag(StatusRegisterFlags.Interrupt)
+      Processor.sr.setFlag(StatusFlag.Interrupt)
       // now do a jsr to the irq routine ith return address set to byte after break instruction + 1
       val returnAdr = Processor.pc.addr + 2
       Processor.sp.pushByte(((returnAdr / 256) % 256).toShort)
@@ -148,9 +148,9 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val writeBack = (accVal + value) & 0xFF
     // is accumulator and value +ve and result > 126 then overflow
     val overflow = accVal < 127 && value < 127 && writeBack > 127
-    Processor.sr.updateFlag(StatusRegisterFlags.Overflow, overflow)
-    Processor.sr.updateFlag(StatusRegisterFlags.Negative, writeBack > 127)
-    Processor.sr.updateFlag(StatusRegisterFlags.Zero, writeBack == 0)
+    Processor.sr.updateFlag(StatusFlag.Overflow, overflow)
+    Processor.sr.updateFlag(StatusFlag.Negative, writeBack > 127)
+    Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
     Processor.ac.value = writeBack
     Processor.pc.inc(opcode.addressMode.bytes)
 
@@ -161,8 +161,8 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     else // has no effective address so it must be immediate
       operand._1
     val writeBack = Processor.ac.value & value
-    Processor.sr.updateFlag(StatusRegisterFlags.Zero, writeBack == 0)
-    Processor.sr.updateFlag(StatusRegisterFlags.Negative, writeBack > 127)
+    Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
+    Processor.sr.updateFlag(StatusFlag.Negative, writeBack > 127)
     Processor.ac.value = writeBack
     Processor.pc.inc(opcode.addressMode.bytes)
 
@@ -170,18 +170,18 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     if effectiveAddr.hasValue then
       val value: Int = memoryAccess.getMemoryByte(effectiveAddr.address)
-      Processor.sr.updateFlag(StatusRegisterFlags.Carry, (value & 255) >= 128)
+      Processor.sr.updateFlag(StatusFlag.Carry, (value & 255) >= 128)
       val writeBack = (value << 1) & 0xFE
-      Processor.sr.updateFlag(StatusRegisterFlags.Zero, writeBack == 0)
-      Processor.sr.updateFlag(StatusRegisterFlags.Negative, writeBack > 127)
+      Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
+      Processor.sr.updateFlag(StatusFlag.Negative, writeBack > 127)
       memoryAccess.setMemoryByte(effectiveAddr.address, writeBack)
     else // must be accumulator if no effective address as no immediate for ASL
       val accVal = Processor.ac.value
-      Processor.sr.updateFlag(StatusRegisterFlags.Carry, (accVal & 255) >= 128)
+      Processor.sr.updateFlag(StatusFlag.Carry, (accVal & 255) >= 128)
       val writeBack =  (accVal << 1) & 0xFE
       Processor.ac.value = writeBack
-      Processor.sr.updateFlag(StatusRegisterFlags.Zero, writeBack == 0)
-      Processor.sr.updateFlag(StatusRegisterFlags.Negative, writeBack > 127)
+      Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
+      Processor.sr.updateFlag(StatusFlag.Negative, writeBack > 127)
     Processor.pc.inc(opcode.addressMode.bytes)
 
 
@@ -191,8 +191,8 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
       operand._1
-    Processor.sr.updateFlag(StatusRegisterFlags.Negative, value > 127)
-    Processor.sr.updateFlag(StatusRegisterFlags.Zero, value == 0)
+    Processor.sr.updateFlag(StatusFlag.Negative, value > 127)
+    Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
     Processor.ix.ebr = value
     Processor.pc.inc(opcode.addressMode.bytes)
 
@@ -207,8 +207,8 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
       operand._1
-    Processor.sr.updateFlag(StatusRegisterFlags.Negative, value > 127)
-    Processor.sr.updateFlag(StatusRegisterFlags.Zero, value == 0)
+    Processor.sr.updateFlag(StatusFlag.Negative, value > 127)
+    Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
     Processor.iy.ebr = value
     Processor.pc.inc(opcode.addressMode.bytes)
 
@@ -218,32 +218,32 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
    val currentIx = Processor.ix.ebr
    if currentIx == 0 then
       Processor.ix.ebr = 255
-      Processor.sr.setFlag(StatusRegisterFlags.Negative)
-      Processor.sr.clearFlag(StatusRegisterFlags.Zero)
+      Processor.sr.setFlag(StatusFlag.Negative)
+      Processor.sr.clearFlag(StatusFlag.Zero)
       Processor.ix.ebr = 255
    else
       val newIx = currentIx - 1
-      Processor.sr.updateFlag(StatusRegisterFlags.Negative, newIx > 127)
-      Processor.sr.updateFlag(StatusRegisterFlags.Zero, newIx == 0)
+      Processor.sr.updateFlag(StatusFlag.Negative, newIx > 127)
+      Processor.sr.updateFlag(StatusFlag.Zero, newIx == 0)
       Processor.ix.ebr = newIx
    Processor.pc.inc(opcode.addressMode.bytes)
   
   def executeBCC(): Unit =
-    if !Processor.sr.testFlag(StatusRegisterFlags.Carry) then
+    if !Processor.sr.testFlag(StatusFlag.Carry) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
       val newPc = Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeBCS(): Unit =
-    if Processor.sr.testFlag(StatusRegisterFlags.Carry) then
+    if Processor.sr.testFlag(StatusFlag.Carry) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
       val newPc = Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeBEQ(): Unit =
-    if Processor.sr.testFlag(StatusRegisterFlags.Zero) then
+    if Processor.sr.testFlag(StatusFlag.Zero) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
@@ -253,12 +253,12 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     if effectiveAddr.hasValue then
       val value = memoryAccess.getMemoryByte(effectiveAddr.address)
-      Processor.sr.updateFlag(StatusRegisterFlags.Negative, (value & 0x80) > 0)
-      Processor.sr.updateFlag(StatusRegisterFlags.Overflow, (value & 0x40) > 0)
-      Processor.sr.updateFlag(StatusRegisterFlags.Zero, (value & Processor.ac.value) == 0)
+      Processor.sr.updateFlag(StatusFlag.Negative, (value & 0x80) > 0)
+      Processor.sr.updateFlag(StatusFlag.Overflow, (value & 0x40) > 0)
+      Processor.sr.updateFlag(StatusFlag.Zero, (value & Processor.ac.value) == 0)
 
   def executeBNE(): Unit =
-    if !Processor.sr.testFlag(StatusRegisterFlags.Zero) then
+    if !Processor.sr.testFlag(StatusFlag.Zero) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
