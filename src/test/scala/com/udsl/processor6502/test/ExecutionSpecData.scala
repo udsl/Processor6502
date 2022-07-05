@@ -7,23 +7,24 @@ import com.udsl.processor6502.cpu.Memory.NMI_VECTOR
 import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.execution.*
-import com.udsl.processor6502.cpu.{Processor, StatusRegisterFlags}
+import com.udsl.processor6502.cpu.{Processor}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger, testLocation}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 
-trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean )
+trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean = false, val withZero:Boolean = false, val withNegative:Boolean = false, val withOverflow:Boolean = false )
 
-case class ZeroValues() extends RegValues( 0, 0, 0, false)
-case class AccValue( override val acc: Int) extends RegValues( acc, 0, 0, false)
+case class ZeroValues() extends RegValues( 0, 0, 0)
+case class AccValue( override val acc: Int) extends RegValues( acc, 0, 0)
 case class AccValueWithCarry( override val acc: Int) extends RegValues( acc, 0, 0, true)
-case class AccIxValue( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0, false)
-case class IxValue( override val ix: Int) extends RegValues( 0, ix, 0, false)
-case class AccIxValueWithCarry( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0, true)
-case class AccIyValue( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy, false)
+case class AccValueWithZero( override val acc: Int) extends RegValues( acc, 0, 0, false, withZero = true)
+case class AccIxValue( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
+case class IxValue( override val ix: Int) extends RegValues( 0, ix, 0)
+case class AccIxValueWithCarry( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
+case class AccIyValue( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy)
 case class AccIyValueWithCarry( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy, true)
-case class AccIxIyValue( override val acc: Int, override val ix: Int, override val iy: Int) extends RegValues( acc, ix, iy, false)
+case class AccIxIyValue( override val acc: Int, override val ix: Int, override val iy: Int) extends RegValues( acc, ix, iy)
 case class AccIxIyValueWithCarry( override val acc: Int, override val ix: Int, override val iy: Int) extends RegValues( acc, ix, iy, true)
 
 
@@ -159,10 +160,20 @@ object ExecutionSpecData:
 
   // BEQ branch on equal (zero set)
   val dataBeqInstructionTest = List(
+    ("BEQ 1.0 relative zero set PC + 6 = 4 branch + 2 fetch", InsSourceData(0xF0, InsData(0x4, AccValueWithZero(0x0))), AccSrPcResData(0x0, testLocation + 6, ZERO_FLAG_MASK), memVoidResult()),
+    ("BEQ 1.1 relative zero set -ve offset", InsSourceData(0xF0, InsData(0xFC, AccValueWithZero(0x0))), AccSrPcResData(0x0, testLocation -2, ZERO_FLAG_MASK), memVoidResult()),
+    ("BEQ 2.0 relative zero clear", InsSourceData(0xF0, InsData(0x4, AccValue(0x20))), AccResData(0x20), memVoidResult())
   )
 
   // BIT bit test
+  // bits 7 and 6 of operand are transfered to bit 7 and 6 of SR (N,V) the zero-flag is set to the result of operand AND accumulator.
   val dataBitInstructionTest = List(
+    // Zero set
+    ("BIT 1.0 Zeropage 0x67 = 0x80", InsSourceData(0x24, InsData(0x67, ZeroValues())), AccSrResData(0x0, ZERO_FLAG_MASK | NEGATIVE_FLAG_MASK), memVoidResult()),
+    ("BIT 1.1 Zeropage 0x68 = 0xF0", InsSourceData(0x24, InsData(0x68, ZeroValues())), AccSrResData(0x0, ZERO_FLAG_MASK | NEGATIVE_FLAG_MASK | OVERFLOW_FLAG_MASK), memVoidResult()),
+    ("BIT 1.2 Zeropage 0x69 = 0x40", InsSourceData(0x24, InsData(0x68, ZeroValues())), AccSrResData(0x0, ZERO_FLAG_MASK | OVERFLOW_FLAG_MASK), memVoidResult()),
+    // Zero cleared
+    ("BIT 2.0 Zeropage 0x67 = 0x80", InsSourceData(0x24, InsData(0x67, AccValue(0xF0))), AccSrResData(0xF0, NEGATIVE_FLAG_MASK), memVoidResult()),
   )
 
   // BMI branch on minus (negative set)

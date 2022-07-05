@@ -88,19 +88,21 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 
     logger.info(s"Executing instruction ${opcode.mnemonic}, operand (${byteToHexString(operand._1)}, ${byteToHexString(operand._2)}) at ${Processor.pc.addr} Accumulator ${Processor.ac}")
     val execute: Unit =  opcode.mnemonic match {
-      case "ADC" => { executeADC() }
-      case "AND" => { executeAND() }
-      case "ASL" => { executeASL() }
-      case "BCC" => { executeBCC() }
-      case "BCS" => { executeBCS() }
-      case "BNE" => { executeBNE() }
-      case "BRK" => { executeBRK() }
-      case "DEX" => { executeDEX() }
-      case "LDX" => { executeLDX() }
-      case "LDY" => { executeLDY() }
-      case "STX" => { executeSTX() }
-      case "TXS" => { executeTXS() }
-      case _ => { notImplmented() }
+      case "ADC" => executeADC()
+      case "AND" => executeAND()
+      case "ASL" => executeASL()
+      case "BCC" => executeBCC()
+      case "BCS" => executeBCS()
+      case "BEQ" => executeBEQ()
+      case "BIT" => executeBIT()
+      case "BNE" => executeBNE()
+      case "BRK" => executeBRK()
+      case "DEX" => executeDEX()
+      case "LDX" => executeLDX()
+      case "LDY" => executeLDY()
+      case "STX" => executeSTX()
+      case "TXS" => executeTXS()
+      case _ => notImplmented()
     }
     if Platform.isFxApplicationThread then
       Platform.runLater(new Runnable {
@@ -239,6 +241,21 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       Processor.pc.addr = effectiveAddr.address
     else
       val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeBEQ(): Unit =
+    if Processor.sr.testFlag(StatusRegisterFlags.Zero) then
+      val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+      Processor.pc.addr = effectiveAddr.address
+    else
+      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeBIT(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    if effectiveAddr.hasValue then
+      val value = memoryAccess.getMemoryByte(effectiveAddr.address)
+      Processor.sr.updateFlag(StatusRegisterFlags.Negative, (value & 0x80) > 0)
+      Processor.sr.updateFlag(StatusRegisterFlags.Overflow, (value & 0x40) > 0)
+      Processor.sr.updateFlag(StatusRegisterFlags.Zero, (value & Processor.ac.value) == 0)
 
   def executeBNE(): Unit =
     if !Processor.sr.testFlag(StatusRegisterFlags.Zero) then
