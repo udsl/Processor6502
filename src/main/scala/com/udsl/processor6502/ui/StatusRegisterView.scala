@@ -5,7 +5,6 @@ package com.udsl.processor6502.ui:
   import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
   import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}
   import com.udsl.processor6502.cpu.{Processor, StatusFlag}
-  import com.udsl.processor6502.cpu.StatusRegister.{BREAK_FLAG_MASK, CARRY_FLAG_MASK, DECIMAL_FLAG_MASK, INTERRUPT_FLAG_MASK, NEGATIVE_FLAG_MASK, OVERFLOW_FLAG_MASK, ZERO_FLAG_MASK}
   import scalafx.event.subscriptions.Subscription
   import scalafx.geometry.Insets
   import scalafx.scene.control.Label
@@ -23,13 +22,13 @@ package com.udsl.processor6502.ui:
     }
 
     def updateDisplayedValues(newValue: Int): Unit ={
-      setFlag( StatusFlag.Negative, (NEGATIVE_FLAG_MASK & newValue) > 0)
-      setFlag( StatusFlag.Overflow, (OVERFLOW_FLAG_MASK & newValue) > 0)
-      setFlag( StatusFlag.Break, (BREAK_FLAG_MASK & newValue) > 0)
-      setFlag( StatusFlag.Decimal, (DECIMAL_FLAG_MASK & newValue) > 0)
-      setFlag( StatusFlag.Interrupt, (INTERRUPT_FLAG_MASK & newValue) > 0)
-      setFlag( StatusFlag.Zero, (ZERO_FLAG_MASK & newValue) > 0)
-      setFlag( StatusFlag.Carry, (CARRY_FLAG_MASK & newValue) > 0)
+      setFlag( StatusFlag.Negative, (StatusFlag.Negative.mask & newValue) > 0)
+      setFlag( StatusFlag.Overflow, (StatusFlag.Overflow.mask & newValue) > 0)
+      setFlag( StatusFlag.Break, (StatusFlag.Break.mask & newValue) > 0)
+      setFlag( StatusFlag.Decimal, (StatusFlag.Decimal.mask & newValue) > 0)
+      setFlag( StatusFlag.Interrupt, (StatusFlag.Interrupt.mask & newValue) > 0)
+      setFlag( StatusFlag.Zero, (StatusFlag.Zero.mask & newValue) > 0)
+      setFlag( StatusFlag.Carry, (StatusFlag.Carry.mask & newValue) > 0)
     }
 
     val neg = new StatusFlagControl("Negative")
@@ -75,6 +74,7 @@ package com.udsl.processor6502.ui:
         case StatusFlag.Interrupt => inter.update(value)
         case StatusFlag.Zero => zero.update(value)
         case StatusFlag.Carry => carry.update(value)
+        case _ => ()
       }
     }
   }

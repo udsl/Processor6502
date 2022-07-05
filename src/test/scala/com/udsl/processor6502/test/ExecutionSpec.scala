@@ -6,6 +6,7 @@ import com.udsl.processor6502.assembler.{AssembleLocation, InstructionToken}
 import com.udsl.processor6502.cpu.Memory.NMI_VECTOR
 import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegister.*
+import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusFlag}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger, testLocation}
@@ -96,7 +97,7 @@ object ExecutionSpec extends StrictLogging:
     assert(Processor.iy.value == resData.iy, s"IY = ${Processor.iy.value} required ${resData.iy} - $resData")
 
     // Ensure we have the UNUSED_FLAG_MASK in the value
-    val requiredMask: Int = UNUSED_FLAG_MASK | resData.sr
+    val requiredMask: Int = Unused.mask | resData.sr
 
     assert(Processor.sr.value == requiredMask, s"SR = ${Processor.sr.value} required $requiredMask - $resData")
 

@@ -6,7 +6,6 @@ import com.udsl.processor6502.Utilities.{byteToHexString, constructSourceLine, n
 import com.udsl.processor6502.cpu.Memory.INTERRUPT_VECTOR
 import com.udsl.processor6502.cpu.{ByteValue, Processor, StatusFlag}
 import com.udsl.processor6502.cpu.Processor.{getNextInstruction, *}
-import com.udsl.processor6502.cpu.StatusRegister.CARRY_FLAG_MASK
 import com.udsl.processor6502.cpu.StatusFlag.{Break, Carry, Decimal, Interrupt, Negative, Overflow, Zero}
 import com.udsl.processor6502.disassembler.Disassembler
 import com.udsl.processor6502.ui.popups.Executor

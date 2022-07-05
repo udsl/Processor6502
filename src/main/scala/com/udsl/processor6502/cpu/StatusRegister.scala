@@ -1,7 +1,6 @@
 package com.udsl.processor6502.cpu
   
-import com.udsl.processor6502.cpu.StatusRegister.{BREAK_FLAG_MASK, CARRY_FLAG_MASK, DECIMAL_FLAG_MASK, INTERRUPT_FLAG_MASK, NEGATIVE_FLAG_MASK, OVERFLOW_FLAG_MASK, UNUSED_FLAG_MASK, ZERO_FLAG_MASK}
-  
+
 class StatusRegister(name: String) extends EightBitRegister(name: String):
 
   def value: Int = _ebr.value
@@ -42,14 +41,14 @@ class StatusRegister(name: String) extends EightBitRegister(name: String):
 
 
 object StatusRegister {
-  val NEGATIVE_FLAG_MASK = 128;
-  val OVERFLOW_FLAG_MASK = 64;
-  val UNUSED_FLAG_MASK = 32;
-  val BREAK_FLAG_MASK = 16;
-  val DECIMAL_FLAG_MASK = 8;
-  val INTERRUPT_FLAG_MASK = 4;
-  val ZERO_FLAG_MASK = 2;
-  val CARRY_FLAG_MASK = 1;
+//  val NEGATIVE_FLAG_MASK = 128;
+//  val OVERFLOW_FLAG_MASK = 64;
+//  val UNUSED_FLAG_MASK = 32;
+//  val BREAK_FLAG_MASK = 16;
+//  val DECIMAL_FLAG_MASK = 8;
+//  val INTERRUPT_FLAG_MASK = 4;
+//  val ZERO_FLAG_MASK = 2;
+//  val CARRY_FLAG_MASK = 1;
 
   def apply() : StatusRegister = {
     val sr_ = new StatusRegister("Status Register")
