@@ -169,12 +169,23 @@ object ExecutionSpecData:
   // BIT bit test
   // bits 7 and 6 of operand are transfered to bit 7 and 6 of SR (N,V) the zero-flag is set to the result of operand AND accumulator.
   val dataBitInstructionTest = List(
-    // Zero set
+    // The AND gives Zero result
     ("BIT 1.0 Zeropage 0x67 = 0x80", InsSourceData(0x24, InsData(0x67, ZeroValues())), AccSrResData(0x0, Zero.mask | Negative.mask), memVoidResult()),
     ("BIT 1.1 Zeropage 0x68 = 0xF0", InsSourceData(0x24, InsData(0x68, ZeroValues())), AccSrResData(0x0, Zero.mask | Negative.mask | Overflow.mask), memVoidResult()),
-    ("BIT 1.2 Zeropage 0x69 = 0x40", InsSourceData(0x24, InsData(0x68, ZeroValues())), AccSrResData(0x0, Zero.mask | Overflow.mask), memVoidResult()),
-    // Zero cleared
+    ("BIT 1.2 Zeropage 0x69 = 0x40", InsSourceData(0x24, InsData(0x69, ZeroValues())), AccSrResData(0x0, Zero.mask | Overflow.mask), memVoidResult()),
+    // The AND gives non Zero result
     ("BIT 2.0 Zeropage 0x67 = 0x80", InsSourceData(0x24, InsData(0x67, AccValue(0xF0))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
+    ("BIT 2.1 Zeropage 0x68 = 0xF0", InsSourceData(0x24, InsData(0x68, AccValue(0x30))), AccSrResData(0x30, Negative.mask | Overflow.mask), memVoidResult()),
+    ("BIT 2.2 Zeropage 0x69 = 0x40", InsSourceData(0x24, InsData(0x69, AccValue(0xF0))), AccSrResData(0xF0, Overflow.mask), memVoidResult()),
+    // for absolute addressing using data starting at location absTestLocation = 2500
+    // The AND gives Zero result
+    ("BIT 3.0 absTestLocation + 4 (0x9C8) = 0x80", InsSourceData(0x2C, InsData(0x9C8, AccValue(0x30))), AccSrResData(0x30, Zero.mask | Negative.mask), memVoidResult()),
+    ("BIT 3.1 absTestLocation + 5 (0x9C9) = 0xF0", InsSourceData(0x2C, InsData(0x9C9, AccValue(0x0F))), AccSrResData(0x0F, Zero.mask | Negative.mask | Overflow.mask), memVoidResult()),
+    ("BIT 3.2 absTestLocation + 6 (0x9CA) = 0x40", InsSourceData(0x2C, InsData(0x9CA, AccValue(0xA3))), AccSrResData(0xA3, Zero.mask | Overflow.mask), memVoidResult()),
+    // The AND gives non Zero result
+    ("BIT 4.0 absTestLocation + 4 (0x9C8) = 0x80", InsSourceData(0x2C, InsData(0x9C8, AccValue(0xF0))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
+    ("BIT 4.1 absTestLocation + 5 (0x9C9) = 0xF0", InsSourceData(0x2C, InsData(0x9C9, AccValue(0xC8))), AccSrResData(0xC8, Negative.mask | Overflow.mask), memVoidResult()),
+    ("BIT 4.2 absTestLocation + 6 (0x9CA) = 0x40", InsSourceData(0x2C, InsData(0x9CA, AccValue(0x66))), AccSrResData(0x66, Overflow.mask), memVoidResult())
   )
 
   // BMI branch on minus (negative set)

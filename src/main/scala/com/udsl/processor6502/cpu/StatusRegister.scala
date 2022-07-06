@@ -1,5 +1,7 @@
 package com.udsl.processor6502.cpu
-  
+
+import scala.language.postfixOps
+
 
 class StatusRegister(name: String) extends EightBitRegister(name: String):
 
@@ -40,22 +42,31 @@ class StatusRegister(name: String) extends EightBitRegister(name: String):
     ebr = 32
 
 
-object StatusRegister {
-//  val NEGATIVE_FLAG_MASK = 128;
-//  val OVERFLOW_FLAG_MASK = 64;
-//  val UNUSED_FLAG_MASK = 32;
-//  val BREAK_FLAG_MASK = 16;
-//  val DECIMAL_FLAG_MASK = 8;
-//  val INTERRUPT_FLAG_MASK = 4;
-//  val ZERO_FLAG_MASK = 2;
-//  val CARRY_FLAG_MASK = 1;
 
-  def apply() : StatusRegister = {
+
+object StatusRegister:
+
+  def apply() : StatusRegister =
     val sr_ = new StatusRegister("Status Register")
     sr_.reset()
     sr_
-  }
-}
+
+  def testValueForFlag( value: Int, flag: StatusFlag) : Boolean =
+    (value & flag.mask) > 0
+
+  def asFlagsString( value: Int) : String =
+    var res: String = ""
+    for (flag: StatusFlag <- StatusFlag.values) {
+      flag match
+        case StatusFlag.Unused => ()
+        case _ =>
+          if testValueForFlag( value, flag) then
+            if res.nonEmpty then
+              res += "|"
+            res += flag.str
+    }
+    res
+
 
 enum StatusFlag(val mask: Int, val str: String):
   case Negative extends StatusFlag(0x80, "Negative")

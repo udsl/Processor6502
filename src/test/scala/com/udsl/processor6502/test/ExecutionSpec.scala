@@ -8,9 +8,9 @@ import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
-import com.udsl.processor6502.cpu.{Processor, StatusFlag}
+import com.udsl.processor6502.cpu.{Processor, StatusFlag, StatusRegister}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest}
+import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -80,6 +80,19 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
   }
 
 
+  "Given a valid BIT instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataBitInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+
 object ExecutionSpec extends StrictLogging:
 
   var fixedValuesInitialised = false
@@ -99,7 +112,7 @@ object ExecutionSpec extends StrictLogging:
     // Ensure we have the UNUSED_FLAG_MASK in the value
     val requiredMask: Int = Unused.mask | resData.sr
 
-    assert(Processor.sr.value == requiredMask, s"SR = ${Processor.sr.value} required $requiredMask - $resData")
+    assert(Processor.sr.value == requiredMask, s"SR = (${asHexStr(Processor.sr.value)}) ${StatusRegister.asFlagsString(Processor.sr.value)} required (${asHexStr(requiredMask)}) ${StatusRegister.asFlagsString(resData.sr)} - $resData")
 
     if resData.pc > 0 then // include PC check
       val pc = Processor.pc.addr
@@ -127,17 +140,24 @@ object ExecutionSpec extends StrictLogging:
       AssembleLocation.setMemoryByte(6) // 101 (0x65) =6
       AssembleLocation.setMemoryByte(0x3F) // 102 (0x66) = 63
       AssembleLocation.setMemoryByte(0x80) // 103 (0x67) = 128
+      AssembleLocation.setMemoryByte(0xF0) // 104 (0x68) = 240
+      AssembleLocation.setMemoryByte(0x40) // 105 (0x69) = 64
+      AssembleLocation.setMemoryByte(0xC0) // 106 (0x6A) = 192
       AssembleLocation.setMemoryAddress(absTestLocation2) // 103 (ox67) pointer to absTestLocation2
 
       AssembleLocation.setAssembleLoc(0x638) // set current location to ins location
       for x <- List(1,2,3,4, 0x80) do
         AssembleLocation.setMemoryByte(x)
 
+      // absTestLocation = 2500 (0x9c4)
       AssembleLocation.setAssembleLoc(absTestLocation) // set current location to absTestLocation
-      AssembleLocation.setMemoryByte(0x33) // absTestLocation = 0x33
-      AssembleLocation.setMemoryByte(0xCC) // (absTestLocation  + 1)= 0xCC
-      AssembleLocation.setMemoryByte(0x84) // (absTestLocation  + 2)= 0x84
-      AssembleLocation.setMemoryByte(0x00) // (absTestLocation  + 3)= 0x00
+      AssembleLocation.setMemoryByte(0x33) // absTestLocation (0x9C4) = 51
+      AssembleLocation.setMemoryByte(0xCC) // absTestLocation + 1 (0x9C5) = 204
+      AssembleLocation.setMemoryByte(0x84) // absTestLocation + 2 (0x9C6) = 132
+      AssembleLocation.setMemoryByte(0x00) // absTestLocation + 3 (0x9C7) = 0
+      AssembleLocation.setMemoryByte(0x80) // absTestLocation + 4 (0x9C8) = 128
+      AssembleLocation.setMemoryByte(0xF0) // absTestLocation + 5 (0x9C9) = 240
+      AssembleLocation.setMemoryByte(0x40) // absTestLocation + 6 (0x9CA) = 64
       AssembleLocation.setMemoryAddress(absTestLocation2) // (absTestLocation  + 2) pointer to address absTestLocation2
 
       AssembleLocation.setAssembleLoc(absTestLocation2) // set current location to absTestLocation2
