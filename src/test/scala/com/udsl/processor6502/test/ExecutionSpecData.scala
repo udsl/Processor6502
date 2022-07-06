@@ -8,8 +8,8 @@ import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.StatusFlag.*
 import com.udsl.processor6502.cpu.execution.*
-import com.udsl.processor6502.cpu.{Processor}
-import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger, testLocation}
+import com.udsl.processor6502.cpu.{Processor, StatusRegister}
+import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, asHexStr, fixedValuesInitialised, logger, testLocation}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -19,7 +19,9 @@ trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean = f
 case class ZeroValues() extends RegValues( 0, 0, 0)
 case class AccValue( override val acc: Int) extends RegValues( acc, 0, 0)
 case class AccValueWithCarry( override val acc: Int) extends RegValues( acc, 0, 0, true)
-case class AccValueWithZero( override val acc: Int) extends RegValues( acc, 0, 0, false, withZero = true)
+case class AccValueWithZero( override val acc: Int) extends RegValues( acc, 0, 0, false, true)
+case class AccValueWithNegative( override val acc: Int) extends RegValues( acc, 0, 0, false, false, true)
+case class AccValueWithOverflow( override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, true)
 case class AccIxValue( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
 case class IxValue( override val ix: Int) extends RegValues( 0, ix, 0)
 case class AccIxValueWithCarry( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
@@ -74,7 +76,55 @@ object InsData extends StrictLogging:
 // InsData( value, acc, ix, iy)
 case class InsSourceData(opcode: Int, data: InsData)
 
-trait ResultData( val ac: Int, val ix: Int, val iy: Int, val sr: Int, val pc: Int)
+object Validation extends StrictLogging:
+  def asHexStr( v: Int): String =
+    s"0x${v.toHexString.toUpperCase()}"
+
+  def basicValidation(): Unit =
+    logger.info("not doing any validation")
+    assert(Processor.sp.value == 0xFF, s"Stack pointer has changed = ${asHexStr(Processor.sp.value)}")
+
+  def checkPc(shouldBe: Int): Unit =
+    if shouldBe > 0 then // include PC check
+      val pc = Processor.pc.addr
+      assert(pc == shouldBe, s"PC = ${asHexStr(pc)} expected ${asHexStr(shouldBe)}")
+
+  def checkSr(shouldBe: Int): Unit =
+    val requiredMask: Int = Unused.mask | shouldBe
+    assert(Processor.sr.value == requiredMask, s"SR = (${asHexStr(Processor.sr.value)}) ${StatusRegister.asFlagsString(Processor.sr.value)} required (${asHexStr(requiredMask)}) ${StatusRegister.asFlagsString(shouldBe)} - $shouldBe")
+
+  def checkAcc(shouldBe: Int): Unit =
+    assert(Processor.ac.value == shouldBe, s"AC = ${Processor.ac.value} required ${shouldBe}")
+
+  def checkIx(shouldBe: Int): Unit =
+    assert(Processor.ix.value == shouldBe, s"IX = ${Processor.ix.value} required ${shouldBe}")
+
+  def checkIy(shouldBe: Int): Unit =
+    assert(Processor.iy.value == shouldBe, s"IY = ${Processor.iy.value} required ${shouldBe}")
+
+  def validateStack4BTK(): Unit =
+    // 3 bytes on stack
+    assert(Processor.sp.value == 0xFC, s"Stack pointer NOT CORRECT should be 0xFC is ${asHexStr(Processor.sp.value)}")
+    // bottom of stack should be retrun address
+    val returnAdd = memoryAccess.getMemoryWrd(0x1FE)
+    // BRK @2000, then the following byte so return should be to 2002
+    assert(returnAdd == 2002, s"Return address on stack incorrect is $returnAdd" )
+    val pushedStatus = memoryAccess.getMemoryByte(0x1FD)
+    // just the break flag set (32) and the unused (16) = 48
+    assert(pushedStatus == 48, s"Status pushed on stack incorrect is $pushedStatus - ${StatusRegister.asFlagsString(pushedStatus)}" )
+
+  def validateStackWithZero4BTK(): Unit =
+    // 3 bytes on stack
+    assert(Processor.sp.value == 0xFC, s"Stack pointer NOT CORRECT should be 0xFC is ${asHexStr(Processor.sp.value)}")
+    // bottom of stack should be retrun address
+    val returnAdd = memoryAccess.getMemoryWrd(0x1FE)
+    // BRK @2000, then the following byte so return should be to 2002
+    assert(returnAdd == 2002, s"Return address on stack incorrect is $returnAdd" )
+    val pushedStatus = memoryAccess.getMemoryByte(0x1FD)
+    // the break flag set (32), zero (2) and the unused (16) = 50
+    assert(pushedStatus == 50, s"Status pushed on stack incorrect is $pushedStatus - ${StatusRegister.asFlagsString(pushedStatus)}" )
+
+trait ResultData( val ac: Int, val ix: Int, val iy: Int, val sr: Int, val pc: Int, val spValidation: () => Unit = Validation.basicValidation)
 
 case class AccResData(override val ac: Int) extends ResultData(ac, 0, 0, 0, 0)
 case class AccSrResData(override val ac: Int, override val sr: Int) extends ResultData(ac, 0, 0, sr, 0)
@@ -87,7 +137,9 @@ case class IxSrResData(override val ix: Int, override val sr: Int) extends Resul
 case class IxResData(override val ix: Int) extends ResultData(0, ix, 0, 0, 0)
 case class SrResData(override val sr: Int) extends ResultData(0, 0, 0, sr, 0)
 case class AccPcResData(override val ac: Int, override val pc: Int) extends ResultData(ac, 0, 0, 0, pc)
-case class AccSrPcResData(override val ac: Int, override val pc: Int, override val sr: Int) extends ResultData(ac, 0, 0, sr, pc)
+case class AccSrPcResData(override val ac: Int, override val sr: Int, override val pc: Int) extends ResultData(ac, 0, 0, sr, pc)
+case class AccPcSpResData(override val ac: Int, override val pc: Int, override val spValidation: () => Unit)  extends ResultData(ac, 0, 0, 0, pc, spValidation)
+case class AccSrPcSpResData(override val ac: Int, override val sr: Int, override val pc: Int, override val spValidation: () => Unit)  extends ResultData(ac, 0, 0, sr, pc, spValidation)
 
 
 trait ResultMemData( val loc:Int, val value: Int, val byte: Boolean)
@@ -163,7 +215,7 @@ object ExecutionSpecData:
   val dataBeqInstructionTest = List(
     ("BEQ 1.0 relative zero set PC + 6 = 4 branch + 2 fetch", InsSourceData(0xF0, InsData(0x4, AccValueWithZero(0x0))), AccSrPcResData(0x0, testLocation + 6, Zero.mask), memVoidResult()),
     ("BEQ 1.1 relative zero set -ve offset", InsSourceData(0xF0, InsData(0xFC, AccValueWithZero(0x0))), AccSrPcResData(0x0, testLocation -2, Zero.mask), memVoidResult()),
-    ("BEQ 2.0 relative zero clear", InsSourceData(0xF0, InsData(0x4, AccValue(0x20))), AccResData(0x20), memVoidResult())
+    ("BEQ 2.0 relative zero clear", InsSourceData(0xF0, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation + 2), memVoidResult())
   )
 
   // BIT bit test
@@ -190,26 +242,44 @@ object ExecutionSpecData:
 
   // BMI branch on minus (negative set)
   val dataBmiInstructionTest = List(
+    ("BMI 1.0 relative negative set PC + 6 = 4 branch + 2 fetch", InsSourceData(0x30, InsData(0x4, AccValueWithNegative(0x0))), AccSrPcResData(0x0, testLocation + 6, Negative.mask), memVoidResult()),
+    ("BMI 1.1 relative negative set set -ve offset", InsSourceData(0x30, InsData(0xFC, AccValueWithNegative(0x0))), AccSrPcResData(0x0, testLocation -2,  Negative.mask), memVoidResult()),
+    ("BMI 2.0 relative negative clear", InsSourceData(0x30, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation +2), memVoidResult())
   )
 
   // BNE branch on not equal (zero clear)
   val dataBneInstructionTest = List(
+    ("BNE 1.0 relative zero clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0xD0, InsData(0x4, AccValue(0x0))), AccPcResData(0x0, testLocation + 6), memVoidResult()),
+    ("BNE 1.1 relative zero clear set -ve offset", InsSourceData(0xD0, InsData(0xFC, AccValue(0x0))), AccPcResData(0x0, testLocation -2), memVoidResult()),
+    ("BNE 2.0 relative zero set", InsSourceData(0xD0, InsData(0x4, AccValueWithZero(0x20))), AccSrPcResData(0x20, testLocation +2, Zero.mask), memVoidResult())
   )
 
   // BPL branch on plus (negative clear)
   val dataBplInstructionTest = List(
+    ("BPL 1.0 relative negative clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0x10, InsData(0x4, AccValue(0x0))), AccPcResData(0x0, testLocation + 6), memVoidResult()),
+    ("BPL 1.1 relative negative clear set -ve offset", InsSourceData(0x10, InsData(0xFC, AccValue(0x0))), AccPcResData(0x0, testLocation -2), memVoidResult()),
+    ("BPL 2.0 relative negative set", InsSourceData(0x10, InsData(0x4, AccValueWithNegative(0x20))), AccSrPcResData(0x20, Negative.mask, testLocation +2), memVoidResult())
   )
 
   // BRK break / interrupt
   val dataBrkInstructionTest = List(
+    // IRQ vector contents 3000 set in test initialisation
+    ("BRK 1.0 all flags clear", InsSourceData(0x00, InsData(0x0, AccValue(0x0))), AccPcSpResData(0x0, 3000, Validation.validateStack4BTK), memVoidResult()),
+    ("BRK 1.1 with Zero flag set", InsSourceData(0x00, InsData(0x0, AccValueWithZero(0x0))), AccSrPcSpResData(0x0, Zero.mask, 3000, Validation.validateStackWithZero4BTK), memVoidResult())
   )
 
   // BVC branch on overflow clear
   val dataBvcInstructionTest = List(
+    ("BVC 1.0 relative overflow clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0x50, InsData(0x4, AccValue(0x0))), AccPcResData(0x0, testLocation + 6), memVoidResult()),
+    ("BVC 1.1 relative overflow clear set -ve offset", InsSourceData(0x50, InsData(0xFC, AccValue(0x0))), AccPcResData(0x0, testLocation -2), memVoidResult()),
+    ("BVC 2.0 relative overflow set", InsSourceData(0x50, InsData(0x4, AccValueWithOverflow(0x20))), AccSrPcResData(0x20, testLocation +2, Overflow.mask), memVoidResult())
   )
 
   // BVS branch on overflow set
   val dataBvsInstructionTest = List(
+    ("BVS 1.0 relative overflow set PC + 6 = 4 branch + 2 fetch", InsSourceData(0x70, InsData(0x4, AccValueWithOverflow(0x0))), AccSrPcResData(0x0, testLocation + 6, Overflow.mask), memVoidResult()),
+    ("BVS 1.1 relative overflow set -ve offset", InsSourceData(0x70, InsData(0xFC, AccValueWithOverflow(0x0))), AccSrPcResData(0x0, testLocation -2, Overflow.mask), memVoidResult()),
+    ("BVS 2.0 relative overflow clear", InsSourceData(0x70, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation + 2), memVoidResult())
   )
 
   // CLC clear carry

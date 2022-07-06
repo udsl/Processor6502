@@ -5,6 +5,11 @@ import com.udsl.processor6502.cpu.EightBitRegister.MAX_VALUE
 
 
 class StackPointer(name: String) extends EightBitRegister(name: String), StrictLogging {
+  def value: Int = _ebr.value
+
+  def value_= (value: Int): Unit =
+    ebr = value
+  
   def pushByte(byt: Int): Unit ={
     logger.info(s"Pushing byte $byt")
     // write byte to memory offset by sp value

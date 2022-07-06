@@ -10,8 +10,9 @@ import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusFlag, StatusRegister}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest}
+import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
+import com.udsl.processor6502.test.Validation.{checkAcc, checkIx, checkIy, checkPc, checkSr}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 
@@ -92,6 +93,78 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
     }
   }
 
+  "Given a valid BMI instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataBmiInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid BNE instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataBneInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid BPL instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataBplInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid BRK instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataBrkInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid BVC instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataBvcInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid BVS instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataBvsInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
 
 object ExecutionSpec extends StrictLogging:
 
@@ -105,18 +178,15 @@ object ExecutionSpec extends StrictLogging:
 
   def checkRes(resData: ResultData, memRes: ResultMemData, title: String, opcodeExecuted: OpcodeValue): Unit =
     logger.info(s"Checking results for $title")
-    assert(Processor.ac.value == resData.ac, s"AC = ${Processor.ac.value} required ${resData.ac} - $resData")
-    assert(Processor.ix.value == resData.ix, s"IX = ${Processor.ix.value} required ${resData.ix} - $resData")
-    assert(Processor.iy.value == resData.iy, s"IY = ${Processor.iy.value} required ${resData.iy} - $resData")
 
-    // Ensure we have the UNUSED_FLAG_MASK in the value
-    val requiredMask: Int = Unused.mask | resData.sr
+    checkAcc(resData.ac)
+    checkIx(resData.ix)
+    checkIy(resData.iy)
+    checkSr(resData.sr)
+    checkPc(resData.pc)
 
-    assert(Processor.sr.value == requiredMask, s"SR = (${asHexStr(Processor.sr.value)}) ${StatusRegister.asFlagsString(Processor.sr.value)} required (${asHexStr(requiredMask)}) ${StatusRegister.asFlagsString(resData.sr)} - $resData")
-
-    if resData.pc > 0 then // include PC check
-      val pc = Processor.pc.addr
-      assert(pc == resData.pc, s"PC = ${asHexStr(pc)} expected ${asHexStr(resData.pc)}")
+    // call the stack pointer validation method
+    resData.spValidation()
 
     if memRes.byte then
       // checking memory byte
@@ -188,8 +258,13 @@ object ExecutionSpec extends StrictLogging:
     Processor.ix.value = regData.regValues.ix
     Processor.iy.value = regData.regValues.iy
     Processor.sr.reset()
+    //Set initial stack value
+    Processor.sp.value = 0xFF
     if regData.regValues.withCarry then
       Processor.sr.setFlag(StatusFlag.Carry)
-
-
-
+    if regData.regValues.withZero then
+      Processor.sr.setFlag(StatusFlag.Zero)
+    if regData.regValues.withNegative then
+      Processor.sr.setFlag(StatusFlag.Negative)
+    if regData.regValues.withOverflow then
+      Processor.sr.setFlag(StatusFlag.Overflow)

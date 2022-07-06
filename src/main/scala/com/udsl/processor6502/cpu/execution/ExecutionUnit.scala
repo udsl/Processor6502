@@ -95,7 +95,11 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "BEQ" => executeBEQ()
       case "BIT" => executeBIT()
       case "BNE" => executeBNE()
+      case "BMI" => executeBMI()
+      case "BPL" => executeBPL()
       case "BRK" => executeBRK()
+      case "BVC" => executeBVC()
+      case "BVS" => executeBVS()
       case "DEX" => executeDEX()
       case "LDX" => executeLDX()
       case "LDY" => executeLDY()
@@ -122,20 +126,6 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     Processor.sp.ebr = Processor.ix.ebr
     Processor.pc.inc(opcode.addressMode.bytes)
 
-
-  def executeBRK(): Unit =
-    if (runMode == RunMode.Running || runMode == RunMode.RunningSlow) && operand._1 == 0 then
-      runMode = RunMode.SingleStepping
-      // This is a break to single step, need to step over to the next instruction
-      Processor.pc.inc(2)
-    else
-      Processor.sr.setFlag(StatusFlag.Interrupt)
-      // now do a jsr to the irq routine ith return address set to byte after break instruction + 1
-      val returnAdr = Processor.pc.addr + 2
-      Processor.sp.pushByte(((returnAdr / 256) % 256).toShort)
-      Processor.sp.pushByte((returnAdr % 255).toShort)
-      // get address at INTERRUPT_VECTOR
-      Processor.pc.addr = memoryAccess.getMemoryAsAddress(INTERRUPT_VECTOR)
 
   def executeADC(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -256,12 +246,57 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       Processor.sr.updateFlag(StatusFlag.Overflow, (value & 0x40) > 0)
       Processor.sr.updateFlag(StatusFlag.Zero, (value & Processor.ac.value) == 0)
 
+  def executeBMI(): Unit =
+    if Processor.sr.testFlag(StatusFlag.Negative) then
+      val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+      Processor.pc.addr = effectiveAddr.address
+    else
+      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+
   def executeBNE(): Unit =
     if !Processor.sr.testFlag(StatusFlag.Zero) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
       val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeBPL(): Unit =
+    if !Processor.sr.testFlag(StatusFlag.Negative) then
+      val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+      Processor.pc.addr = effectiveAddr.address
+    else
+      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeBRK(): Unit =
+      if (runMode == RunMode.Running || runMode == RunMode.RunningSlow) && operand._1 == 0 then
+        runMode = RunMode.SingleStepping
+        // This is a break to single step, need to step over to the next instruction
+        Processor.pc.inc(2)
+      else
+        // now do a jsr to the irq routine ith return address set to byte after break instruction + 1
+        val returnAdr = Processor.pc.addr + 2
+        Processor.sp.pushByte(((returnAdr / 256) & 255).toShort)
+        Processor.sp.pushByte((returnAdr & 255).toShort)
+        var flagsToPush = Processor.sr.value | Break.mask
+        Processor.sp.pushByte(flagsToPush)
+        // get address at INTERRUPT_VECTOR
+        Processor.pc.addr = memoryAccess.getMemoryAsAddress(INTERRUPT_VECTOR)
+
+  def executeBVC(): Unit =
+    if !Processor.sr.testFlag(StatusFlag.Overflow) then
+      val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+      Processor.pc.addr = effectiveAddr.address
+    else
+      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeBVS(): Unit =
+    if Processor.sr.testFlag(StatusFlag.Overflow) then
+      val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+      Processor.pc.addr = effectiveAddr.address
+    else
+      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+
+
 
 object ExecutionUnit:
   def apply: ExecutionUnit =
