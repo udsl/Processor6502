@@ -96,13 +96,13 @@ object Validation extends StrictLogging:
     assert(Processor.sr.value == requiredMask, s"SR = (${asHexStr(Processor.sr.value)}) { ${StatusRegister.asFlagsString(Processor.sr.value)} } required (${asHexStr(requiredMask)}) { ${StatusRegister.asFlagsString(shouldBe)} } - ${asHexStr(shouldBe)}")
 
   def checkAcc(shouldBe: Int): Unit =
-    assert(Processor.ac.value == shouldBe, s"AC = ${Processor.ac.value} required ${shouldBe}")
+    assert(Processor.ac.value == shouldBe, s"AC = ${Processor.ac.value} {${asHexStr(Processor.ac.value)}} required $shouldBe {${asHexStr(shouldBe)}}")
 
   def checkIx(shouldBe: Int): Unit =
-    assert(Processor.ix.value == shouldBe, s"IX = ${Processor.ix.value} required ${shouldBe}")
+    assert(Processor.ix.value == shouldBe, s"IX = ${Processor.ix.value} required $shouldBe")
 
   def checkIy(shouldBe: Int): Unit =
-    assert(Processor.iy.value == shouldBe, s"IY = ${Processor.iy.value} required ${shouldBe}")
+    assert(Processor.iy.value == shouldBe, s"IY = ${Processor.iy.value} required $shouldBe")
 
   def validateStack4BTK(): Unit =
     // 3 bytes on stack
@@ -308,16 +308,36 @@ object ExecutionSpecData:
     ("CLV 2.0 NOP overflow still set", InsSourceData(0xEA, InsData(0x4, AccValueWithOverflow(0x0))), AccSrResData(0x0, Overflow.mask), memVoidResult())
   )
 
-  // CMP compare (with accumulator)
+  // CMP compare (with accumulator) only effects Zero, Negative and carry flags
   val dataCmpInstructionTest = List(
+    ("CMP 1.0 Acc 0xF0 immediate with 0xF4 result Negative  set", InsSourceData(0xC9, InsData(0xF4, AccValue(0xF0))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
+    ("CMP 1.1 Acc 0x80 immediate with 0x40 result overflow set", InsSourceData(0xC9, InsData(0x40, AccValue(0x80))), AccSrResData(0x80, Carry.mask), memVoidResult()),
+    ("CMP 1.2 Acc 0x80 immediate with 0x80 result Zero set", InsSourceData(0xC9, InsData(0x80, AccValue(0x80))), AccSrResData(0x80, Zero.mask), memVoidResult()),
+    ("CMP 2.0 acc (0x64) zero page 101 value 6 ", InsSourceData(0xC5, InsData(101, AccValue(0x64))), AccSrResData(0x64, Carry.mask), memVoidResult()),
+    ("CMP 3.0 acc (0x64) zero page,X (100 + 2 = 102) value 0x3F result should be 6", InsSourceData(0xD5, InsData(100, AccIxValue(0x64, 2))), AccIxSrResData(0x64, 2, Carry.mask), memVoidResult()),
+    ("CMP 4.0 acc (0x20) absolute (2500) = 0x33", InsSourceData(0xCD, InsData(absTestLocation, AccValue(0x20))), AccSrResData(0x20, Negative.mask), memVoidResult()),
+    ("CMP 5.0 acc (0xCC) absoluteX (2500 + 2) = 0x84", InsSourceData(0xDD, InsData(absTestLocation, AccIxValue(0xCC, 2))), AccIxSrResData(0xCC, 2, Carry.mask), memVoidResult()),
+    ("CMP 6.0 acc (0x84) AbsoluteY absTestLocation + IY = 2 gives 0x84", InsSourceData(0xD9, InsData(absTestLocation, AccIyValue(0x84, 2))), AccIySrResData(0x84, 2, Zero.mask), memVoidResult()),
+    ("CMP 7.0 acc (0x84) IndirectX 100 + IX = 7 gives absTestLocation2 = 0xF0", InsSourceData(0xC1, InsData(100, AccIxValue(0x66, 7))), AccIxSrResData(0x66, 7, Negative.mask), memVoidResult()),
+    ("CMP 8.0 acc (0x66) IndirectY 107 = absTestLocation2 + Y -> 0x66", InsSourceData(0xD1, InsData(107, AccIyValue(0x66, 3))), AccIySrResData(0x66, 3, Zero.mask), memVoidResult())
   )
 
   // CPX compare with X
   val dataCpxInstructionTest = List(
+    ("CPX 1.0 Acc 0xF0 immediate with 0xF4 result Negative  set", InsSourceData(0xE0, InsData(0xF4, AccIxValue(0xF0, 0xF0))), AccIxSrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
+    ("CPX 1.1 Acc 0x80 immediate with 0x40 result overflow set", InsSourceData(0xE0, InsData(0x40, AccIxValue(0x80, 0x80))), AccIxSrResData(0x80, 0x80, Carry.mask), memVoidResult()),
+    ("CPX 1.2 Acc 0x80 immediate with 0x80 result Zero set", InsSourceData(0xE0, InsData(0x80, AccIxValue(0x80, 0x80))), AccIxSrResData(0x80, 0x80, Zero.mask), memVoidResult()),
+    ("CPX 2.0 acc (0x64) zero page 101 value 6 ", InsSourceData(0xE4, InsData(101, AccIxValue(0x64, 0x64))), AccIxSrResData(0x64, 0x64, Carry.mask), memVoidResult()),
+    ("CPX 3.0 acc (0x20) absolute (2500) = 0x33", InsSourceData(0xEC, InsData(absTestLocation, AccIxValue(0x20, 0x20))), AccIxSrResData(0x20, 0x20, Negative.mask), memVoidResult()),
   )
 
   // CPY compare with Y
   val dataCpyInstructionTest = List(
+    ("CPY 1.0 Acc 0xF0 immediate with 0xF4 result Negative  set", InsSourceData(0xC0, InsData(0xF4, AccIyValue(0xF0, 0xF0))), AccIySrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
+    ("CPY 1.1 Acc 0x80 immediate with 0x40 result overflow set", InsSourceData(0xC0, InsData(0x40, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Carry.mask), memVoidResult()),
+    ("CPY 1.2 Acc 0x80 immediate with 0x80 result Zero set", InsSourceData(0xC0, InsData(0x80, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Zero.mask), memVoidResult()),
+    ("CPY 2.0 acc (0x64) zero page 101 value 6 ", InsSourceData(0xC4, InsData(101, AccIyValue(0x64, 0x64))), AccIySrResData(0x64, 0x64, Carry.mask), memVoidResult()),
+    ("CPY 3.0 acc (0x20) absolute (2500) = 0x33", InsSourceData(0xCC, InsData(absTestLocation, AccIyValue(0x20, 0x20))), AccIySrResData(0x20, 0x20, Negative.mask), memVoidResult()),
   )
 
   // DEC decrement

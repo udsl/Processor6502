@@ -28,7 +28,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 
   val pcSubscription: Subscription = Processor.pc._addr.onChange {
     (_, oldValue, newValue) => {
-      logger.debug(s"PC subscription fired - $oldValue, ${newValue}")
+      logger.debug(s"PC subscription fired - $oldValue, $newValue")
       opcode = getInstruction(newValue.##)
       operand = getInstructionOperand(newValue.##)
       notifyObservers()
@@ -42,14 +42,14 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   def singleStep(): OpcodeValue ={
     runMode = RunMode.SingleStepping
     // Always get the next instruction
-    getInstructionAtPc()
+    loadInstructionAtPc()
     val executing = opcode
     executeIns()
     logger.debug(s"Next instruction $opcode, operand $operand")
     executing
   }
 
-  def getInstructionAtPc(): Unit =
+  def loadInstructionAtPc(): Unit =
     opcode = Processor.getNextInstruction
     operand = getNextInstructionOperand
 
@@ -66,19 +66,19 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
   def run(): Unit =
     // make sure we have a current instruction
     opcode match {
-      case NULL(NotApplicable) => getInstructionAtPc()
+      case NULL(NotApplicable) => loadInstructionAtPc()
       case _ => ()
     }
 
     val thread = new Thread {
-      override def run =
+      override def run(): Unit =
         while runMode == RunMode.Running || runMode == RunMode.RunningSlow do
           executeIns()
           Thread.`yield`()
           if runMode == RunMode.RunningSlow then
             Thread.sleep(50) // slow the loop down a bit
     }
-    thread.start
+    thread.start()
 
   //noinspection EmptyParenMethodAccessedAsParameterless
   def executeIns(): Unit =
@@ -104,6 +104,9 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "CLD" => executeCLD()
       case "CLI" => executeCLI()
       case "CLV" => executeCLV()
+      case "CMP" => executeCMP()
+      case "CPX" => executeCPX()
+      case "CPY" => executeCPY()
 
       case "DEX" => executeDEX()
       case "LDX" => executeLDX()
@@ -113,10 +116,8 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case _ => notImplmented()
     }
     if Platform.isFxApplicationThread then
-      Platform.runLater(new Runnable {
-        def run(): Unit = {
-          execute
-        }
+      Platform.runLater(() => {
+        execute
       })
     else
       execute
@@ -315,6 +316,44 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
 
   def executeCLV(): Unit =
     Processor.sr.clearFlag(StatusFlag.Overflow)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  /**
+   *
+   * @param mem value bing compared to
+   * @param reg register (acc, X or Y) value
+   */
+  def doTheCompare(mem: Int, reg: Int): Unit =
+    val res = reg - mem
+    Processor.sr.updateFlag(StatusFlag.Negative, res < 0)
+    Processor.sr.updateFlag(StatusFlag.Zero, res == 0)
+    Processor.sr.updateFlag(StatusFlag.Carry, res > 0)
+
+  def executeCMP(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    doTheCompare(value, Processor.ac.value)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeCPX(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    doTheCompare(value, Processor.ix.value)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeCPY(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    doTheCompare(value, Processor.iy.value)
     Processor.pc.inc(opcode.addressMode.bytes)
 
 
