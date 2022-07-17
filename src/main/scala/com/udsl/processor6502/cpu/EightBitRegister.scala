@@ -16,6 +16,10 @@ package com.udsl.processor6502.cpu:
 
     def ebr: Int = _ebr.value
 
+    def asHex: String = s"0x${_ebr.value.toHexString.toUpperCase}"
+
+    def asDebugStr: String = s"${_ebr.value} - 0x${_ebr.value.toHexString.toUpperCase}"
+
     override def toString: String = {
       numToString(_ebr.value)
     }

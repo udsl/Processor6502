@@ -100,6 +100,11 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "BRK" => executeBRK()
       case "BVC" => executeBVC()
       case "BVS" => executeBVS()
+      case "CLC" => executeCLC()
+      case "CLD" => executeCLD()
+      case "CLI" => executeCLI()
+      case "CLV" => executeCLV()
+
       case "DEX" => executeDEX()
       case "LDX" => executeLDX()
       case "LDY" => executeLDY()
@@ -229,7 +234,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeBEQ(): Unit =
     if Processor.sr.testFlag(StatusFlag.Zero) then
@@ -251,21 +256,21 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeBNE(): Unit =
     if !Processor.sr.testFlag(StatusFlag.Zero) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeBPL(): Unit =
     if !Processor.sr.testFlag(StatusFlag.Negative) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeBRK(): Unit =
       if (runMode == RunMode.Running || runMode == RunMode.RunningSlow) && operand._1 == 0 then
@@ -287,15 +292,30 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeBVS(): Unit =
     if Processor.sr.testFlag(StatusFlag.Overflow) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressMode.bytes)
 
+  def executeCLC(): Unit =
+    Processor.sr.clearFlag(StatusFlag.Carry)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeCLD(): Unit =
+    Processor.sr.clearFlag(StatusFlag.Decimal)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeCLI(): Unit =
+    Processor.sr.clearFlag(StatusFlag.Interrupt)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeCLV(): Unit =
+    Processor.sr.clearFlag(StatusFlag.Overflow)
+    Processor.pc.inc(opcode.addressMode.bytes)
 
 
 object ExecutionUnit:

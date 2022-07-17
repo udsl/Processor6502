@@ -9,12 +9,12 @@ import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.StatusFlag.*
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusRegister}
-import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, asHexStr, fixedValuesInitialised, logger, testLocation}
+import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, asHexStr, logger, testLocation}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 
-trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean = false, val withZero:Boolean = false, val withNegative:Boolean = false, val withOverflow:Boolean = false )
+trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean = false, val withZero:Boolean = false, val withNegative:Boolean = false, val withOverflow:Boolean = false, val withDecimal:Boolean = false, val withInterupt:Boolean = false  )
 
 case class ZeroValues() extends RegValues( 0, 0, 0)
 case class AccValue( override val acc: Int) extends RegValues( acc, 0, 0)
@@ -22,6 +22,8 @@ case class AccValueWithCarry( override val acc: Int) extends RegValues( acc, 0, 
 case class AccValueWithZero( override val acc: Int) extends RegValues( acc, 0, 0, false, true)
 case class AccValueWithNegative( override val acc: Int) extends RegValues( acc, 0, 0, false, false, true)
 case class AccValueWithOverflow( override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, true)
+case class AccValueWithDecimal( override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, false, true)
+case class AccValueWithInterupt( override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, false, false, true)
 case class AccIxValue( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
 case class IxValue( override val ix: Int) extends RegValues( 0, ix, 0)
 case class AccIxValueWithCarry( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
@@ -91,7 +93,7 @@ object Validation extends StrictLogging:
 
   def checkSr(shouldBe: Int): Unit =
     val requiredMask: Int = Unused.mask | shouldBe
-    assert(Processor.sr.value == requiredMask, s"SR = (${asHexStr(Processor.sr.value)}) ${StatusRegister.asFlagsString(Processor.sr.value)} required (${asHexStr(requiredMask)}) ${StatusRegister.asFlagsString(shouldBe)} - $shouldBe")
+    assert(Processor.sr.value == requiredMask, s"SR = (${asHexStr(Processor.sr.value)}) { ${StatusRegister.asFlagsString(Processor.sr.value)} } required (${asHexStr(requiredMask)}) { ${StatusRegister.asFlagsString(shouldBe)} } - ${asHexStr(shouldBe)}")
 
   def checkAcc(shouldBe: Int): Unit =
     assert(Processor.ac.value == shouldBe, s"AC = ${Processor.ac.value} required ${shouldBe}")
@@ -172,16 +174,16 @@ object ExecutionSpecData:
 
   // AND and (with accumulator)
   val dataAndInstructionTest = List(
-    ("AND 1", InsSourceData(0x29, InsData(0xF4, AccValue(100))), AccResData(100), memVoidResult()), // And acc (0x64) immediate with 0xF4 result should be 0x64
-    ("AND 2", InsSourceData(0x25, InsData(101, AccValue(100))), AccResData(4), memVoidResult()), // And acc (0x64) zero page 101 value 6 result should be 4
-    ("AND 3", InsSourceData(0x35, InsData(99, AccIxValue(0x66, 2))), AccIxResData(6, 2), memVoidResult()), // And acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 6
-    ("AND 4", InsSourceData(0x35, InsData(99, AccIxValue(0x88, 2))), IxSrResData(2, Zero.mask), memVoidResult()), // And acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 0
-    ("AND 5", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xE1, 2))), AccIxResData(0x21, 2), memVoidResult()), //  TestData("AND", 0x2D, 3, Absolute),  // $LLLL
-    ("AND 6", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xCC, 2))), IxSrResData(2, Zero.mask), memVoidResult()), //  TestData("AND", 0x2D, 3, Absolute),  // $LLLL
-    ("AND 7", InsSourceData(0x3D, InsData(absTestLocation, AccIxValue(0xCC, 1))), AccIxSrResData(0xCC, 1, Negative.mask), memVoidResult()), //  TestData("AND", 0x3D, 3, AbsoluteX), // $LL,X
-    ("AND 8.1 AbsoluteY absTestLocation + IY = 2 gives 0x84", InsSourceData(0x39, InsData(absTestLocation, AccIyValue(0xCC, 2))), AccIySrResData(0x84, 2, Negative.mask), memVoidResult()), //  TestData("AND", 0x39, 3, AbsoluteY), // $LL,Y
+    ("AND 1 acc (0x64) immediate with 0xF4 result should be 0x64", InsSourceData(0x29, InsData(0xF4, AccValue(100))), AccResData(100), memVoidResult()),
+    ("AND 2  acc (0x64) zero page 101 value 6 result should be 4", InsSourceData(0x25, InsData(101, AccValue(100))), AccResData(4), memVoidResult()),
+    ("AND 3 acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 6", InsSourceData(0x35, InsData(99, AccIxValue(0x66, 2))), AccIxResData(6, 2), memVoidResult()),
+    ("AND 4 acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 0", InsSourceData(0x35, InsData(99, AccIxValue(0x88, 2))), IxSrResData(2, Zero.mask), memVoidResult()),
+    ("AND 5", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xE1, 2))), AccIxResData(0x21, 2), memVoidResult()),
+    ("AND 6", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xCC, 2))), IxSrResData(2, Zero.mask), memVoidResult()),
+    ("AND 7", InsSourceData(0x3D, InsData(absTestLocation, AccIxValue(0xCC, 1))), AccIxSrResData(0xCC, 1, Negative.mask), memVoidResult()),
+    ("AND 8.1 AbsoluteY absTestLocation + IY = 2 gives 0x84", InsSourceData(0x39, InsData(absTestLocation, AccIyValue(0xCC, 2))), AccIySrResData(0x84, 2, Negative.mask), memVoidResult()),
     ("AND 8.2 AbsoluteY absTestLocation + IY = 3 gives 0x00", InsSourceData(0x39, InsData(absTestLocation, AccIyValue(0xCC, 3))), IySrResData(3, Zero.mask), memVoidResult()),
-    ("AND 9.1 IndirectX 100 + IX = 4 gives absTestLocation2 = 0xF0", InsSourceData(0x21, InsData(100, AccIxValue(0x66, 4))), AccIxResData(0x60, 4), memVoidResult()), //  TestData("AND", 0x21, 2, IndirectX), // ($LL,X)
+    ("AND 9.1 IndirectX 100 + IX = 7 gives absTestLocation2 = 0xF0", InsSourceData(0x21, InsData(100, AccIxValue(0x66, 7))), AccIxResData(0x60, 7), memVoidResult()),
     ("AND 10", InsSourceData(0x31, InsData(100, AccIyValue(0x66, 3))), AccIyResData(0x04, 3), memVoidResult())
   )
 
@@ -206,8 +208,8 @@ object ExecutionSpecData:
 
   // BCS branch on carry set
   val dataBcsInstructionTest = List(
-    ("BCS 1.0 relative carry set PC + 6 = 4 branch + 2 fetch", InsSourceData(0xB0, InsData(0x4, AccValueWithCarry(0x20))), AccSrPcResData(0x20, testLocation + 6, Carry.mask), memVoidResult()),
-    ("BCS 1.1 relative carry set -ve offset", InsSourceData(0xB0, InsData(0xFC, AccValueWithCarry(0x20))), AccSrPcResData(0x20, testLocation -2, Carry.mask), memVoidResult()),
+    ("BCS 1.0 relative carry set PC + 6 = 4 branch + 2 fetch", InsSourceData(0xB0, InsData(0x4, AccValueWithCarry(0x20))), AccSrPcResData(0x20, Carry.mask, testLocation + 6), memVoidResult()),
+    ("BCS 1.1 relative carry set -ve offset", InsSourceData(0xB0, InsData(0xFC, AccValueWithCarry(0x20))), AccSrPcResData(0x20, Carry.mask, testLocation -2), memVoidResult()),
     ("BCS 2.0 relative carry clear", InsSourceData(0xB0, InsData(0x4, AccValue(0x20))), AccResData(0x20), memVoidResult())
   )
 
@@ -242,8 +244,8 @@ object ExecutionSpecData:
 
   // BMI branch on minus (negative set)
   val dataBmiInstructionTest = List(
-    ("BMI 1.0 relative negative set PC + 6 = 4 branch + 2 fetch", InsSourceData(0x30, InsData(0x4, AccValueWithNegative(0x0))), AccSrPcResData(0x0, testLocation + 6, Negative.mask), memVoidResult()),
-    ("BMI 1.1 relative negative set set -ve offset", InsSourceData(0x30, InsData(0xFC, AccValueWithNegative(0x0))), AccSrPcResData(0x0, testLocation -2,  Negative.mask), memVoidResult()),
+    ("BMI 1.0 relative negative set PC + 6 = 4 branch + 2 fetch", InsSourceData(0x30, InsData(0x4, AccValueWithNegative(0x0))), AccSrPcResData(0x0, Negative.mask, testLocation + 6), memVoidResult()),
+    ("BMI 1.1 relative negative set set -ve offset", InsSourceData(0x30, InsData(0xFC, AccValueWithNegative(0x0))), AccSrPcResData(0x0,  Negative.mask, testLocation -2), memVoidResult()),
     ("BMI 2.0 relative negative clear", InsSourceData(0x30, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation +2), memVoidResult())
   )
 
@@ -251,7 +253,7 @@ object ExecutionSpecData:
   val dataBneInstructionTest = List(
     ("BNE 1.0 relative zero clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0xD0, InsData(0x4, AccValue(0x0))), AccPcResData(0x0, testLocation + 6), memVoidResult()),
     ("BNE 1.1 relative zero clear set -ve offset", InsSourceData(0xD0, InsData(0xFC, AccValue(0x0))), AccPcResData(0x0, testLocation -2), memVoidResult()),
-    ("BNE 2.0 relative zero set", InsSourceData(0xD0, InsData(0x4, AccValueWithZero(0x20))), AccSrPcResData(0x20, testLocation +2, Zero.mask), memVoidResult())
+    ("BNE 2.0 relative zero set", InsSourceData(0xD0, InsData(0x4, AccValueWithZero(0x20))), AccSrPcResData(0x20, Zero.mask, testLocation +2), memVoidResult())
   )
 
   // BPL branch on plus (negative clear)
@@ -272,30 +274,38 @@ object ExecutionSpecData:
   val dataBvcInstructionTest = List(
     ("BVC 1.0 relative overflow clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0x50, InsData(0x4, AccValue(0x0))), AccPcResData(0x0, testLocation + 6), memVoidResult()),
     ("BVC 1.1 relative overflow clear set -ve offset", InsSourceData(0x50, InsData(0xFC, AccValue(0x0))), AccPcResData(0x0, testLocation -2), memVoidResult()),
-    ("BVC 2.0 relative overflow set", InsSourceData(0x50, InsData(0x4, AccValueWithOverflow(0x20))), AccSrPcResData(0x20, testLocation +2, Overflow.mask), memVoidResult())
+    ("BVC 2.0 relative overflow set", InsSourceData(0x50, InsData(0x4, AccValueWithOverflow(0x20))), AccSrPcResData(0x20, Overflow.mask, testLocation +2), memVoidResult())
   )
 
   // BVS branch on overflow set
   val dataBvsInstructionTest = List(
-    ("BVS 1.0 relative overflow set PC + 6 = 4 branch + 2 fetch", InsSourceData(0x70, InsData(0x4, AccValueWithOverflow(0x0))), AccSrPcResData(0x0, testLocation + 6, Overflow.mask), memVoidResult()),
-    ("BVS 1.1 relative overflow set -ve offset", InsSourceData(0x70, InsData(0xFC, AccValueWithOverflow(0x0))), AccSrPcResData(0x0, testLocation -2, Overflow.mask), memVoidResult()),
+    ("BVS 1.0 relative overflow set PC + 6 = 4 branch + 2 fetch", InsSourceData(0x70, InsData(0x4, AccValueWithOverflow(0x0))), AccSrPcResData(0x0, Overflow.mask, testLocation + 6), memVoidResult()),
+    ("BVS 1.1 relative overflow set -ve offset", InsSourceData(0x70, InsData(0xFC, AccValueWithOverflow(0x0))), AccSrPcResData(0x0, Overflow.mask, testLocation -2), memVoidResult()),
     ("BVS 2.0 relative overflow clear", InsSourceData(0x70, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation + 2), memVoidResult())
   )
 
   // CLC clear carry
   val dataClcInstructionTest = List(
+    ("CLC 1.0 implied clear carry", InsSourceData(0x18, InsData(0x4, AccValueWithCarry(0x0))), AccResData(0x0), memVoidResult()),
+    ("CLC 2.0 NOP carry still set", InsSourceData(0xEA, InsData(0x4, AccValueWithCarry(0x0))), AccSrResData(0x0, Carry.mask), memVoidResult())
   )
 
   // CLD clear decimal
   val dataCldInstructionTest = List(
+    ("CLD 1.0 implied clear decimal", InsSourceData(0xD8, InsData(0x4, AccValueWithDecimal(0x0))), AccResData(0x0), memVoidResult()),
+    ("CLD 2.0 NOP decimal still set", InsSourceData(0xEA, InsData(0x4, AccValueWithDecimal(0x0))), AccSrResData(0x0, Decimal.mask), memVoidResult())
   )
 
   // CLI clear interrupt disable
   val dataCliInstructionTest = List(
+    ("CLI 1.0 implied clear interrupt", InsSourceData(0x58, InsData(0x4, AccValueWithInterupt(0x0))), AccResData(0x0), memVoidResult()),
+    ("CLI 2.0 NOP interrupt still set", InsSourceData(0xEA, InsData(0x4, AccValueWithInterupt(0x0))), AccSrResData(0x0, Interrupt.mask), memVoidResult())
   )
 
   // CLV clear overflow
   val dataClvInstructionTest = List(
+    ("CLV 1.0 implied clear overflow", InsSourceData(0xB8, InsData(0x4, AccValueWithOverflow(0x0))), AccResData(0x0), memVoidResult()),
+    ("CLV 2.0 NOP overflow still set", InsSourceData(0xEA, InsData(0x4, AccValueWithOverflow(0x0))), AccSrResData(0x0, Overflow.mask), memVoidResult())
   )
 
   // CMP compare (with accumulator)

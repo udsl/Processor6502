@@ -9,8 +9,9 @@ import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusFlag, StatusRegister}
-import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, fixedValuesInitialised, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest}
+import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, logger, testLocation}
+import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest,
+  dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import com.udsl.processor6502.test.Validation.{checkAcc, checkIx, checkIy, checkPc, checkSr}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -165,10 +166,57 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
     }
   }
 
+  "Given a valid CLC instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataClcInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid CLD instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataCldInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid CLI instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataCliInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid CLV instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataClvInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
 
 object ExecutionSpec extends StrictLogging:
 
-  var fixedValuesInitialised = false
   val testLocation = 2000
   val absTestLocation = 2500
   val absTestLocation2 = 2600
@@ -203,46 +251,43 @@ object ExecutionSpec extends StrictLogging:
    * Initialise memory and registers for test
    */
   def initFixedValuesForTest() : Unit =
-    if !fixedValuesInitialised then
-      AssembleLocation.setAssembleLoc(100) // zero page location
-      // setting a zero page pointer to address 0x638
-      AssembleLocation.setMemoryByte(0x38) // 100 (0x64) = 56
-      AssembleLocation.setMemoryByte(6) // 101 (0x65) =6
-      AssembleLocation.setMemoryByte(0x3F) // 102 (0x66) = 63
-      AssembleLocation.setMemoryByte(0x80) // 103 (0x67) = 128
-      AssembleLocation.setMemoryByte(0xF0) // 104 (0x68) = 240
-      AssembleLocation.setMemoryByte(0x40) // 105 (0x69) = 64
-      AssembleLocation.setMemoryByte(0xC0) // 106 (0x6A) = 192
-      AssembleLocation.setMemoryAddress(absTestLocation2) // 103 (ox67) pointer to absTestLocation2
+    AssembleLocation.setAssembleLoc(100) // zero page location
+    // setting a zero page pointer to address 0x638
+    AssembleLocation.setMemoryByte(0x38) // 100 (0x64) = 56
+    AssembleLocation.setMemoryByte(6) // 101 (0x65) =6
+    AssembleLocation.setMemoryByte(0x3F) // 102 (0x66) = 63
+    AssembleLocation.setMemoryByte(0x80) // 103 (0x67) = 128
+    AssembleLocation.setMemoryByte(0xF0) // 104 (0x68) = 240
+    AssembleLocation.setMemoryByte(0x40) // 105 (0x69) = 64
+    AssembleLocation.setMemoryByte(0xC0) // 106 (0x6A) = 192
+    AssembleLocation.setMemoryAddress(absTestLocation2) // 103 (ox67) pointer to absTestLocation2
 
-      AssembleLocation.setAssembleLoc(0x638) // set current location to ins location
-      for x <- List(1,2,3,4, 0x80) do
-        AssembleLocation.setMemoryByte(x)
+    AssembleLocation.setAssembleLoc(0x638) // set current location to ins location
+    for x <- List(1,2,3,4, 0x80) do
+      AssembleLocation.setMemoryByte(x)
 
-      // absTestLocation = 2500 (0x9c4)
-      AssembleLocation.setAssembleLoc(absTestLocation) // set current location to absTestLocation
-      AssembleLocation.setMemoryByte(0x33) // absTestLocation (0x9C4) = 51
-      AssembleLocation.setMemoryByte(0xCC) // absTestLocation + 1 (0x9C5) = 204
-      AssembleLocation.setMemoryByte(0x84) // absTestLocation + 2 (0x9C6) = 132
-      AssembleLocation.setMemoryByte(0x00) // absTestLocation + 3 (0x9C7) = 0
-      AssembleLocation.setMemoryByte(0x80) // absTestLocation + 4 (0x9C8) = 128
-      AssembleLocation.setMemoryByte(0xF0) // absTestLocation + 5 (0x9C9) = 240
-      AssembleLocation.setMemoryByte(0x40) // absTestLocation + 6 (0x9CA) = 64
-      AssembleLocation.setMemoryAddress(absTestLocation2) // (absTestLocation  + 2) pointer to address absTestLocation2
+    // absTestLocation = 2500 (0x9c4)
+    AssembleLocation.setAssembleLoc(absTestLocation) // set current location to absTestLocation
+    AssembleLocation.setMemoryByte(0x33) // absTestLocation (0x9C4) = 51
+    AssembleLocation.setMemoryByte(0xCC) // absTestLocation + 1 (0x9C5) = 204
+    AssembleLocation.setMemoryByte(0x84) // absTestLocation + 2 (0x9C6) = 132
+    AssembleLocation.setMemoryByte(0x00) // absTestLocation + 3 (0x9C7) = 0
+    AssembleLocation.setMemoryByte(0x80) // absTestLocation + 4 (0x9C8) = 128
+    AssembleLocation.setMemoryByte(0xF0) // absTestLocation + 5 (0x9C9) = 240
+    AssembleLocation.setMemoryByte(0x40) // absTestLocation + 6 (0x9CA) = 64
+    AssembleLocation.setMemoryAddress(absTestLocation2) // (absTestLocation  + 2) pointer to address absTestLocation2
 
-      AssembleLocation.setAssembleLoc(absTestLocation2) // set current location to absTestLocation2
-      AssembleLocation.setMemoryByte(0xF0) // absTestLocation2 = 0xF0
-      AssembleLocation.setMemoryByte(0x3F) // (absTestLocation2 + 1) = 0xF0
+    AssembleLocation.setAssembleLoc(absTestLocation2) // set current location to absTestLocation2
+    AssembleLocation.setMemoryByte(0xF0) // absTestLocation2 = 0xF0
+    AssembleLocation.setMemoryByte(0x3F) // (absTestLocation2 + 1) = 0xF0
 
+    AssembleLocation.setAssembleLoc(NMI_VECTOR)  // start of vectors in memory
+    AssembleLocation.setMemoryAddress(1000) // set NMI vector to address 1000
+    AssembleLocation.setMemoryAddress(2000) // set RESET vector to address 2000
+    AssembleLocation.setMemoryAddress(3000) // set INTERRUPT vector to address 3000
 
-      AssembleLocation.setAssembleLoc(NMI_VECTOR)  // start of vectors in memory
-      AssembleLocation.setMemoryAddress(1000) // set NMI vector to address 1000
-      AssembleLocation.setMemoryAddress(2000) // set RESET vector to address 2000
-      AssembleLocation.setMemoryAddress(3000) // set INTERRUPT vector to address 3000
+    AssembleLocation.setAssembleLoc(testLocation) // set current location to ins location
 
-
-      AssembleLocation.setAssembleLoc(testLocation) // set current location to ins location
-    fixedValuesInitialised = true
 
   def initValuesForTest(sourceData : InsSourceData) : Unit =
     AssembleLocation.setAssembleLoc(testLocation)
@@ -268,3 +313,7 @@ object ExecutionSpec extends StrictLogging:
       Processor.sr.setFlag(StatusFlag.Negative)
     if regData.regValues.withOverflow then
       Processor.sr.setFlag(StatusFlag.Overflow)
+    if regData.regValues.withDecimal then
+      Processor.sr.setFlag(StatusFlag.Decimal)
+    if regData.regValues.withInterupt then
+      Processor.sr.setFlag(StatusFlag.Interrupt)
