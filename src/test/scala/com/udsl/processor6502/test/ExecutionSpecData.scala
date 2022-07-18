@@ -26,6 +26,7 @@ case class AccValueWithDecimal( override val acc: Int) extends RegValues( acc, 0
 case class AccValueWithInterupt( override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, false, false, true)
 case class AccIxValue( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
 case class IxValue( override val ix: Int) extends RegValues( 0, ix, 0)
+case class IyValue( override val iy: Int) extends RegValues( 0, 0, iy)
 case class AccIxValueWithCarry( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
 case class AccIyValue( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy)
 case class AccIyValueWithCarry( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy, true)
@@ -128,6 +129,7 @@ object Validation extends StrictLogging:
 
 trait ResultData( val ac: Int, val ix: Int, val iy: Int, val sr: Int, val pc: Int, val spValidation: () => Unit = Validation.basicValidation)
 
+case class ZeroResData() extends ResultData(0, 0, 0, 0, 0)
 case class AccResData(override val ac: Int) extends ResultData(ac, 0, 0, 0, 0)
 case class AccSrResData(override val ac: Int, override val sr: Int) extends ResultData(ac, 0, 0, sr, 0)
 case class AccIySrResData(override val ac: Int, override val iy: Int, override val sr: Int) extends ResultData(ac, 0, iy, sr, 0)
@@ -137,6 +139,7 @@ case class AccIxResData(override val ac: Int, override val ix: Int) extends Resu
 case class AccIyResData(override val ac: Int, override val iy: Int) extends ResultData(ac, 0, iy, 0, 0)
 case class IxSrResData(override val ix: Int, override val sr: Int) extends ResultData(0, ix, 0, sr, 0)
 case class IxResData(override val ix: Int) extends ResultData(0, ix, 0, 0, 0)
+case class IyResData(override val iy: Int) extends ResultData(0, 0, iy, 0, 0)
 case class SrResData(override val sr: Int) extends ResultData(0, 0, 0, sr, 0)
 case class AccPcResData(override val ac: Int, override val pc: Int) extends ResultData(ac, 0, 0, 0, pc)
 case class AccSrPcResData(override val ac: Int, override val sr: Int, override val pc: Int) extends ResultData(ac, 0, 0, sr, pc)
@@ -337,19 +340,32 @@ object ExecutionSpecData:
     ("CPY 1.1 Acc 0x80 immediate with 0x40 result overflow set", InsSourceData(0xC0, InsData(0x40, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Carry.mask), memVoidResult()),
     ("CPY 1.2 Acc 0x80 immediate with 0x80 result Zero set", InsSourceData(0xC0, InsData(0x80, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Zero.mask), memVoidResult()),
     ("CPY 2.0 acc (0x64) zero page 101 value 6 ", InsSourceData(0xC4, InsData(101, AccIyValue(0x64, 0x64))), AccIySrResData(0x64, 0x64, Carry.mask), memVoidResult()),
-    ("CPY 3.0 acc (0x20) absolute (2500) = 0x33", InsSourceData(0xCC, InsData(absTestLocation, AccIyValue(0x20, 0x20))), AccIySrResData(0x20, 0x20, Negative.mask), memVoidResult()),
+    ("CPY 3.0 acc (0x20) absolute (2500) = 0x33", InsSourceData(0xCC, InsData(absTestLocation, AccIyValue(0x20, 0x20))), AccIySrResData(0x20, 0x20, Negative.mask), memVoidResult())
   )
+
 
   // DEC decrement
   val dataDecInstructionTest = List(
+    ("DEC 1.0 zeropage 0x64 = 0x38", InsSourceData(0xC6, InsData(0x64, ZeroValues())), ZeroResData(),  memByteResult(0x64, 0x37)),
+    ("DEC 1.1 zeropage 0x6D = 0x00", InsSourceData(0xC6, InsData(0x6D, ZeroValues())), SrResData(Negative.mask),  memByteResult(0x6D, 0xFF)),
+    ("DEC 1.2 zeropage 0x6E = 0x01", InsSourceData(0xC6, InsData(0x6E, ZeroValues())), SrResData(Zero.mask),  memByteResult(0x6E, 0x00)),
+    ("DEC 2.0 zeropage,X 0x64 + 4 = 0xF0", InsSourceData(0xD6, InsData(0x64, IxValue(0x04))), IxSrResData(0x04, Negative.mask),  memByteResult(0x68, 0xEF)),
+    ("DEC 3.0 Absolute absTestLocation = 0x33", InsSourceData(0xCE, InsData(absTestLocation, ZeroValues())), ZeroResData(),  memByteResult(absTestLocation, 0x32)),
+    ("DEC 3.0 Absolute,X  absTestLocation + 4 = 0x80", InsSourceData(0xDE, InsData(absTestLocation, IxValue(0x04))), IxResData(0x04),  memByteResult(absTestLocation + 4, 0x7F))
   )
 
   // DEX decrement X
   val dataDexInstructionTest = List(
+    ("DEX 1.0 implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x20))), IxResData(0x1F), memVoidResult()),
+    ("DEX 1.1 implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x00))), IxSrResData(0xFF, Negative.mask), memVoidResult()),
+    ("DEX 1.2 implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x01))), IxSrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // DEY decrement Y
   val dataDeyInstructionTest = List(
+    ("DEY 1.0 implied", InsSourceData(0x88, InsData(0x64, IyValue(0x20))), IyResData(0x1F), memVoidResult()),
+    ("DEY 1.1 implied", InsSourceData(0x88, InsData(0x64, IyValue(0x00))), IySrResData(0xFF, Negative.mask), memVoidResult()),
+    ("DEY 1.2 implied", InsSourceData(0x88, InsData(0x64, IyValue(0x01))), IySrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // EOR exclusive or (with accumulator)

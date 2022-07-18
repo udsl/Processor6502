@@ -107,8 +107,9 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "CMP" => executeCMP()
       case "CPX" => executeCPX()
       case "CPY" => executeCPY()
-
+      case "DEC" => executeDEC()
       case "DEX" => executeDEX()
+      case "DEY" => executeDEY()
       case "LDX" => executeLDX()
       case "LDY" => executeLDY()
       case "STX" => executeSTX()
@@ -179,50 +180,6 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       Processor.sr.updateFlag(StatusFlag.Negative, writeBack > 127)
     Processor.pc.inc(opcode.addressMode.bytes)
 
-
-  def executeLDX(): Unit =
-    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
-    val value = if effectiveAddr.hasValue then
-      memoryAccess.getMemoryByte(effectiveAddr.address)
-    else // has no effective address so it must be immediate
-      operand._1
-    Processor.sr.updateFlag(StatusFlag.Negative, value > 127)
-    Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
-    Processor.ix.ebr = value
-    Processor.pc.inc(opcode.addressMode.bytes)
-
-  def executeSTX(): Unit =
-    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
-    memoryAccess.setMemoryByte(effectiveAddr.address, Processor.ix.ebr)
-    Processor.pc.inc(opcode.addressMode.bytes)
-
-  def executeLDY(): Unit =
-    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
-    val value = if effectiveAddr.hasValue then
-      memoryAccess.getMemoryByte(effectiveAddr.address)
-    else // has no effective address so it must be immediate
-      operand._1
-    Processor.sr.updateFlag(StatusFlag.Negative, value > 127)
-    Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
-    Processor.iy.ebr = value
-    Processor.pc.inc(opcode.addressMode.bytes)
-
-
-
-  def executeDEX(): Unit =
-   val currentIx = Processor.ix.ebr
-   if currentIx == 0 then
-      Processor.ix.ebr = 255
-      Processor.sr.setFlag(StatusFlag.Negative)
-      Processor.sr.clearFlag(StatusFlag.Zero)
-      Processor.ix.ebr = 255
-   else
-      val newIx = currentIx - 1
-      Processor.sr.updateFlag(StatusFlag.Negative, newIx > 127)
-      Processor.sr.updateFlag(StatusFlag.Zero, newIx == 0)
-      Processor.ix.ebr = newIx
-   Processor.pc.inc(opcode.addressMode.bytes)
-  
   def executeBCC(): Unit =
     if !Processor.sr.testFlag(StatusFlag.Carry) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -355,6 +312,72 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       operand._1
     doTheCompare(value, Processor.iy.value)
     Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeDEC(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = memoryAccess.getMemoryByte(effectiveAddr.address)
+    val res = (value -1) & 255
+    Processor.sr.updateFlag(StatusFlag.Negative, res  > 128)
+    Processor.sr.updateFlag(StatusFlag.Zero, res == 0)
+    memoryAccess.setMemoryByte(effectiveAddr.address, res)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeDEX(): Unit =
+    val currentIx = Processor.ix.ebr
+    if currentIx == 0 then
+      Processor.ix.ebr = 255
+      Processor.sr.setFlag(StatusFlag.Negative)
+      Processor.sr.clearFlag(StatusFlag.Zero)
+      Processor.ix.ebr = 255
+    else
+      val newIx = (currentIx - 1) & 255
+      Processor.sr.updateFlag(StatusFlag.Negative, newIx > 128)
+      Processor.sr.updateFlag(StatusFlag.Zero, newIx == 0)
+      Processor.ix.ebr = newIx
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeDEY(): Unit =
+    val currentIy = Processor.iy.ebr
+    if currentIy == 0 then
+      Processor.iy.ebr = 255
+      Processor.sr.setFlag(StatusFlag.Negative)
+      Processor.sr.clearFlag(StatusFlag.Zero)
+    else
+      val newIy = (currentIy - 1) & 255
+      Processor.sr.updateFlag(StatusFlag.Negative, newIy > 127)
+      Processor.sr.updateFlag(StatusFlag.Zero, newIy == 0)
+      Processor.iy.ebr = newIy
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+
+  def executeLDX(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    Processor.sr.updateFlag(StatusFlag.Negative, value > 127)
+    Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
+    Processor.ix.ebr = value
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeSTX(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    memoryAccess.setMemoryByte(effectiveAddr.address, Processor.ix.ebr)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeLDY(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    Processor.sr.updateFlag(StatusFlag.Negative, value > 127)
+    Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
+    Processor.iy.ebr = value
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+
 
 
 object ExecutionUnit:

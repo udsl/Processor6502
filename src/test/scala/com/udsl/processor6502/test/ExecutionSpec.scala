@@ -10,7 +10,7 @@ import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusFlag, StatusRegister}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest}
+import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import com.udsl.processor6502.test.Validation.{checkAcc, checkIx, checkIy, checkPc, checkSr}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -18,7 +18,6 @@ import org.scalatest.matchers.should
 
 
 class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
-
 
   "Given a valid ADC instruction token" should "should execute to the correct opcode and value" in {
     val executionUnit = ExecutionUnit.apply
@@ -237,11 +236,46 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
     }
   }
 
-
   "Given a valid CPY instruction token" should "should execute to the correct opcode and value" in {
     val executionUnit = ExecutionUnit.apply
     ExecutionSpec.initFixedValuesForTest()
     for ((title, insData, resData, memRes) <- dataCpyInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid DEC instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataDecInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid DEX instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataDexInstructionTest) {
+      logger.info(s"\nStarting test: $title")
+      ExecutionSpec.initValuesForTest(insData)
+      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
+    }
+  }
+
+  "Given a valid DEY instruction token" should "should execute to the correct opcode and value" in {
+    val executionUnit = ExecutionUnit.apply
+    ExecutionSpec.initFixedValuesForTest()
+    for ((title, insData, resData, memRes) <- dataDeyInstructionTest) {
       logger.info(s"\nStarting test: $title")
       ExecutionSpec.initValuesForTest(insData)
       logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
@@ -290,13 +324,15 @@ object ExecutionSpec extends StrictLogging:
     AssembleLocation.setAssembleLoc(100) // zero page location
     // setting a zero page pointer to address 0x638
     AssembleLocation.setMemoryByte(0x38) // 100 (0x64) = 56
-    AssembleLocation.setMemoryByte(6) // 101 (0x65) =6
+    AssembleLocation.setMemoryByte(6) // 101 (0x65) = 6
     AssembleLocation.setMemoryByte(0x3F) // 102 (0x66) = 63
     AssembleLocation.setMemoryByte(0x80) // 103 (0x67) = 128
     AssembleLocation.setMemoryByte(0xF0) // 104 (0x68) = 240
     AssembleLocation.setMemoryByte(0x40) // 105 (0x69) = 64
     AssembleLocation.setMemoryByte(0xC0) // 106 (0x6A) = 192
     AssembleLocation.setMemoryAddress(absTestLocation2) // 107 (0x6B) pointer to absTestLocation2
+    AssembleLocation.setMemoryByte(0x00) // 109 (0x6D) = 0
+    AssembleLocation.setMemoryByte(0x01) // 110 (0x6E) = 1
 
     AssembleLocation.setAssembleLoc(0x638) // set current location to ins location
     for x <- List(1,2,3,4, 0x80) do
