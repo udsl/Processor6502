@@ -110,6 +110,8 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "DEC" => executeDEC()
       case "DEX" => executeDEX()
       case "DEY" => executeDEY()
+      case "EOR" => executeEOR()
+
       case "LDX" => executeLDX()
       case "LDY" => executeLDY()
       case "STX" => executeSTX()
@@ -141,13 +143,18 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     else // has no effective address so it must be immediate
       operand._1
     val accVal = Processor.ac.value
-    val writeBack = (accVal + value) & 0xFF
-    // is accumulator and value +ve and result > 126 then overflow
+    val writeBack = accVal + value
+    // is accumulator and value +ve (Unsigned value > 127) but result > 127 then overflow because result
+    // should be positive but value as singed is negative there for have overflowed positive 8 bit value
     val overflow = accVal < 127 && value < 127 && writeBack > 127
     Processor.sr.updateFlag(StatusFlag.Overflow, overflow)
-    Processor.sr.updateFlag(StatusFlag.Negative, writeBack > 127)
+    Processor.sr.updateFlag(StatusFlag.Negative, (writeBack & 0x80) > 0)
     Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
-    Processor.ac.value = writeBack
+    // As the write back could be greater than 0xFF for example 0xFF (-1) plus 0x01 (1) = 0x100
+    // We have an overflow and result is positive (no -0) but not an overflow
+    // now 0xFC (-4) add 0xFF (-1) we would expect 0xFB (-5) we get 0x1FB which is a negative result no overflow
+    // We have to restrict result to 8 bits and with 0xFF
+    Processor.ac.value = writeBack & 0xFF
     Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeAND(): Unit =
@@ -158,26 +165,24 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       operand._1
     val writeBack = Processor.ac.value & value
     Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
-    Processor.sr.updateFlag(StatusFlag.Negative, writeBack > 127)
+    Processor.sr.updateFlag(StatusFlag.Negative, (writeBack & 0x80) > 0)
     Processor.ac.value = writeBack
     Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeASL(): Unit =
+    def calcWritebackAndUpdateFlags( value: Int ): Int =
+      Processor.sr.updateFlag(StatusFlag.Carry, (value & 0x80) > 0)
+      val writeBack = (value << 1) & 0xFE
+      Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
+      Processor.sr.updateFlag(StatusFlag.Negative, (writeBack & 0x80) > 0)
+      writeBack
+
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     if effectiveAddr.hasValue then
       val value: Int = memoryAccess.getMemoryByte(effectiveAddr.address)
-      Processor.sr.updateFlag(StatusFlag.Carry, (value & 255) >= 128)
-      val writeBack = (value << 1) & 0xFE
-      Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
-      Processor.sr.updateFlag(StatusFlag.Negative, writeBack > 127)
-      memoryAccess.setMemoryByte(effectiveAddr.address, writeBack)
+      memoryAccess.setMemoryByte(effectiveAddr.address, calcWritebackAndUpdateFlags(value))
     else // must be accumulator if no effective address as no immediate for ASL
-      val accVal = Processor.ac.value
-      Processor.sr.updateFlag(StatusFlag.Carry, (accVal & 255) >= 128)
-      val writeBack =  (accVal << 1) & 0xFE
-      Processor.ac.value = writeBack
-      Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
-      Processor.sr.updateFlag(StatusFlag.Negative, writeBack > 127)
+      Processor.ac.value = calcWritebackAndUpdateFlags(Processor.ac.value)
     Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeBCC(): Unit =
@@ -317,7 +322,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     val value = memoryAccess.getMemoryByte(effectiveAddr.address)
     val res = (value -1) & 255
-    Processor.sr.updateFlag(StatusFlag.Negative, res  > 128)
+    Processor.sr.updateFlag(StatusFlag.Negative, (res & 0x80) > 0)
     Processor.sr.updateFlag(StatusFlag.Zero, res == 0)
     memoryAccess.setMemoryByte(effectiveAddr.address, res)
     Processor.pc.inc(opcode.addressMode.bytes)
@@ -331,7 +336,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       Processor.ix.ebr = 255
     else
       val newIx = (currentIx - 1) & 255
-      Processor.sr.updateFlag(StatusFlag.Negative, newIx > 128)
+      Processor.sr.updateFlag(StatusFlag.Negative, (newIx & 0x80) > 0)
       Processor.sr.updateFlag(StatusFlag.Zero, newIx == 0)
       Processor.ix.ebr = newIx
     Processor.pc.inc(opcode.addressMode.bytes)
@@ -344,10 +349,21 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       Processor.sr.clearFlag(StatusFlag.Zero)
     else
       val newIy = (currentIy - 1) & 255
-      Processor.sr.updateFlag(StatusFlag.Negative, newIy > 127)
+      Processor.sr.updateFlag(StatusFlag.Negative, (newIy & 0x80) > 0)
       Processor.sr.updateFlag(StatusFlag.Zero, newIy == 0)
       Processor.iy.ebr = newIy
     Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeEOR(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    val res =  Processor.ac.value ^ value
+    Processor.sr.updateFlag(StatusFlag.Negative, (res & 0x80)  > 0)
+    Processor.sr.updateFlag(StatusFlag.Zero, res == 0)
+    Processor.ac.value = res
 
 
   def executeLDX(): Unit =
@@ -356,7 +372,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
       operand._1
-    Processor.sr.updateFlag(StatusFlag.Negative, value > 127)
+    Processor.sr.updateFlag(StatusFlag.Negative, (value & 0x80)  > 0)
     Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
     Processor.ix.ebr = value
     Processor.pc.inc(opcode.addressMode.bytes)

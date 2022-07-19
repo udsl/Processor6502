@@ -370,6 +370,16 @@ object ExecutionSpecData:
 
   // EOR exclusive or (with accumulator)
   val dataEorInstructionTest = List(
+    ("EOR 1.0 Acc 0xF0 immediate with 0xF4 result Negative  set", InsSourceData(0x49, InsData(0x04, AccValue(0xF0))), AccSrResData(0xF4, Negative.mask), memVoidResult()),
+    ("EOR 1.1 Acc 0x80 immediate with 0x40 result zero set", InsSourceData(0x49, InsData(0x40, AccValue(0x40))), AccSrResData(0x00, Zero.mask), memVoidResult()),
+    ("EOR 1.2 Acc 0x0F immediate with 0x40 flags unchanged", InsSourceData(0x49, InsData(0x40, AccValue(0x0F))), AccResData(0x4F), memVoidResult()),
+    ("EOR 2.0 Acc (0x64) zero page 101 -> 0x06 give 0x62, flags unchanged", InsSourceData(0x45, InsData(101, AccValue(0x64))), AccResData(0x62), memVoidResult()),
+    ("EOR 3.0 Acc (0x64) zero page,X (100 + 2 = 102) value 0x3F result should be 6", InsSourceData(0x55, InsData(100, AccIxValue(0x64, 2))), AccIxResData(0x5B, 2), memVoidResult()),
+    ("EOR 4.0 Acc (0x20) absolute (2500) = 0x33", InsSourceData(0x4D, InsData(absTestLocation, AccValue(0x20))), AccResData(0x13), memVoidResult()),
+    ("EOR 5.0 Acc (0xCC) absoluteX (2500 + 2) = 0x84", InsSourceData(0x5D, InsData(absTestLocation, AccIxValue(0x48, 2))), AccIxSrResData(0xCC, 2, Negative.mask), memVoidResult()),
+    ("EOR 6.0 Acc (0x84) AbsoluteY absTestLocation + IY = 2 gives 0x84", InsSourceData(0x59, InsData(absTestLocation, AccIyValue(0x84, 2))), AccIySrResData(0x00, 2, Zero.mask), memVoidResult()),
+    ("EOR 7.0 Acc (0x66) IndirectX 100 + IX = 7 gives absTestLocation2 = 0xF0", InsSourceData(0x41, InsData(100, AccIxValue(0x66, 7))), AccIxSrResData(0x96, 7, Negative.mask), memVoidResult()),
+    ("EOR 8.0 Acc (0x66) IndirectY 107 = absTestLocation2 + Y -> 0x66", InsSourceData(0x51, InsData(107, AccIyValue(0x66, 3))), AccIySrResData(0x00, 3, Zero.mask), memVoidResult())
   )
 
   // INC increment
