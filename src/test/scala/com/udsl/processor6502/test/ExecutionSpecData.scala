@@ -384,14 +384,24 @@ object ExecutionSpecData:
 
   // INC increment
   val dataIncInstructionTest = List(
+    ("INC 1.0 zero page 0x65 -> 0x06 give 0x62, flags unchanged", InsSourceData(0xE6, InsData(0x65, ZeroValues())), ZeroResData(), memByteResult(0x65, 0x07)),
+    ("INC 2.0 zero page,X (100 + 4 = 102) value 0xF0", InsSourceData(0xF6, InsData(100, IxValue(4))), IxSrResData(4, Negative.mask), memByteResult(0x68, 0xF1)),
+    ("INC 3.0 absolute (absTestLocation2 + 4 (0xA2C)) = 0xFF", InsSourceData(0xEE, InsData(0xA2C, ZeroValues())), SrResData(Zero.mask), memByteResult(0xA2C, 0x00)),
+    ("INC 4.0 absoluteX (2500 + 3) = 0x00", InsSourceData(0xFE, InsData(absTestLocation, IxValue(3))), IxResData(3), memByteResult(absTestLocation + 3, 0x01)),
   )
 
   // INX increment X
   val dataInxInstructionTest = List(
+    ("INX 1.0 implied, x = 3 flags unchanged", InsSourceData(0xE8, InsData(0x00, IxValue(3))), IxResData(4), memVoidResult()),
+    ("INX 1.1 implied, x = 0xF0 negative flag", InsSourceData(0xE8, InsData(0x00, IxValue(0xF0))), IxSrResData(0xF1, Negative.mask), memVoidResult()),
+    ("INX 1.2 implied, x = 0xFF Zero flag", InsSourceData(0xE8, InsData(0x00, IxValue(0xFF))), IxSrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // INY increment Y
   val dataInyInstructionTest = List(
+    ("INY 1.0 implied, x = 3 flags unchanged", InsSourceData(0xC8, InsData(0x00, IyValue(3))), IyResData(4), memVoidResult()),
+    ("INY 1.1 implied, x = 0xF0 negative flag", InsSourceData(0xC8, InsData(0x00, IyValue(0xF0))), IySrResData(0xF1, Negative.mask), memVoidResult()),
+    ("INY 1.2 implied, x = 0xFF Zero flag", InsSourceData(0xC8, InsData(0x00, IyValue(0xFF))), IySrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // JMP jump

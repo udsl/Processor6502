@@ -111,6 +111,9 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "DEX" => executeDEX()
       case "DEY" => executeDEY()
       case "EOR" => executeEOR()
+      case "INC" => executeINC()
+      case "INX" => executeINX()
+      case "INY" => executeINY()
 
       case "LDX" => executeLDX()
       case "LDY" => executeLDY()
@@ -364,7 +367,32 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     Processor.sr.updateFlag(StatusFlag.Negative, (res & 0x80)  > 0)
     Processor.sr.updateFlag(StatusFlag.Zero, res == 0)
     Processor.ac.value = res
+    Processor.pc.inc(opcode.addressMode.bytes)
 
+  def executeINC(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = memoryAccess.getMemoryByte(effectiveAddr.address)
+    val res =  (value + 1) & 0xFF
+    Processor.sr.updateFlag(StatusFlag.Negative, (res & 0x80)  > 0)
+    Processor.sr.updateFlag(StatusFlag.Zero, res == 0)
+    memoryAccess.setMemoryByte(effectiveAddr.address, res)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeINX(): Unit =
+    val value = Processor.ix.value
+    val res =  (value + 1) & 0xFF
+    Processor.sr.updateFlag(StatusFlag.Negative, (res & 0x80)  > 0)
+    Processor.sr.updateFlag(StatusFlag.Zero, res == 0)
+    Processor.ix.value = res
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeINY(): Unit =
+    val value = Processor.iy.value
+    val res =  (value + 1) & 0xFF
+    Processor.sr.updateFlag(StatusFlag.Negative, (res & 0x80)  > 0)
+    Processor.sr.updateFlag(StatusFlag.Zero, res == 0)
+    Processor.iy.value = res
+    Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeLDX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
