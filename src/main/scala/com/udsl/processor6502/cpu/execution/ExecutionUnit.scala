@@ -148,13 +148,15 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     else // has no effective address so it must be immediate
       operand._1
     val accVal = Processor.ac.value
-    val writeBack = accVal + value
+    val carry = if Processor.sr.testFlag(Carry) then 1 else 0
+    val writeBack = accVal + value + carry
     // is accumulator and value +ve (Unsigned value > 127) but result > 127 then overflow because result
     // should be positive but value as singed is negative there for have overflowed positive 8 bit value
     val overflow = accVal < 127 && value < 127 && writeBack > 127
     Processor.sr.updateFlag(StatusFlag.Overflow, overflow)
     Processor.sr.updateFlag(StatusFlag.Negative, (writeBack & 0x80) > 0)
     Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
+    Processor.sr.updateFlag(StatusFlag.Carry, writeBack > 0xFF)
     // As the write back could be greater than 0xFF for example 0xFF (-1) plus 0x01 (1) = 0x100
     // We have an overflow and result is positive (no -0) but not an overflow
     // now 0xFC (-4) add 0xFF (-1) we would expect 0xFB (-5) we get 0x1FB which is a negative result no overflow
@@ -403,7 +405,6 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     else // indirect
       Processor.pc.addr = memoryAccess.getMemoryAsAddress(effectiveAddr.address)
 
-
   def executeJSR(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     // return address is not next instruction, this is resolved by the RTS. CPU not this app feature!
@@ -412,6 +413,16 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     // JSR always absolute
     Processor.pc.addr = effectiveAddr.address
 
+  def executeLDA(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    Processor.sr.updateFlag(StatusFlag.Negative, (value & 0x80)  > 0)
+    Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
+    Processor.ac.ebr = value
+    Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeLDX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -424,22 +435,22 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     Processor.ix.ebr = value
     Processor.pc.inc(opcode.addressMode.bytes)
 
-  def executeSTX(): Unit =
-    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
-    memoryAccess.setMemoryByte(effectiveAddr.address, Processor.ix.ebr)
-    Processor.pc.inc(opcode.addressMode.bytes)
-
   def executeLDY(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
       operand._1
-    Processor.sr.updateFlag(StatusFlag.Negative, value > 127)
+    Processor.sr.updateFlag(StatusFlag.Negative, (value & 0x80)  > 0)
     Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
     Processor.iy.ebr = value
     Processor.pc.inc(opcode.addressMode.bytes)
 
+
+  def executeSTX(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    memoryAccess.setMemoryByte(effectiveAddr.address, Processor.ix.ebr)
+    Processor.pc.inc(opcode.addressMode.bytes)
 
 
 

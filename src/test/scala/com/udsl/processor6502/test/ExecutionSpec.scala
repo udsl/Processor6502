@@ -359,7 +359,7 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
 
 
 object ExecutionSpec extends StrictLogging:
-
+  val zeroPageData: Int = 100
   val testLocation: Int = 2000 // 0x7D0
   val absTestLocation: Int = 2500 // 0x9C4
   val absTestLocation2: Int= 2600 // 0xA28
@@ -395,7 +395,7 @@ object ExecutionSpec extends StrictLogging:
    * Initialise memory and registers for test
    */
   def initFixedValuesForTest() : Unit =
-    AssembleLocation.setAssembleLoc(100) // zero page location
+    AssembleLocation.setAssembleLoc(zeroPageData) // zero page location
     // setting a zero page pointer to address 0x638
     AssembleLocation.setMemoryByte(0x38) // 100 (0x64) = 56
     AssembleLocation.setMemoryByte(6) // 101 (0x65) = 6
@@ -424,7 +424,7 @@ object ExecutionSpec extends StrictLogging:
     AssembleLocation.setMemoryAddress(absTestLocation2) // (absTestLocation + 7 (0x9CB)) pointer to address absTestLocation2
 
     AssembleLocation.setAssembleLoc(absTestLocation2) // set current location to absTestLocation2
-    AssembleLocation.setMemoryByte(0xF0) // absTestLocation2 (0xA28) = 0xF0
+    AssembleLocation.setMemoryByte(0xF0) // absTestLocation2 (0xA28) = (0xF0) 240
     AssembleLocation.setMemoryByte(0x3F) // absTestLocation2 + 1 0xA29) = 0x3F
     // absTestLocation2 as an address = 0x3FF0
     AssembleLocation.setMemoryByte(0x0F) // absTestLocation2 + 2 0xA2A) = 0x0F

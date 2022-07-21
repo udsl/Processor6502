@@ -9,7 +9,7 @@ import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.StatusFlag.*
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusRegister}
-import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, asHexStr, logger, testLocation, testLocation2Ptr}
+import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, asHexStr, logger, testLocation, testLocation2Ptr, zeroPageData}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -27,7 +27,7 @@ case class AccValueWithInterupt( override val acc: Int) extends RegValues( acc, 
 case class AccIxValue( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
 case class IxValue( override val ix: Int) extends RegValues( 0, ix, 0)
 case class IyValue( override val iy: Int) extends RegValues( 0, 0, iy)
-case class AccIxValueWithCarry( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
+case class AccIxValueWithCarry( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0, true)
 case class AccIyValue( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy)
 case class AccIyValueWithCarry( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy, true)
 case class AccIxIyValue( override val acc: Int, override val ix: Int, override val iy: Int) extends RegValues( acc, ix, iy)
@@ -149,22 +149,24 @@ object ExecutionSpecData:
 
   // ADC add with carry
   val dataAdcInstructionTest = List(
-    ("ADC 1", InsSourceData(0x69, InsData(10, AccValue(100))), AccResData(110), memVoidResult()), // ADC immediate 10
-    ("ADC 2", InsSourceData(0x69, InsData(126, AccValue(100))), AccSrResData(226, Overflow.mask | Negative.mask), memVoidResult()), // ADC immediate 126
-    ("ADC 3", InsSourceData(0x65, InsData(101, AccValue(100))), AccResData(106), memVoidResult()), // ADC zer0 page 101 contains 6
-    ("ADC 4", InsSourceData(0x75, InsData(101, AccValue(100))), AccResData(106), memVoidResult()), //  Token("ADC", 0x75, 2, ZeroPageX), // $LL,X
-    ("ADC 5", InsSourceData(0x6D, InsData(101, AccValue(100))), AccResData(106), memVoidResult()), //  Token("ADC", 0x6D, 3, Absolute),  // $LLLL
-    ("ADC 6", InsSourceData(0x7D, InsData(101, AccValue(100))), AccResData(106), memVoidResult()), //  Token("ADC", 0x7D, 3, AbsoluteX), // $LL,X
-    ("ADC 7", InsSourceData(0x79, InsData(101, AccValue(100))), AccResData(106), memVoidResult()), //  Token("ADC", 0x79, 3, AbsoluteY), // $LL,Y
+    ("ADC 1.0 immediate acc = 0x64 add 0x0A", InsSourceData(0x69, InsData(10, AccValue(100))), AccResData(110), memVoidResult()),
+    ("ADC 1.1 immediate acc = 0x64 add 126", InsSourceData(0x69, InsData(126, AccValue(100))), AccSrResData(226, Overflow.mask | Negative.mask), memVoidResult()),
+    ("ADC 1.2 immediate acc = 0x64 add 0x0A carry set", InsSourceData(0x69, InsData(10, AccValueWithCarry(100))), AccResData(111), memVoidResult()),
+    ("ADC 2.0 zeropage 101 -> 0x06", InsSourceData(0x65, InsData(101, AccValue(100))), AccResData(106), memVoidResult()),
+    ("ADC 3.0 zeropage,x", InsSourceData(0x75, InsData(100, AccIxValue(100, 1))), AccIxResData(106, 1), memVoidResult()),
+    ("ADC 4.0 absolute absTestLocation -> 0x33", InsSourceData(0x6D, InsData(absTestLocation, AccValue(0x64))), AccSrResData(0x97, Negative.mask | Overflow.mask), memVoidResult()),
+    ("ADC 5.0 absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0x7D, InsData(absTestLocation, AccIxValue(0x24, 6))), AccIxResData(0x64, 6), memVoidResult()),
+    ("ADC 6.0 absolute,y absTestLocation + 6", InsSourceData(0x79, InsData(absTestLocation, AccIyValue(0x64, 6))), AccIySrResData(0xA4, 6, Negative.mask | Overflow.mask), memVoidResult()),
     // Zeropage 100 set to 0x638 by data initialisation
-    ("ADC 8", InsSourceData(0x61, InsData(100, AccValue(100))), AccResData(101), memVoidResult()), //  Token("ADC", 0x61, 2, IndirectX), // ($LL,X)
-    ("ADC 9", InsSourceData(0x61, InsData(100, AccValue(105))), AccResData(106), memVoidResult()), //  Token("ADC", 0x61, 2, IndirectX), // ($LL,X)
+    ("ADC 7.0 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x61, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0x54, 7, Carry.mask), memVoidResult()),
+    ("ADC 7.1 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x61, InsData(zeroPageData, AccIxValueWithCarry(0x64, 7))), AccIxSrResData(0x55, 7, Carry.mask), memVoidResult()),
+    ("ADC 7.2 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x61, InsData(zeroPageData, AccIxValue(0x04, 7))), AccIxSrResData(0xF4, 7, Negative.mask), memVoidResult()),
   /*
   Execute instruction with opcode 0x71 at 2000, operand 100 with ac= 99, ix=0, iy=1.
   Zeropage 100 contains address 0x638 which has been initialised with byts 1,2,3,4
   so result will be 99 + 2 = 101.
   */
-    ("ADC 10", InsSourceData(0x71, InsData(100, AccIyValue(99, 1))), AccIySrResData(101, 1, Unused.mask), memVoidResult()) //  Token("ADC", 0x71, 2, IndirectY), //"($LL),Y"
+    ("ADC 8.0 (indirect),y", InsSourceData(0x71, InsData(100, AccIyValue(99, 1))), AccIySrResData(101, 1, Unused.mask), memVoidResult())
   )
 
   // AND and (with accumulator)
