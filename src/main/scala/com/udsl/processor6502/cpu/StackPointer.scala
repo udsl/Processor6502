@@ -18,6 +18,19 @@ class StackPointer(name: String) extends EightBitRegister(name: String), StrictL
     decrement()
   }
 
+  def pushAddress(address: Int): Unit ={
+    logger.info(s"Pushing address $address")
+    pushByte(address & 255) // push the low byte
+    pushByte((address >> 8) & 255) // push the hi byte
+  }
+
+  def popAddress(address: Int): Int ={
+    logger.info(s"Popping address")
+    val hiByte = popByte()
+    val loByte = popByte()
+    (hiByte * 256) + loByte
+  }
+
   def popByte(): Int ={
     increment()
     val addr = 255 + ebr

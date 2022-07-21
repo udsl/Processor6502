@@ -30,8 +30,9 @@ class Memory extends StrictLogging:
     Memory.getMemoryAsAddress(location)
   }
 
+  // Memory words are in hi byte low byte order (reverse of addresses)
   def getMemoryWrd(location: Int): Int = {
-    Memory.getMemoryAsAddress(location)
+    (Memory.getMemoryByte(location) * 256) + Memory.getMemoryByte(location + 1)
   }
 
 

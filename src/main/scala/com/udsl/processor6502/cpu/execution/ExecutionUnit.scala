@@ -114,6 +114,8 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "INC" => executeINC()
       case "INX" => executeINX()
       case "INY" => executeINY()
+      case "JMP" => executeJMP()
+      case "JSR" => executeJSR()
 
       case "LDX" => executeLDX()
       case "LDY" => executeLDY()
@@ -246,8 +248,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       else
         // now do a jsr to the irq routine ith return address set to byte after break instruction + 1
         val returnAdr = Processor.pc.addr + 2
-        Processor.sp.pushByte(((returnAdr / 256) & 255).toShort)
-        Processor.sp.pushByte((returnAdr & 255).toShort)
+        Processor.sp.pushAddress(returnAdr)
         var flagsToPush = Processor.sr.value | Break.mask
         Processor.sp.pushByte(flagsToPush)
         // get address at INTERRUPT_VECTOR
@@ -394,6 +395,24 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     Processor.iy.value = res
     Processor.pc.inc(opcode.addressMode.bytes)
 
+  def executeJMP(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = effectiveAddr.address
+    if effectiveAddr.absolute then
+      Processor.pc.addr = value
+    else // indirect
+      Processor.pc.addr = memoryAccess.getMemoryAsAddress(effectiveAddr.address)
+
+
+  def executeJSR(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    // return address is not next instruction, this is resolved by the RTS. CPU not this app feature!
+    val ret = Processor.pc.addr + 2
+    Processor.sp.pushAddress(ret)
+    // JSR always absolute
+    Processor.pc.addr = effectiveAddr.address
+
+
   def executeLDX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     val value = if effectiveAddr.hasValue then
@@ -432,9 +451,9 @@ object ExecutionUnit:
   def getEffectiveAddress(opcode: OpcodeValue, operand: (Int, Int)): EffectiveAddress =
     opcode.addressMode match
     case Accumulator | Implied | Immediate =>
-      EffectiveAddress(false)
+      EffectiveAddress()
     case ZeroPage =>
-      EffectiveAddress(true, operand._1)
+      EffectiveAddress(operand._1, true)
     case Relative =>
       // Relative addressing is used in branch instructions
       // In a real 6502 the PC is incremented on each memory fetch
@@ -443,44 +462,45 @@ object ExecutionUnit:
       // convert offset to signed byte value
       val offset = ByteValue.asSignedValue(operand._1.toByte)
       // then add 2 that the real 6502 would have added on each fetch
-      EffectiveAddress(true, Processor.pc.addr + offset + 2)
+      EffectiveAddress(Processor.pc.addr + offset + 2)
     case ZeroPageX =>
       //TODO verify what happens when $LL + index exceeds 255
-      EffectiveAddress(true, operand._1 + Processor.ix.ebr)
+      EffectiveAddress(operand._1 + Processor.ix.ebr)
     case ZeroPageY =>
       //TODO verify what happens when $LL + index exceeds 255
-      EffectiveAddress(true, operand._1 + Processor.iy.ebr)
+      EffectiveAddress(operand._1 + Processor.iy.ebr)
     case IndirectX =>
       val zeroPgaeAddr = operand._1 + Processor.ix.ebr
       val loByte = memoryAccess.getMemoryByte(zeroPgaeAddr)
       val hiByte = memoryAccess.getMemoryByte(zeroPgaeAddr + 1)
-      EffectiveAddress(true, loByte + (hiByte * 256))
+      EffectiveAddress(loByte + (hiByte * 256))
     case IndirectY =>
       val loByte = memoryAccess.getMemoryByte(operand._1)
       val hiByte = memoryAccess.getMemoryByte(operand._1 + 1)
-      EffectiveAddress(true, loByte + (hiByte * 256) + Processor.iy.ebr)
+      EffectiveAddress(loByte + (hiByte * 256) + Processor.iy.ebr)
     case Indirect =>
       val indirectAddr = operand._1 + (operand._2 * 256)
       val loByte = memoryAccess.getMemoryByte(indirectAddr)
       val hiByte = memoryAccess.getMemoryByte(indirectAddr + 1)
-      EffectiveAddress(true, loByte + (hiByte * 256))
+      EffectiveAddress(loByte + (hiByte * 256))
     case Absolute =>
-      EffectiveAddress(true, operand._1 + (operand._2 * 256))
+      EffectiveAddress(operand._1 + (operand._2 * 256), true)
     case AbsoluteX =>
-      EffectiveAddress(true, operand._1 + (operand._2 * 256) + Processor.ix.ebr)
+      EffectiveAddress(operand._1 + (operand._2 * 256) + Processor.ix.ebr)
     case AbsoluteY =>
-      EffectiveAddress(true, operand._1 + (operand._2 * 256) + Processor.iy.ebr)
+      EffectiveAddress(operand._1 + (operand._2 * 256) + Processor.iy.ebr)
     case _ =>
-      EffectiveAddress(false)
+      EffectiveAddress()
 
-class EffectiveAddress(val hasValue: Boolean, val address: Int)
+class EffectiveAddress(val hasValue: Boolean, val address: Int, val absolute: Boolean)
 
 object EffectiveAddress:
-  def apply(hasValue: Boolean): EffectiveAddress =
-    new EffectiveAddress(hasValue, -1)
+  def apply(): EffectiveAddress =
+    new EffectiveAddress(false, -1, false)
 
-  def apply(hasValue: Boolean, address: Int): EffectiveAddress =
-    new EffectiveAddress(hasValue, address)
+  def apply(address: Int, absolute: Boolean = false): EffectiveAddress =
+    new EffectiveAddress(true, address, absolute)
+
 
 enum RunMode:
   case Stopped

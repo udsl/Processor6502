@@ -9,7 +9,7 @@ import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.StatusFlag.*
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusRegister}
-import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, asHexStr, logger, testLocation}
+import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, asHexStr, logger, testLocation, testLocation2Ptr}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -105,16 +105,6 @@ object Validation extends StrictLogging:
   def checkIy(shouldBe: Int): Unit =
     assert(Processor.iy.value == shouldBe, s"IY = ${Processor.iy.value} required $shouldBe")
 
-  def validateStack4BTK(): Unit =
-    // 3 bytes on stack
-    assert(Processor.sp.value == 0xFC, s"Stack pointer NOT CORRECT should be 0xFC is ${asHexStr(Processor.sp.value)}")
-    // bottom of stack should be retrun address
-    val returnAdd = memoryAccess.getMemoryWrd(0x1FE)
-    // BRK @2000, then the following byte so return should be to 2002
-    assert(returnAdd == 2002, s"Return address on stack incorrect is $returnAdd" )
-    val pushedStatus = memoryAccess.getMemoryByte(0x1FD)
-    // just the break flag set (32) and the unused (16) = 48
-    assert(pushedStatus == 48, s"Status pushed on stack incorrect is $pushedStatus - ${StatusRegister.asFlagsString(pushedStatus)}" )
 
   def validateStackWithZero4BTK(): Unit =
     // 3 bytes on stack
@@ -142,6 +132,8 @@ case class IxResData(override val ix: Int) extends ResultData(0, ix, 0, 0, 0)
 case class IyResData(override val iy: Int) extends ResultData(0, 0, iy, 0, 0)
 case class SrResData(override val sr: Int) extends ResultData(0, 0, 0, sr, 0)
 case class AccPcResData(override val ac: Int, override val pc: Int) extends ResultData(ac, 0, 0, 0, pc)
+case class PcResData(override val pc: Int) extends ResultData(0, 0,0, 0, pc)
+case class PcSpResData(override val pc: Int, override val spValidation: () => Unit) extends ResultData(0, 0, 0, 0, pc, spValidation)
 case class AccSrPcResData(override val ac: Int, override val sr: Int, override val pc: Int) extends ResultData(ac, 0, 0, sr, pc)
 case class AccPcSpResData(override val ac: Int, override val pc: Int, override val spValidation: () => Unit)  extends ResultData(ac, 0, 0, 0, pc, spValidation)
 case class AccSrPcSpResData(override val ac: Int, override val sr: Int, override val pc: Int, override val spValidation: () => Unit)  extends ResultData(ac, 0, 0, sr, pc, spValidation)
@@ -266,10 +258,21 @@ object ExecutionSpecData:
     ("BPL 2.0 relative negative set", InsSourceData(0x10, InsData(0x4, AccValueWithNegative(0x20))), AccSrPcResData(0x20, Negative.mask, testLocation +2), memVoidResult())
   )
 
+  def validateStack4BTK(): Unit =
+    // 3 bytes on stack
+    assert(Processor.sp.value == 0xFC, s"Stack pointer NOT CORRECT should be 0xFC is ${asHexStr(Processor.sp.value)}")
+    // bottom of stack should be return address
+    val returnAdd = memoryAccess.getMemoryWrd(0x1FE)
+    // BRK @2000, then the following byte so return should be to 2002
+    assert(returnAdd == 2002, s"Return address on stack incorrect is ${asHexStr(returnAdd)} ($returnAdd)" )
+    val pushedStatus = memoryAccess.getMemoryByte(0x1FD)
+    // just the break flag set (32) and the unused (16) = 48
+    assert(pushedStatus == 48, s"Status pushed on stack incorrect is $pushedStatus - ${StatusRegister.asFlagsString(pushedStatus)}" )
+
   // BRK break / interrupt
   val dataBrkInstructionTest = List(
     // IRQ vector contents 3000 set in test initialisation
-    ("BRK 1.0 all flags clear", InsSourceData(0x00, InsData(0x0, AccValue(0x0))), AccPcSpResData(0x0, 3000, Validation.validateStack4BTK), memVoidResult()),
+    ("BRK 1.0 all flags clear", InsSourceData(0x00, InsData(0x0, AccValue(0x0))), AccPcSpResData(0x0, 3000, validateStack4BTK), memVoidResult()),
     ("BRK 1.1 with Zero flag set", InsSourceData(0x00, InsData(0x0, AccValueWithZero(0x0))), AccSrPcSpResData(0x0, Zero.mask, 3000, Validation.validateStackWithZero4BTK), memVoidResult())
   )
 
@@ -404,12 +407,24 @@ object ExecutionSpecData:
     ("INY 1.2 implied, x = 0xFF Zero flag", InsSourceData(0xC8, InsData(0x00, IyValue(0xFF))), IySrResData(0x00, Zero.mask), memVoidResult()),
   )
 
-  // JMP jump
+  // JMP jump test that PC is updated does not execute at the destination
   val dataJmpInstructionTest = List(
+    ("JMP 1.0 absolute absTestLocation", InsSourceData(0x4C, InsData(absTestLocation, ZeroValues())), PcResData(absTestLocation), memVoidResult()),
+    ("JMP 2.0 indirect testLocation2Ptr = 0x9CB -> 0x3FF0", InsSourceData(0x6C, InsData(testLocation2Ptr, ZeroValues())), PcResData(0x3FF0), memVoidResult()),
   )
 
-  // JSR jump subroutine
+  def validateJsrStack(): Unit =
+    // 3 bytes on stack
+    assert(Processor.sp.value == 0xFD, s"Stack pointer NOT CORRECT should be 0xFD is ${asHexStr(Processor.sp.value)}")
+    // start of stack should be return address 0x1FF = low byte and 0x1FE = high bye
+    // stach is pushed is reverse order do it appears as a word at 0x1FE not an address
+    val returnAdd = memoryAccess.getMemoryWrd(0x1FE)
+    // @2000, JSR instruction then the 2 byte address so return should be to 2003 but thr RTS does an increment so its only 2002
+    assert(returnAdd == 2002, s"Return address on stack incorrect should be 0x7D3 is ${asHexStr(returnAdd)} ($returnAdd)" )
+
+  // JSR jump subroutine. Test that PC is updated and return address pushed to stack. Does not execute at the destination
   val dataJsrInstructionTest = List(
+    ("JSR 1.0 absolute absTestLocation", InsSourceData(0x20, InsData(absTestLocation, ZeroValues())), PcSpResData(absTestLocation, validateJsrStack), memVoidResult()),
   )
 
   // LDA load accumulator
