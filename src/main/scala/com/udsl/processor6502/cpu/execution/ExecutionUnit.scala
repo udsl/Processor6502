@@ -12,7 +12,7 @@ import com.udsl.processor6502.ui.popups.Executor
 import scalafx.application.Platform
 import scalafx.event.subscriptions.Subscription
 
-/**
+ /**
  * Most instructions that explicitly reference memory locations have bit patterns of the form aaabbbcc.
  * The aaa and cc bits determine the opcode, and the bbb bits determine the addressing mode.
  *
@@ -21,17 +21,18 @@ import scalafx.event.subscriptions.Subscription
  * see https://llx.com/Neil/a2/opcodes.html
  */
 
-class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
+class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject[ExecutionUnit]:
   var opcode: OpcodeValue = NULL(NotApplicable)
   var operand: (Int, Int) = (0, 0)
   var runMode: RunMode = RunMode.Stopped
 
   val pcSubscription: Subscription = Processor.pc._addr.onChange {
     (_, oldValue, newValue) => {
-      logger.debug(s"PC subscription fired - $oldValue, $newValue")
-      opcode = getInstruction(newValue.##)
-      operand = getInstructionOperand(newValue.##)
-      notifyObservers()
+      if !testing then
+        logger.debug(s"PC subscription fired - $oldValue, $newValue")
+        opcode = getInstruction(newValue.##)
+        operand = getInstructionOperand(newValue.##)
+        notifyObservers()
     }
   }
 
@@ -119,7 +120,8 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "LDA" => executeLDA()
       case "LDX" => executeLDX()
       case "LDY" => executeLDY()
-      
+      case "LSR" => executeLSR()
+
       case "STX" => executeSTX()
       case "TXS" => executeTXS()
       case _ => notImplmented()
@@ -448,6 +450,22 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     Processor.pc.inc(opcode.addressMode.bytes)
 
 
+  def executeLSR(): Unit =
+    def calcWritebackAndUpdateFlags( value: Int ): Int =
+      Processor.sr.updateFlag(StatusFlag.Carry, (value & 0x01) > 0)
+      val writeBack = value >>> 1
+      Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
+      Processor.sr.clearFlag(StatusFlag.Negative)
+      writeBack
+
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    if effectiveAddr.hasValue then
+      val value: Int = memoryAccess.getMemoryByte(effectiveAddr.address)
+      memoryAccess.setMemoryByte(effectiveAddr.address, calcWritebackAndUpdateFlags(value))
+    else // must be accumulator if no effective address as no immediate for ASL
+      Processor.ac.value = calcWritebackAndUpdateFlags(Processor.ac.value)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
 
   def executeSTX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -461,6 +479,10 @@ object ExecutionUnit:
     val eu = new ExecutionUnit()
     eu
 
+  def forTest: ExecutionUnit =
+    val eu = new ExecutionUnit(true)
+    eu
+    
   def getEffectiveAddress(opcode: OpcodeValue, operand: (Int, Int)): EffectiveAddress =
     opcode.addressMode match
     case Accumulator | Implied | Immediate =>

@@ -10,7 +10,7 @@ import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusFlag, StatusRegister}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest, dataLdaInstructionTest, dataLdxInstructionTest, dataLdyInstructionTest}
+import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest, dataLdaInstructionTest, dataLdxInstructionTest, dataLdyInstructionTest, dataLsrInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import com.udsl.processor6502.test.Validation.{checkAcc, checkIx, checkIy, checkPc, checkSr}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -144,8 +144,12 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
     runTestWithData(dataLdyInstructionTest)
   }
 
+  "Given a valid LSR instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataLsrInstructionTest)
+  }
+
   def runTestWithData(data: List[(String, InsSourceData, ResultData, ResultMemData)]): Unit =
-    val executionUnit = ExecutionUnit.apply
+    val executionUnit = ExecutionUnit.forTest
     ExecutionSpec.initFixedValuesForTest()
     for ((title, insData, resData, memRes) <- data) {
       logger.info(s"\nStarting test: $title")

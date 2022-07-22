@@ -195,7 +195,7 @@ object ExecutionSpecData:
     ("ASL 1.1 accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x80))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
     ("ASL 1.2 accumulator", InsSourceData(0x0A, InsData(0x7F, AccValueWithCarry(0x3F))), AccResData(0x7E), memVoidResult()),
     ("ASL 2.0 zeroPage ", InsSourceData(0x06, InsData(0x66, ZeroValues())), AccResData(0), memByteResult(0x66, 0x7E)),
-    ("ASL 3.0 zeroPageX 100 -> 0x638, IX = 1 contains 2", InsSourceData(0x16, InsData(0x64, IxValue(1))), IxResData(1), memByteResult(0x639, 2)),
+    ("ASL 3.0 zeroPageX 100 -> 0x638, IX = 1 contains 2", InsSourceData(0x16, InsData(0x64, IxValue(1))), IxResData(1), memByteResult(0x65, 0x0C)),
     ("ASL 3.1 zeroPageX 100 -> 0x638, IX = 3 contains 0x80", InsSourceData(0x16, InsData(0x64, IxValue(3))), IxSrResData(3, Carry.mask | Zero.mask), memByteResult(103, 0)),
     ("ASL 4.0 absolute absTestLocation2 contains 0xF0", InsSourceData(0x0E, InsData(absTestLocation2, ZeroValues())), SrResData(Carry.mask | Negative.mask), memByteResult(absTestLocation2, 0xE0)),
     ("ASL 5.0 absoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x1E, InsData(absTestLocation2, AccIxValue(0,1))), IxResData(1), memByteResult(absTestLocation2 + 1, 0x7E))
@@ -473,6 +473,14 @@ object ExecutionSpecData:
 
   // LSR logical shift right
   val dataLsrInstructionTest = List(
+    ("LSR 1.0 accumulator", InsSourceData(0x4A, InsData(0xF4, AccValue(0x20))), AccResData(0x10), memVoidResult()),
+    ("LSR 1.1 accumulator", InsSourceData(0x4A, InsData(0xF4, AccValue(0x01))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
+    ("LSR 1.2 accumulator", InsSourceData(0x4A, InsData(0x7F, AccValueWithCarry(0x3F))), AccSrResData(0x1F, Carry.mask), memVoidResult()),
+    ("LSR 1.3 accumulator", InsSourceData(0x4A, InsData(0x7F, AccValueWithCarry(0x3E))), AccResData(0x1F), memVoidResult()),
+    ("LSR 2.0 zeroPage 0x66 -> 0x3F", InsSourceData(0x46, InsData(0x66, ZeroValues())), SrResData(Carry.mask), memByteResult(0x66, 0x1F)),
+    ("LSR 3.0 zeroPageX 100 + IX = 9 contains 0", InsSourceData(0x56, InsData(0x64, IxValue(9))), IxSrResData(9, Zero.mask), memByteResult(0x109, 0)),
+    ("LSR 4.0 absolute absTestLocation2 contains 0xF0", InsSourceData(0x4E, InsData(absTestLocation2, ZeroValues())), ZeroResData(), memByteResult(absTestLocation2, 0x78)),
+    ("LSR 5.0 absoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x5E, InsData(absTestLocation2, IxValue(1))), IxSrResData(1, Carry.mask), memByteResult(absTestLocation2 + 1, 0x1F))
   )
 
   // NOP no operation
