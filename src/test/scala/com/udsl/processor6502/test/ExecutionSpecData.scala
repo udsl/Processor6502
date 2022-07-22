@@ -14,7 +14,7 @@ import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 
-trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean = false, val withZero:Boolean = false, val withNegative:Boolean = false, val withOverflow:Boolean = false, val withDecimal:Boolean = false, val withInterupt:Boolean = false  )
+trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean = false, val withZero:Boolean = false, val withNegative:Boolean = false, val withOverflow:Boolean = false, val withDecimal:Boolean = false, val withInterrupt:Boolean = false  )
 
 case class ZeroValues() extends RegValues( 0, 0, 0)
 case class AccValue( override val acc: Int) extends RegValues( acc, 0, 0)
@@ -23,7 +23,7 @@ case class AccValueWithZero( override val acc: Int) extends RegValues( acc, 0, 0
 case class AccValueWithNegative( override val acc: Int) extends RegValues( acc, 0, 0, false, false, true)
 case class AccValueWithOverflow( override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, true)
 case class AccValueWithDecimal( override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, false, true)
-case class AccValueWithInterupt( override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, false, false, true)
+case class AccValueWithInterrupt(override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, false, false, true)
 case class AccIxValue( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
 case class IxValue( override val ix: Int) extends RegValues( 0, ix, 0)
 case class IyValue( override val iy: Int) extends RegValues( 0, 0, iy)
@@ -145,6 +145,7 @@ case class memByteResult(override val loc:Int, override val value: Int ) extends
 case class memWrdResult(override val loc:Int, override val value: Int ) extends ResultMemData(loc, value, false)
 case class memVoidResult() extends ResultMemData(0, 0, false)
 
+
 object ExecutionSpecData:
 
   // ADC add with carry
@@ -166,7 +167,7 @@ object ExecutionSpecData:
   Zeropage 100 contains address 0x638 which has been initialised with byts 1,2,3,4
   so result will be 99 + 2 = 101.
   */
-    ("ADC 8.0 (indirect),y", InsSourceData(0x71, InsData(100, AccIyValue(99, 1))), AccIySrResData(101, 1, Unused.mask), memVoidResult())
+    ("ADC 8.0 (indirect),y", InsSourceData(0x71, InsData(100, AccIyValue(99, 1))), AccIyResData(101, 1), memVoidResult())
   )
 
   // AND and (with accumulator)
@@ -306,8 +307,8 @@ object ExecutionSpecData:
 
   // CLI clear interrupt disable
   val dataCliInstructionTest = List(
-    ("CLI 1.0 implied clear interrupt", InsSourceData(0x58, InsData(0x4, AccValueWithInterupt(0x0))), AccResData(0x0), memVoidResult()),
-    ("CLI 2.0 NOP interrupt still set", InsSourceData(0xEA, InsData(0x4, AccValueWithInterupt(0x0))), AccSrResData(0x0, Interrupt.mask), memVoidResult())
+    ("CLI 1.0 implied clear interrupt", InsSourceData(0x58, InsData(0x4, AccValueWithInterrupt(0x0))), AccResData(0x0), memVoidResult()),
+    ("CLI 2.0 NOP interrupt still set", InsSourceData(0xEA, InsData(0x4, AccValueWithInterrupt(0x0))), AccSrResData(0x0, Interrupt.mask), memVoidResult())
   )
 
   // CLV clear overflow
@@ -431,6 +432,17 @@ object ExecutionSpecData:
 
   // LDA load accumulator
   val dataLdaInstructionTest = List(
+    ("LDA 1.0 immediate", InsSourceData(0xA9, InsData(10, AccValue(100))), AccResData(10), memVoidResult()),
+
+    ("LDA 1.1 immediate", InsSourceData(0xA9, InsData(0xF0, AccValue(100))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
+    ("LDA 1.2 immediate", InsSourceData(0xA9, InsData(0x00, AccValueWithCarry(100))), AccSrResData(0, Zero.mask | Carry.mask), memVoidResult()),
+    ("LDA 2.0 zeropage 101 -> 0x06", InsSourceData(0xA5, InsData(101, AccValue(100))), AccResData(6), memVoidResult()),
+    ("LDA 3.0 zeropage,x", InsSourceData(0xB5, InsData(100, AccIxValue(100, 1))), AccIxResData(6, 1), memVoidResult()),
+    ("LDA 4.0 absolute absTestLocation -> 0x33", InsSourceData(0xAD, InsData(absTestLocation, AccValue(0x64))), AccResData(0x33), memVoidResult()),
+    ("LDA 5.0 absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0xBD, InsData(absTestLocation, AccIxValue(0x24, 6))), AccIxResData(0x40, 6), memVoidResult()),
+    ("LDA 6.0 absolute,y absTestLocation + 6", InsSourceData(0xB9, InsData(absTestLocation, AccIyValue(0x64, 6))), AccIyResData(0x40, 6), memVoidResult()),
+    ("LDA 7.0 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0xA1, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0xF0, 7, Negative.mask), memVoidResult()),
+    ("LDA 8.0 (indirect),y", InsSourceData(0xB1, InsData(100, AccIyValue(99, 3))), AccIyResData(0x04, 3), memVoidResult())
   )
 
   // LDX load X

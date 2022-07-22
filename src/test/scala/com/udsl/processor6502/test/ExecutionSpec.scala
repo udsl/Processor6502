@@ -10,7 +10,7 @@ import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusFlag, StatusRegister}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest}
+import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest, dataLdaInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import com.udsl.processor6502.test.Validation.{checkAcc, checkIx, checkIy, checkPc, checkSr}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -20,341 +20,132 @@ import org.scalatest.matchers.should
 class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
 
   "Given a valid ADC instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataAdcInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataAndInstructionTest)
   }
 
   "Given a valid AND instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataAndInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataAndInstructionTest)
   }
 
   "Given a valid ASL instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataAslInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataAslInstructionTest)
   }
 
   "Given a valid BCC instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataBccInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataBccInstructionTest)
   }
 
   "Given a valid BCS instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataBcsInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataBcsInstructionTest)
   }
 
 
   "Given a valid BIT instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataBitInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataBitInstructionTest)
   }
 
   "Given a valid BMI instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataBmiInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataBmiInstructionTest)
   }
 
   "Given a valid BNE instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataBneInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataBneInstructionTest)
   }
 
   "Given a valid BPL instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataBplInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataBplInstructionTest)
   }
 
   "Given a valid BRK instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataBrkInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataBrkInstructionTest)
   }
 
   "Given a valid BVC instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataBvcInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataBvcInstructionTest)
   }
 
   "Given a valid BVS instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataBvsInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataBvsInstructionTest)
   }
 
   "Given a valid CLC instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataClcInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataClcInstructionTest)
   }
 
   "Given a valid CLD instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataCldInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataCldInstructionTest)
   }
 
   "Given a valid CLI instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataCliInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataCliInstructionTest)
   }
 
   "Given a valid CLV instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataClvInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataClvInstructionTest)
   }
 
   "Given a valid CMP instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataCmpInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataCmpInstructionTest)
   }
 
   "Given a valid CPX instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataCpxInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataCpyInstructionTest)
   }
 
   "Given a valid CPY instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataCpyInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataCpyInstructionTest)
   }
 
   "Given a valid DEC instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataDecInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataDecInstructionTest)
   }
 
   "Given a valid DEX instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataDexInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataDexInstructionTest)
   }
 
   "Given a valid DEY instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataDeyInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataDeyInstructionTest)
   }
 
   "Given a valid EOR instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataEorInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataEorInstructionTest)
   }
 
   "Given a valid INC instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataIncInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataIncInstructionTest)
   }
 
   "Given a valid INX instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataInxInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataInxInstructionTest)
   }
 
   "Given a valid INY instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataInyInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataInyInstructionTest)
   }
 
   "Given a valid JMP instruction token" should "should execute to the correct opcode and value" in {
-    val executionUnit = ExecutionUnit.apply
-    ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataJmpInstructionTest) {
-      logger.info(s"\nStarting test: $title")
-      ExecutionSpec.initValuesForTest(insData)
-      logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
-      ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
-    }
+    runTestWithData(dataJmpInstructionTest)
   }
 
   "Given a valid JSR instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataJsrInstructionTest)
+  }
+
+  "Given a valid LDA instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataLdaInstructionTest)
+  }
+
+  def runTestWithData(data: List[(String, InsSourceData, ResultData, ResultMemData)]): Unit =
     val executionUnit = ExecutionUnit.apply
     ExecutionSpec.initFixedValuesForTest()
-    for ((title, insData, resData, memRes) <- dataJsrInstructionTest) {
+    for ((title, insData, resData, memRes) <- data) {
       logger.info(s"\nStarting test: $title")
       ExecutionSpec.initValuesForTest(insData)
       logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
       val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
       ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
     }
-  }
 
 
 
@@ -396,9 +187,13 @@ object ExecutionSpec extends StrictLogging:
    */
   def initFixedValuesForTest() : Unit =
     AssembleLocation.setAssembleLoc(zeroPageData) // zero page location
-    // setting a zero page pointer to address 0x638
-    AssembleLocation.setMemoryByte(0x38) // 100 (0x64) = 56
-    AssembleLocation.setMemoryByte(6) // 101 (0x65) = 6
+    /*
+     setting a zero page pointer to address 0x638
+     So 100 (0x64) = 56 (0x38) and 101 (0x65) = 6
+     memory @ 0x638 is set below to bytes 1,2,3,4, 0x80
+     */
+    AssembleLocation.setMemoryAddress(0x638)
+
     AssembleLocation.setMemoryByte(0x3F) // 102 (0x66) = 63
     AssembleLocation.setMemoryByte(0x80) // 103 (0x67) = 128
     AssembleLocation.setMemoryByte(0xF0) // 104 (0x68) = 240
@@ -408,7 +203,7 @@ object ExecutionSpec extends StrictLogging:
     AssembleLocation.setMemoryByte(0x00) // 109 (0x6D) = 0
     AssembleLocation.setMemoryByte(0x01) // 110 (0x6E) = 1
 
-    AssembleLocation.setAssembleLoc(0x638) // set current location to ins location
+    AssembleLocation.setAssembleLoc(0x638) // set current location to 0x638
     for x <- List(1,2,3,4, 0x80) do
       AssembleLocation.setMemoryByte(x)
 
@@ -465,5 +260,5 @@ object ExecutionSpec extends StrictLogging:
       Processor.sr.setFlag(StatusFlag.Overflow)
     if regData.regValues.withDecimal then
       Processor.sr.setFlag(StatusFlag.Decimal)
-    if regData.regValues.withInterupt then
+    if regData.regValues.withInterrupt then
       Processor.sr.setFlag(StatusFlag.Interrupt)

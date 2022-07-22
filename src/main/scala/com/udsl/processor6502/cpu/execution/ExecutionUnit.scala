@@ -116,9 +116,10 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
       case "INY" => executeINY()
       case "JMP" => executeJMP()
       case "JSR" => executeJSR()
-
+      case "LDA" => executeLDA()
       case "LDX" => executeLDX()
       case "LDY" => executeLDY()
+      
       case "STX" => executeSTX()
       case "TXS" => executeTXS()
       case _ => notImplmented()
@@ -445,6 +446,7 @@ class ExecutionUnit extends StrictLogging, Subject[ExecutionUnit]:
     Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
     Processor.iy.ebr = value
     Processor.pc.inc(opcode.addressMode.bytes)
+
 
 
   def executeSTX(): Unit =
