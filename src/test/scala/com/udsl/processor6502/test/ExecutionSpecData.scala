@@ -26,7 +26,10 @@ case class AccValueWithDecimal( override val acc: Int) extends RegValues( acc, 0
 case class AccValueWithInterrupt(override val acc: Int) extends RegValues( acc, 0, 0, false, false, false, false, false, true)
 case class AccIxValue( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0)
 case class IxValue( override val ix: Int) extends RegValues( 0, ix, 0)
+case class IxValueWithCarry( override val ix: Int) extends RegValues( 0, ix, 0, true)
 case class IyValue( override val iy: Int) extends RegValues( 0, 0, iy)
+case class IyValueWithCarry( override val iy: Int) extends RegValues( 0, 0, iy, true)
+case class IxIyValue( override val ix: Int, override val iy: Int) extends RegValues( 0, ix, iy)
 case class AccIxValueWithCarry( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0, true)
 case class AccIyValue( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy)
 case class AccIyValueWithCarry( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy, true)
@@ -130,6 +133,7 @@ case class AccIyResData(override val ac: Int, override val iy: Int) extends Resu
 case class IxSrResData(override val ix: Int, override val sr: Int) extends ResultData(0, ix, 0, sr, 0)
 case class IxResData(override val ix: Int) extends ResultData(0, ix, 0, 0, 0)
 case class IyResData(override val iy: Int) extends ResultData(0, 0, iy, 0, 0)
+case class IxIyResData(override val ix: Int, override val iy: Int) extends ResultData(0, ix, iy, 0, 0)
 case class SrResData(override val sr: Int) extends ResultData(0, 0, 0, sr, 0)
 case class AccPcResData(override val ac: Int, override val pc: Int) extends ResultData(ac, 0, 0, 0, pc)
 case class PcResData(override val pc: Int) extends ResultData(0, 0,0, 0, pc)
@@ -447,10 +451,24 @@ object ExecutionSpecData:
 
   // LDX load X
   val dataLdxInstructionTest = List(
+    ("LDX 1.0 immediate", InsSourceData(0xA2, InsData(10, IxValue(100))), IxResData(10), memVoidResult()),
+    ("LDX 1.1 immediate", InsSourceData(0xA2, InsData(0xF0, IxValue(100))), IxSrResData(0xF0, Negative.mask), memVoidResult()),
+    ("LDX 1.2 immediate", InsSourceData(0xA2, InsData(0x00, IxValueWithCarry(100))), IxSrResData(0, Zero.mask | Carry.mask), memVoidResult()),
+    ("LDX 2.0 zeropage 101 -> 0x06", InsSourceData(0xA6, InsData(101, IxValue(100))), IxResData(6), memVoidResult()),
+    ("LDA 3.0 zeropage,y", InsSourceData(0xB6, InsData(100, IxIyValue(100, 1))), IxIyResData(6, 1), memVoidResult()),
+    ("LDX 4.0 absolute absTestLocation -> 0x33", InsSourceData(0xAE, InsData(absTestLocation, IxValue(0x64))), IxResData(0x33), memVoidResult()),
+    ("LDX 54.0 absolute,y absTestLocation + 6", InsSourceData(0xBE, InsData(absTestLocation, IxIyValue(0x64, 6))), IxIyResData(0x40, 6), memVoidResult()),
   )
 
   // LDY load Y
   val dataLdyInstructionTest = List(
+    ("LDY 1.0 immediate", InsSourceData(0xA0, InsData(10, IyValue(100))), IyResData(10), memVoidResult()),
+    ("LDY 1.1 immediate", InsSourceData(0xA0, InsData(0xF0, IyValue(100))), IySrResData(0xF0, Negative.mask), memVoidResult()),
+    ("LDY 1.2 immediate", InsSourceData(0xA0, InsData(0x00, IyValueWithCarry(100))), IySrResData(0, Zero.mask | Carry.mask), memVoidResult()),
+    ("LDY 2.0 zeropage 101 -> 0x06", InsSourceData(0xA4, InsData(101, IyValue(100))), IyResData(6), memVoidResult()),
+    ("LDA 3.0 zeropage,x", InsSourceData(0xB4, InsData(100, IxIyValue(1, 99))), IxIyResData(1, 6), memVoidResult()),
+    ("LDY 3.0 absolute absTestLocation -> 0x33", InsSourceData(0xAC, InsData(absTestLocation, IyValue(0x64))), IyResData(0x33), memVoidResult()),
+    ("LDY 4.0 absolute,x absTestLocation + 6", InsSourceData(0xBC, InsData(absTestLocation, IxIyValue(6, 0x64))), IxIyResData(6, 0x40), memVoidResult()),
   )
 
   // LSR logical shift right
