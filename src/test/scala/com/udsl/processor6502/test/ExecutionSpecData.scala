@@ -16,7 +16,12 @@ import org.scalatest.matchers.should
 
 trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean = false, val withZero:Boolean = false, val withNegative:Boolean = false, val withOverflow:Boolean = false, val withDecimal:Boolean = false, val withInterrupt:Boolean = false  )
 
-case class ZeroValues() extends RegValues( 0, 0, 0)
+case class ZeroValues() extends RegValues( 0, 0, 0,false, false, false, false, false)
+case class SrValue( override val withCarry:Boolean = false, override val withZero:Boolean = false, override val withNegative:Boolean = false, override val withOverflow:Boolean = false, override val withDecimal:Boolean = false) extends RegValues( 0, 0, 0, withCarry, withZero, withNegative, withOverflow, withDecimal)
+object SrValue:
+  def apply(srValue: Int) : SrValue =
+    new SrValue(testValueForFlag(srValue, Carry), testValueForFlag(srValue, Zero), testValueForFlag(srValue, Negative), testValueForFlag(srValue, Overflow), testValueForFlag(srValue, Decimal))
+
 case class AccValue( override val acc: Int) extends RegValues( acc, 0, 0)
 case class AccValueWithCarry( override val acc: Int) extends RegValues( acc, 0, 0, true)
 case class AccValueWithZero( override val acc: Int) extends RegValues( acc, 0, 0, false, true)
@@ -138,6 +143,7 @@ case class SrResData(override val sr: Int) extends ResultData(0, 0, 0, sr, 0)
 case class AccPcResData(override val ac: Int, override val pc: Int) extends ResultData(ac, 0, 0, 0, pc)
 case class PcResData(override val pc: Int) extends ResultData(0, 0,0, 0, pc)
 case class PcSpResData(override val pc: Int, override val spValidation: () => Unit) extends ResultData(0, 0, 0, 0, pc, spValidation)
+case class SrPcSpResData(override val sr: Int, override val pc: Int, override val spValidation: () => Unit) extends ResultData(0, 0, 0, sr, pc, spValidation)
 case class AccSrPcResData(override val ac: Int, override val sr: Int, override val pc: Int) extends ResultData(ac, 0, 0, sr, pc)
 case class AccPcSpResData(override val ac: Int, override val pc: Int, override val spValidation: () => Unit)  extends ResultData(ac, 0, 0, 0, pc, spValidation)
 case class AccSrPcSpResData(override val ac: Int, override val sr: Int, override val pc: Int, override val spValidation: () => Unit)  extends ResultData(ac, 0, 0, sr, pc, spValidation)
@@ -421,7 +427,7 @@ object ExecutionSpecData:
   )
 
   def validateJsrStack(): Unit =
-    // 3 bytes on stack
+    // 2 bytes on stack
     assert(Processor.sp.value == 0xFD, s"Stack pointer NOT CORRECT should be 0xFD is ${asHexStr(Processor.sp.value)}")
     // start of stack should be return address 0x1FF = low byte and 0x1FE = high bye
     // stach is pushed is reverse order do it appears as a word at 0x1FE not an address
@@ -489,14 +495,49 @@ object ExecutionSpecData:
 
   // ORA or with accumulator
   val dataOraInstructionTest = List(
+    ("ORA 1.0 immediate", InsSourceData(0x09, InsData(0x0A, AccValue(0x64))), AccResData(0x6E), memVoidResult()),
+    ("ORA 1.1 immediate", InsSourceData(0x09, InsData(0xF0, AccValue(0x64))), AccSrResData(0xF4, Negative.mask), memVoidResult()),
+    ("ORA 1.2 immediate", InsSourceData(0x09, InsData(0x00, AccValueWithCarry(0x00))), SrResData(Zero.mask | Carry.mask), memVoidResult()),
+    ("ORA 2.0 zeropage 101 -> 0x06", InsSourceData(0x05, InsData(0x65, AccValue(0x64))), AccResData(0x66), memVoidResult()),
+    ("ORA 3.0 zeropage,x", InsSourceData(0x15, InsData(0x64, AccIxValue(0x64, 1))), AccIxResData(0x66, 1), memVoidResult()),
+    ("ORA 4.0 absolute absTestLocation -> 0x33", InsSourceData(0x0D, InsData(absTestLocation, AccValue(0x64))), AccResData(0x77), memVoidResult()),
+    ("ORA 5.0 absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0x1D, InsData(absTestLocation, AccIxValue(0x24, 6))), AccIxResData(0x64, 6), memVoidResult()),
+    ("ORA 6.0 absolute,y absTestLocation + 6", InsSourceData(0x19, InsData(absTestLocation, AccIyValue(0x64, 6))), AccIyResData(0x64, 6), memVoidResult()),
+    ("ORA 7.0 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x01, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0xF4, 7, Negative.mask), memVoidResult()),
+    ("ORA 8.0 (indirect),y", InsSourceData(0x11, InsData(0x64, AccIyValue(0x63, 3))), AccIyResData(0x67, 3), memVoidResult())
   )
+
+  def validateStackValue(expected: Int, stackValue: Int): Unit =
+    assert(expected == stackValue, s"Incorrect value on stack expected ${asHexStr(expected)} was ${asHexStr(stackValue)}")
+
+  def assertOnlyOneByteOnStack(): Unit =
+    assert(Processor.sp.value == 0xFE, s"Stack pointer NOT CORRECT should be 0xFD is ${asHexStr(Processor.sp.value)}")
+
+  def phaValidation(): Unit =
+    assertOnlyOneByteOnStack()
+    val stackValue = memoryAccess.getMemoryByte(0x1FF)
+    validateStackValue(0x64, stackValue)
 
   // PHA push accumulator
   val dataPhaInstructionTest = List(
+    ("PHA 1.0 implied", InsSourceData(0x48, InsData(0x00, AccValue(0x64))), AccPcSpResData(0x64, testLocation + 1, phaValidation), memVoidResult()),
   )
 
-  // PHP push processor status (SR)
+  def phpValidation(expectedValue: Int): Unit =
+    assertOnlyOneByteOnStack()
+    val stackValue = memoryAccess.getMemoryByte(0x1FF)
+    validateStackValue(expectedValue, stackValue)
+
+  def phpValidation1(): Unit =
+    phpValidation(Carry.mask | Zero.mask | Unused.mask)
+
+  def phpValidation2(): Unit =
+    phpValidation(Overflow.mask | Negative.mask | Unused.mask)
+
+// PHP push processor status (SR)
   val dataPhpInstructionTest = List(
+    ("PHP 1.0 implied", InsSourceData(0x08, InsData(0x00, SrValue(Carry.mask | Zero.mask))), SrPcSpResData(Carry.mask | Zero.mask, testLocation + 1, phpValidation1), memVoidResult()),
+    ("PHP 1.0 implied", InsSourceData(0x08, InsData(0x00, SrValue(Overflow.mask | Negative.mask))), SrPcSpResData(Overflow.mask | Negative.mask, testLocation + 1, phpValidation2), memVoidResult()),
   )
 
   // PLA pull accumulator

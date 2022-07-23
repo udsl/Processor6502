@@ -121,6 +121,10 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       case "LDX" => executeLDX()
       case "LDY" => executeLDY()
       case "LSR" => executeLSR()
+      case "NOP" => executeNOP()
+      case "ORA" => executeORA()
+      case "PHA" => executePHA()
+      case "PHP" => executePHP()
 
       case "STX" => executeSTX()
       case "TXS" => executeTXS()
@@ -449,7 +453,6 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     Processor.iy.ebr = value
     Processor.pc.inc(opcode.addressMode.bytes)
 
-
   def executeLSR(): Unit =
     def calcWritebackAndUpdateFlags( value: Int ): Int =
       Processor.sr.updateFlag(StatusFlag.Carry, (value & 0x01) > 0)
@@ -464,6 +467,38 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       memoryAccess.setMemoryByte(effectiveAddr.address, calcWritebackAndUpdateFlags(value))
     else // must be accumulator if no effective address as no immediate for ASL
       Processor.ac.value = calcWritebackAndUpdateFlags(Processor.ac.value)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeNOP(): Unit =
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeORA(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+      memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+      operand._1
+    val writeBack = Processor.ac.value | value
+    Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
+    Processor.sr.updateFlag(StatusFlag.Negative, (writeBack & 0x80) > 0)
+    Processor.ac.value = writeBack
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executePHA(): Unit =
+    Processor.sp.pushByte(Processor.ac.value)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executePHP(): Unit =
+    Processor.sp.pushByte(Processor.sr.value)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executePLA(): Unit =
+    Processor.ac.value = Processor.sp.popByte()
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executePLP(): Unit =
+    val popByte = Processor.sp.popByte() & 0xEF
+    Processor.sr.value = popByte
     Processor.pc.inc(opcode.addressMode.bytes)
 
 
@@ -482,7 +517,7 @@ object ExecutionUnit:
   def forTest: ExecutionUnit =
     val eu = new ExecutionUnit(true)
     eu
-    
+
   def getEffectiveAddress(opcode: OpcodeValue, operand: (Int, Int)): EffectiveAddress =
     opcode.addressMode match
     case Accumulator | Implied | Immediate =>
