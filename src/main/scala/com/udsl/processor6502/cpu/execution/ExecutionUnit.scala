@@ -125,6 +125,8 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       case "ORA" => executeORA()
       case "PHA" => executePHA()
       case "PHP" => executePHP()
+      case "PLA" => executePLA()
+      case "PLP" => executePLP()
 
       case "STX" => executeSTX()
       case "TXS" => executeTXS()
@@ -493,7 +495,10 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     Processor.pc.inc(opcode.addressMode.bytes)
 
   def executePLA(): Unit =
-    Processor.ac.value = Processor.sp.popByte()
+    val writeBack = Processor.sp.popByte()
+    Processor.sr.updateFlag(StatusFlag.Zero, writeBack == 0)
+    Processor.sr.updateFlag(StatusFlag.Negative, (writeBack & 0x80) > 0)
+    Processor.ac.value = writeBack
     Processor.pc.inc(opcode.addressMode.bytes)
 
   def executePLP(): Unit =

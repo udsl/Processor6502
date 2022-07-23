@@ -29,7 +29,7 @@ package com.udsl.processor6502.cpu:
      * @return the string representation
      */
     def toValueString: String =
-      (numericFormatProperty.value) match {
+      numericFormatProperty.value match {
         case NumericFormatType.DEC => numToString(_ebr.value)
         case _ => toString
       }
@@ -49,5 +49,5 @@ package com.udsl.processor6502.cpu:
       validate(ebr)
 
     def validate( ebr: Int): Unit =
-      if (ebr < MIN_VALUE || ebr > MAX_VALUE) throw new Exception("Register out of range.")
+      if (ebr < MIN_VALUE || ebr > MAX_VALUE) throw new Exception(s"Register value $ebr out of range.")
 

@@ -13,7 +13,7 @@ class StackPointer(name: String) extends EightBitRegister(name: String), StrictL
   def pushByte(byt: Int): Unit ={
     logger.info(s"Pushing byte $byt")
     // write byte to memory offset by sp value
-    val addr = 256 + ebr
+    val addr = 0x100 + ebr
     StackPointer.memoryAccess.setMemoryByte(addr, byt)
     decrement()
   }
@@ -33,7 +33,7 @@ class StackPointer(name: String) extends EightBitRegister(name: String), StrictL
 
   def popByte(): Int ={
     increment()
-    val addr = 255 + ebr
+    val addr = 0x100 + ebr
     val byt: Int = StackPointer.memoryAccess.getMemoryByte(addr)
     logger.info(s"Popping byte $byt")
     byt

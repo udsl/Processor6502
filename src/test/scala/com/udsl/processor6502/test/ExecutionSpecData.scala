@@ -43,7 +43,7 @@ case class AccIxIyValueWithCarry( override val acc: Int, override val ix: Int, o
 
 
 
-class InsData( val value: Int, val regValues: RegValues):
+class InsData( val value: Int, val regValues: RegValues, val initialisation:  () => Unit = () => {}):
   def loByte: Int = value & 255
   def hiByte: Int = (value >> 8) & 255
   def hasHiByte: Boolean = value > 255
@@ -54,6 +54,11 @@ object InsData extends StrictLogging:
     checkValue(value)
     validate(regValues)
     new InsData(value, regValues)
+
+  def apply(value: Int, regValues: RegValues, initialisation:  () => Unit): InsData =
+    checkValue(value)
+    validate(regValues)
+    new InsData(value, regValues, initialisation)
 
   def validate(regValues: RegValues): Unit =
     checkAccValue(regValues.acc)
@@ -540,12 +545,33 @@ object ExecutionSpecData:
     ("PHP 1.0 implied", InsSourceData(0x08, InsData(0x00, SrValue(Overflow.mask | Negative.mask))), SrPcSpResData(Overflow.mask | Negative.mask, testLocation + 1, phpValidation2), memVoidResult()),
   )
 
-  // PLA pull accumulator
+  def validateStackClear(): Unit =
+    assert(Processor.sp.value == 0xFF, s"Unexpected stack value ${Processor.sp.value }")
+
+  // PLA pull accumulator - updates the zero and negative flags
   val dataPlaInstructionTest = List(
+    ("PLA 1.0 implied add 0x55 to stack with carry and zero flags set", InsSourceData(0x68, InsData(0x00, SrValue(Carry.mask | Zero.mask), () => {
+      Processor.sp.value = 0xFE // move the point one byte
+      memoryAccess.setMemoryByte(0x1FF, 0x55) // write value to stack location
+    })), AccSrPcSpResData(0x55, Carry.mask, testLocation + 1, validateStackClear), memVoidResult()),
+
+    ("PLA 2.0 implied add 0x00 to stack with no flags set", InsSourceData(0x68, InsData(0x99, AccValue(0x11), () => {
+      Processor.sp.value = 0xFE // move the point one byte
+      memoryAccess.setMemoryByte(0x1FF, 0x00)
+    })), AccSrPcSpResData(0x00, Zero.mask, testLocation + 1, validateStackClear), memVoidResult()),
+
+    ("PLA 2.0 implied add 0x00 to stack with no flags set", InsSourceData(0x68, InsData(0x99, AccValue(0x02), () => {
+      Processor.sp.value = 0xFE // move the point one byte
+      memoryAccess.setMemoryByte(0x1FF, 0xF5)
+    })), AccSrPcSpResData(0xF5, Negative.mask, testLocation + 1, validateStackClear), memVoidResult()),
   )
 
   // PLP pull processor status (SR)
   val dataPlpInstructionTest = List(
+    ("PLP 1.0 implied add sr with carry and zero flags set to stack", InsSourceData(0x28, InsData(0x55, ZeroValues(), () => {
+      Processor.sp.value = 0xFE // move the point one byte
+      memoryAccess.setMemoryByte(0x1FF, Carry.mask | Zero.mask | Unused.mask)
+    })), SrPcSpResData(Carry.mask | Zero.mask, testLocation + 1, validateStackClear), memVoidResult()),
   )
 
   // ROL rotate left
