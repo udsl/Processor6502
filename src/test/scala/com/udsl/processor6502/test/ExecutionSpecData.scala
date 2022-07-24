@@ -73,7 +73,7 @@ object InsData extends StrictLogging:
 
   def checkAccValue(acc: Int): Unit =
     if acc < 0 || acc > 255 then
-      val errorMessage = s"Bad accumulator value $acc"
+      val errorMessage = s"Bad Accumulator value $acc"
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
 
@@ -122,7 +122,7 @@ object Validation extends StrictLogging:
   def validateStackWithZero4BTK(): Unit =
     // 3 bytes on stack
     assert(Processor.sp.value == 0xFC, s"Stack pointer NOT CORRECT should be 0xFC is ${asHexStr(Processor.sp.value)}")
-    // bottom of stack should be retrun address
+    // bottom of stack should be return address
     val returnAdd = memoryAccess.getMemoryWrd(0x1FE)
     // BRK @2000, then the following byte so return should be to 2002
     assert(returnAdd == 2002, s"Return address on stack incorrect is $returnAdd" )
@@ -165,32 +165,32 @@ object ExecutionSpecData:
 
   // ADC add with carry
   val dataAdcInstructionTest = List(
-    ("ADC 1.0 immediate acc = 0x64 add 0x0A", InsSourceData(0x69, InsData(10, AccValue(100))), AccResData(110), memVoidResult()),
-    ("ADC 1.1 immediate acc = 0x64 add 126", InsSourceData(0x69, InsData(126, AccValue(100))), AccSrResData(226, Overflow.mask | Negative.mask), memVoidResult()),
-    ("ADC 1.2 immediate acc = 0x64 add 0x0A carry set", InsSourceData(0x69, InsData(10, AccValueWithCarry(100))), AccResData(111), memVoidResult()),
-    ("ADC 2.0 zeropage 101 -> 0x06", InsSourceData(0x65, InsData(101, AccValue(100))), AccResData(106), memVoidResult()),
-    ("ADC 3.0 zeropage,x", InsSourceData(0x75, InsData(100, AccIxValue(100, 1))), AccIxResData(106, 1), memVoidResult()),
-    ("ADC 4.0 absolute absTestLocation -> 0x33", InsSourceData(0x6D, InsData(absTestLocation, AccValue(0x64))), AccSrResData(0x97, Negative.mask | Overflow.mask), memVoidResult()),
-    ("ADC 5.0 absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0x7D, InsData(absTestLocation, AccIxValue(0x24, 6))), AccIxResData(0x64, 6), memVoidResult()),
-    ("ADC 6.0 absolute,y absTestLocation + 6", InsSourceData(0x79, InsData(absTestLocation, AccIyValue(0x64, 6))), AccIySrResData(0xA4, 6, Negative.mask | Overflow.mask), memVoidResult()),
-    // Zeropage 100 set to 0x638 by data initialisation
-    ("ADC 7.0 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x61, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0x54, 7, Carry.mask), memVoidResult()),
-    ("ADC 7.1 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x61, InsData(zeroPageData, AccIxValueWithCarry(0x64, 7))), AccIxSrResData(0x55, 7, Carry.mask), memVoidResult()),
-    ("ADC 7.2 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x61, InsData(zeroPageData, AccIxValue(0x04, 7))), AccIxSrResData(0xF4, 7, Negative.mask), memVoidResult()),
+    ("ADC 1.0 Immediate acc = 0x64 add 0x0A", InsSourceData(0x69, InsData(10, AccValue(100))), AccResData(110), memVoidResult()),
+    ("ADC 1.1 Immediate acc = 0x64 add 126", InsSourceData(0x69, InsData(126, AccValue(100))), AccSrResData(226, Overflow.mask | Negative.mask), memVoidResult()),
+    ("ADC 1.2 Immediate acc = 0x64 add 0x0A carry set", InsSourceData(0x69, InsData(10, AccValueWithCarry(100))), AccResData(111), memVoidResult()),
+    ("ADC 2.0 ZeroPage 101 -> 0x06", InsSourceData(0x65, InsData(101, AccValue(100))), AccResData(106), memVoidResult()),
+    ("ADC 3.0 ZeroPage,x", InsSourceData(0x75, InsData(100, AccIxValue(100, 1))), AccIxResData(106, 1), memVoidResult()),
+    ("ADC 4.0 Absolute absTestLocation -> 0x33", InsSourceData(0x6D, InsData(absTestLocation, AccValue(0x64))), AccSrResData(0x97, Negative.mask | Overflow.mask), memVoidResult()),
+    ("ADC 5.0 Absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0x7D, InsData(absTestLocation, AccIxValue(0x24, 6))), AccIxResData(0x64, 6), memVoidResult()),
+    ("ADC 6.0 Absolute,y absTestLocation + 6", InsSourceData(0x79, InsData(absTestLocation, AccIyValue(0x64, 6))), AccIySrResData(0xA4, 6, Negative.mask | Overflow.mask), memVoidResult()),
+    // ZeroPage 100 set to 0x638 by data initialisation
+    ("ADC 7.0 (Indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x61, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0x54, 7, Carry.mask), memVoidResult()),
+    ("ADC 7.1 (Indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x61, InsData(zeroPageData, AccIxValueWithCarry(0x64, 7))), AccIxSrResData(0x55, 7, Carry.mask), memVoidResult()),
+    ("ADC 7.2 (Indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x61, InsData(zeroPageData, AccIxValue(0x04, 7))), AccIxSrResData(0xF4, 7, Negative.mask), memVoidResult()),
   /*
   Execute instruction with opcode 0x71 at 2000, operand 100 with ac= 99, ix=0, iy=1.
-  Zeropage 100 contains address 0x638 which has been initialised with byts 1,2,3,4
+  ZeroPage 100 contains address 0x638 which has been initialised with bytes 1,2,3,4
   so result will be 99 + 2 = 101.
   */
-    ("ADC 8.0 (indirect),y", InsSourceData(0x71, InsData(100, AccIyValue(99, 1))), AccIyResData(101, 1), memVoidResult())
+    ("ADC 8.0 (Indirect),y", InsSourceData(0x71, InsData(100, AccIyValue(99, 1))), AccIyResData(101, 1), memVoidResult())
   )
 
-  // AND and (with accumulator)
+  // AND and (with Accumulator)
   val dataAndInstructionTest = List(
-    ("AND 1 acc (0x64) immediate with 0xF4 result should be 0x64", InsSourceData(0x29, InsData(0xF4, AccValue(100))), AccResData(100), memVoidResult()),
-    ("AND 2  acc (0x64) zero page 101 value 6 result should be 4", InsSourceData(0x25, InsData(101, AccValue(100))), AccResData(4), memVoidResult()),
-    ("AND 3 acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 6", InsSourceData(0x35, InsData(99, AccIxValue(0x66, 2))), AccIxResData(6, 2), memVoidResult()),
-    ("AND 4 acc (0x64) zero page,X (99 + 2 = 101) value 6 result should be 0", InsSourceData(0x35, InsData(99, AccIxValue(0x88, 2))), IxSrResData(2, Zero.mask), memVoidResult()),
+    ("AND 1 acc (0x64) Immediate with 0xF4 result should be 0x64", InsSourceData(0x29, InsData(0xF4, AccValue(100))), AccResData(100), memVoidResult()),
+    ("AND 2  acc (0x64) ZeroPage 101 value 6 result should be 4", InsSourceData(0x25, InsData(101, AccValue(100))), AccResData(4), memVoidResult()),
+    ("AND 3 acc (0x64) ZeroPage,X (99 + 2 = 101) value 6 result should be 6", InsSourceData(0x35, InsData(99, AccIxValue(0x66, 2))), AccIxResData(6, 2), memVoidResult()),
+    ("AND 4 acc (0x64) ZeroPage,X (99 + 2 = 101) value 6 result should be 0", InsSourceData(0x35, InsData(99, AccIxValue(0x88, 2))), IxSrResData(2, Zero.mask), memVoidResult()),
     ("AND 5", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xE1, 2))), AccIxResData(0x21, 2), memVoidResult()),
     ("AND 6", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xCC, 2))), IxSrResData(2, Zero.mask), memVoidResult()),
     ("AND 7", InsSourceData(0x3D, InsData(absTestLocation, AccIxValue(0xCC, 1))), AccIxSrResData(0xCC, 1, Negative.mask), memVoidResult()),
@@ -202,13 +202,13 @@ object ExecutionSpecData:
 
   // ASL arithmetic shift left
   val dataAslInstructionTest = List(
-    ("ASL 1.0 accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x20))), AccResData(0x40), memVoidResult()),
-    ("ASL 1.1 accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x80))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
-    ("ASL 1.2 accumulator", InsSourceData(0x0A, InsData(0x7F, AccValueWithCarry(0x3F))), AccResData(0x7E), memVoidResult()),
+    ("ASL 1.0 Accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x20))), AccResData(0x40), memVoidResult()),
+    ("ASL 1.1 Accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x80))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
+    ("ASL 1.2 Accumulator", InsSourceData(0x0A, InsData(0x7F, AccValueWithCarry(0x3F))), AccResData(0x7E), memVoidResult()),
     ("ASL 2.0 zeroPage ", InsSourceData(0x06, InsData(0x66, ZeroValues())), AccResData(0), memByteResult(0x66, 0x7E)),
     ("ASL 3.0 zeroPageX 100 -> 0x638, IX = 1 contains 2", InsSourceData(0x16, InsData(0x64, IxValue(1))), IxResData(1), memByteResult(0x65, 0x0C)),
     ("ASL 3.1 zeroPageX 100 -> 0x638, IX = 3 contains 0x80", InsSourceData(0x16, InsData(0x64, IxValue(3))), IxSrResData(3, Carry.mask | Zero.mask), memByteResult(103, 0)),
-    ("ASL 4.0 absolute absTestLocation2 contains 0xF0", InsSourceData(0x0E, InsData(absTestLocation2, ZeroValues())), SrResData(Carry.mask | Negative.mask), memByteResult(absTestLocation2, 0xE0)),
+    ("ASL 4.0 Absolute absTestLocation2 contains 0xF0", InsSourceData(0x0E, InsData(absTestLocation2, ZeroValues())), SrResData(Carry.mask | Negative.mask), memByteResult(absTestLocation2, 0xE0)),
     ("ASL 5.0 absoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x1E, InsData(absTestLocation2, AccIxValue(0,1))), IxResData(1), memByteResult(absTestLocation2 + 1, 0x7E))
   )
 
@@ -234,17 +234,17 @@ object ExecutionSpecData:
   )
 
   // BIT bit test
-  // bits 7 and 6 of operand are transfered to bit 7 and 6 of SR (N,V) the zero-flag is set to the result of operand AND accumulator.
+  // bits 7 and 6 of operand are transferred to bit 7 and 6 of SR (N,V) the zero-flag is set to the result of operand AND Accumulator.
   val dataBitInstructionTest = List(
     // The AND gives Zero result
-    ("BIT 1.0 Zeropage 0x67 = 0x80", InsSourceData(0x24, InsData(0x67, ZeroValues())), AccSrResData(0x0, Zero.mask | Negative.mask), memVoidResult()),
-    ("BIT 1.1 Zeropage 0x68 = 0xF0", InsSourceData(0x24, InsData(0x68, ZeroValues())), AccSrResData(0x0, Zero.mask | Negative.mask | Overflow.mask), memVoidResult()),
-    ("BIT 1.2 Zeropage 0x69 = 0x40", InsSourceData(0x24, InsData(0x69, ZeroValues())), AccSrResData(0x0, Zero.mask | Overflow.mask), memVoidResult()),
+    ("BIT 1.0 ZeroPage 0x67 = 0x80", InsSourceData(0x24, InsData(0x67, ZeroValues())), AccSrResData(0x0, Zero.mask | Negative.mask), memVoidResult()),
+    ("BIT 1.1 ZeroPage 0x68 = 0xF0", InsSourceData(0x24, InsData(0x68, ZeroValues())), AccSrResData(0x0, Zero.mask | Negative.mask | Overflow.mask), memVoidResult()),
+    ("BIT 1.2 ZeroPage 0x69 = 0x40", InsSourceData(0x24, InsData(0x69, ZeroValues())), AccSrResData(0x0, Zero.mask | Overflow.mask), memVoidResult()),
     // The AND gives non Zero result
-    ("BIT 2.0 Zeropage 0x67 = 0x80", InsSourceData(0x24, InsData(0x67, AccValue(0xF0))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
-    ("BIT 2.1 Zeropage 0x68 = 0xF0", InsSourceData(0x24, InsData(0x68, AccValue(0x30))), AccSrResData(0x30, Negative.mask | Overflow.mask), memVoidResult()),
-    ("BIT 2.2 Zeropage 0x69 = 0x40", InsSourceData(0x24, InsData(0x69, AccValue(0xF0))), AccSrResData(0xF0, Overflow.mask), memVoidResult()),
-    // for absolute addressing using data starting at location absTestLocation = 2500
+    ("BIT 2.0 ZeroPage 0x67 = 0x80", InsSourceData(0x24, InsData(0x67, AccValue(0xF0))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
+    ("BIT 2.1 ZeroPage 0x68 = 0xF0", InsSourceData(0x24, InsData(0x68, AccValue(0x30))), AccSrResData(0x30, Negative.mask | Overflow.mask), memVoidResult()),
+    ("BIT 2.2 ZeroPage 0x69 = 0x40", InsSourceData(0x24, InsData(0x69, AccValue(0xF0))), AccSrResData(0xF0, Overflow.mask), memVoidResult()),
+    // for Absolute addressing using data starting at location absTestLocation = 2500
     // The AND gives Zero result
     ("BIT 3.0 absTestLocation + 4 (0x9C8) = 0x80", InsSourceData(0x2C, InsData(0x9C8, AccValue(0x30))), AccSrResData(0x30, Zero.mask | Negative.mask), memVoidResult()),
     ("BIT 3.1 absTestLocation + 5 (0x9C9) = 0xF0", InsSourceData(0x2C, InsData(0x9C9, AccValue(0x0F))), AccSrResData(0x0F, Zero.mask | Negative.mask | Overflow.mask), memVoidResult()),
@@ -310,36 +310,36 @@ object ExecutionSpecData:
 
   // CLC clear carry
   val dataClcInstructionTest = List(
-    ("CLC 1.0 implied clear carry", InsSourceData(0x18, InsData(0x4, AccValueWithCarry(0x0))), AccResData(0x0), memVoidResult()),
+    ("CLC 1.0 Implied clear carry", InsSourceData(0x18, InsData(0x4, AccValueWithCarry(0x0))), AccResData(0x0), memVoidResult()),
     ("CLC 2.0 NOP carry still set", InsSourceData(0xEA, InsData(0x4, AccValueWithCarry(0x0))), AccSrResData(0x0, Carry.mask), memVoidResult())
   )
 
   // CLD clear decimal
   val dataCldInstructionTest = List(
-    ("CLD 1.0 implied clear decimal", InsSourceData(0xD8, InsData(0x4, AccValueWithDecimal(0x0))), AccResData(0x0), memVoidResult()),
+    ("CLD 1.0 Implied clear decimal", InsSourceData(0xD8, InsData(0x4, AccValueWithDecimal(0x0))), AccResData(0x0), memVoidResult()),
     ("CLD 2.0 NOP decimal still set", InsSourceData(0xEA, InsData(0x4, AccValueWithDecimal(0x0))), AccSrResData(0x0, Decimal.mask), memVoidResult())
   )
 
   // CLI clear interrupt disable
   val dataCliInstructionTest = List(
-    ("CLI 1.0 implied clear interrupt", InsSourceData(0x58, InsData(0x4, AccValueWithInterrupt(0x0))), AccResData(0x0), memVoidResult()),
+    ("CLI 1.0 Implied clear interrupt", InsSourceData(0x58, InsData(0x4, AccValueWithInterrupt(0x0))), AccResData(0x0), memVoidResult()),
     ("CLI 2.0 NOP interrupt still set", InsSourceData(0xEA, InsData(0x4, AccValueWithInterrupt(0x0))), AccSrResData(0x0, Interrupt.mask), memVoidResult())
   )
 
   // CLV clear overflow
   val dataClvInstructionTest = List(
-    ("CLV 1.0 implied clear overflow", InsSourceData(0xB8, InsData(0x4, AccValueWithOverflow(0x0))), AccResData(0x0), memVoidResult()),
+    ("CLV 1.0 Implied clear overflow", InsSourceData(0xB8, InsData(0x4, AccValueWithOverflow(0x0))), AccResData(0x0), memVoidResult()),
     ("CLV 2.0 NOP overflow still set", InsSourceData(0xEA, InsData(0x4, AccValueWithOverflow(0x0))), AccSrResData(0x0, Overflow.mask), memVoidResult())
   )
 
-  // CMP compare (with accumulator) only effects Zero, Negative and carry flags
+  // CMP compare (with Accumulator) only effects Zero, Negative and carry flags
   val dataCmpInstructionTest = List(
-    ("CMP 1.0 Acc 0xF0 immediate with 0xF4 result Negative  set", InsSourceData(0xC9, InsData(0xF4, AccValue(0xF0))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
-    ("CMP 1.1 Acc 0x80 immediate with 0x40 result overflow set", InsSourceData(0xC9, InsData(0x40, AccValue(0x80))), AccSrResData(0x80, Carry.mask), memVoidResult()),
-    ("CMP 1.2 Acc 0x80 immediate with 0x80 result Zero set", InsSourceData(0xC9, InsData(0x80, AccValue(0x80))), AccSrResData(0x80, Zero.mask), memVoidResult()),
-    ("CMP 2.0 acc (0x64) zero page 101 value 6 ", InsSourceData(0xC5, InsData(101, AccValue(0x64))), AccSrResData(0x64, Carry.mask), memVoidResult()),
-    ("CMP 3.0 acc (0x64) zero page,X (100 + 2 = 102) value 0x3F result should be 6", InsSourceData(0xD5, InsData(100, AccIxValue(0x64, 2))), AccIxSrResData(0x64, 2, Carry.mask), memVoidResult()),
-    ("CMP 4.0 acc (0x20) absolute (2500) = 0x33", InsSourceData(0xCD, InsData(absTestLocation, AccValue(0x20))), AccSrResData(0x20, Negative.mask), memVoidResult()),
+    ("CMP 1.0 Acc 0xF0 Immediate with 0xF4 result Negative  set", InsSourceData(0xC9, InsData(0xF4, AccValue(0xF0))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
+    ("CMP 1.1 Acc 0x80 Immediate with 0x40 result overflow set", InsSourceData(0xC9, InsData(0x40, AccValue(0x80))), AccSrResData(0x80, Carry.mask), memVoidResult()),
+    ("CMP 1.2 Acc 0x80 Immediate with 0x80 result Zero set", InsSourceData(0xC9, InsData(0x80, AccValue(0x80))), AccSrResData(0x80, Zero.mask), memVoidResult()),
+    ("CMP 2.0 acc (0x64) ZeroPage 101 value 6 ", InsSourceData(0xC5, InsData(101, AccValue(0x64))), AccSrResData(0x64, Carry.mask), memVoidResult()),
+    ("CMP 3.0 acc (0x64) ZeroPage,X (100 + 2 = 102) value 0x3F result should be 6", InsSourceData(0xD5, InsData(100, AccIxValue(0x64, 2))), AccIxSrResData(0x64, 2, Carry.mask), memVoidResult()),
+    ("CMP 4.0 acc (0x20) Absolute (2500) = 0x33", InsSourceData(0xCD, InsData(absTestLocation, AccValue(0x20))), AccSrResData(0x20, Negative.mask), memVoidResult()),
     ("CMP 5.0 acc (0xCC) absoluteX (2500 + 2) = 0x84", InsSourceData(0xDD, InsData(absTestLocation, AccIxValue(0xCC, 2))), AccIxSrResData(0xCC, 2, Carry.mask), memVoidResult()),
     ("CMP 6.0 acc (0x84) AbsoluteY absTestLocation + IY = 2 gives 0x84", InsSourceData(0xD9, InsData(absTestLocation, AccIyValue(0x84, 2))), AccIySrResData(0x84, 2, Zero.mask), memVoidResult()),
     ("CMP 7.0 acc (0x84) IndirectX 100 + IX = 7 gives absTestLocation2 = 0xF0", InsSourceData(0xC1, InsData(100, AccIxValue(0x66, 7))), AccIxSrResData(0x66, 7, Negative.mask), memVoidResult()),
@@ -348,55 +348,55 @@ object ExecutionSpecData:
 
   // CPX compare with X
   val dataCpxInstructionTest = List(
-    ("CPX 1.0 Acc 0xF0 immediate with 0xF4 result Negative  set", InsSourceData(0xE0, InsData(0xF4, AccIxValue(0xF0, 0xF0))), AccIxSrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
-    ("CPX 1.1 Acc 0x80 immediate with 0x40 result overflow set", InsSourceData(0xE0, InsData(0x40, AccIxValue(0x80, 0x80))), AccIxSrResData(0x80, 0x80, Carry.mask), memVoidResult()),
-    ("CPX 1.2 Acc 0x80 immediate with 0x80 result Zero set", InsSourceData(0xE0, InsData(0x80, AccIxValue(0x80, 0x80))), AccIxSrResData(0x80, 0x80, Zero.mask), memVoidResult()),
-    ("CPX 2.0 acc (0x64) zero page 101 value 6 ", InsSourceData(0xE4, InsData(101, AccIxValue(0x64, 0x64))), AccIxSrResData(0x64, 0x64, Carry.mask), memVoidResult()),
-    ("CPX 3.0 acc (0x20) absolute (2500) = 0x33", InsSourceData(0xEC, InsData(absTestLocation, AccIxValue(0x20, 0x20))), AccIxSrResData(0x20, 0x20, Negative.mask), memVoidResult()),
+    ("CPX 1.0 Acc 0xF0 Immediate with 0xF4 result Negative  set", InsSourceData(0xE0, InsData(0xF4, AccIxValue(0xF0, 0xF0))), AccIxSrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
+    ("CPX 1.1 Acc 0x80 Immediate with 0x40 result overflow set", InsSourceData(0xE0, InsData(0x40, AccIxValue(0x80, 0x80))), AccIxSrResData(0x80, 0x80, Carry.mask), memVoidResult()),
+    ("CPX 1.2 Acc 0x80 Immediate with 0x80 result Zero set", InsSourceData(0xE0, InsData(0x80, AccIxValue(0x80, 0x80))), AccIxSrResData(0x80, 0x80, Zero.mask), memVoidResult()),
+    ("CPX 2.0 acc (0x64) ZeroPage 101 value 6 ", InsSourceData(0xE4, InsData(101, AccIxValue(0x64, 0x64))), AccIxSrResData(0x64, 0x64, Carry.mask), memVoidResult()),
+    ("CPX 3.0 acc (0x20) Absolute (2500) = 0x33", InsSourceData(0xEC, InsData(absTestLocation, AccIxValue(0x20, 0x20))), AccIxSrResData(0x20, 0x20, Negative.mask), memVoidResult()),
   )
 
   // CPY compare with Y
   val dataCpyInstructionTest = List(
-    ("CPY 1.0 Acc 0xF0 immediate with 0xF4 result Negative  set", InsSourceData(0xC0, InsData(0xF4, AccIyValue(0xF0, 0xF0))), AccIySrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
-    ("CPY 1.1 Acc 0x80 immediate with 0x40 result overflow set", InsSourceData(0xC0, InsData(0x40, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Carry.mask), memVoidResult()),
-    ("CPY 1.2 Acc 0x80 immediate with 0x80 result Zero set", InsSourceData(0xC0, InsData(0x80, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Zero.mask), memVoidResult()),
-    ("CPY 2.0 acc (0x64) zero page 101 value 6 ", InsSourceData(0xC4, InsData(101, AccIyValue(0x64, 0x64))), AccIySrResData(0x64, 0x64, Carry.mask), memVoidResult()),
-    ("CPY 3.0 acc (0x20) absolute (2500) = 0x33", InsSourceData(0xCC, InsData(absTestLocation, AccIyValue(0x20, 0x20))), AccIySrResData(0x20, 0x20, Negative.mask), memVoidResult())
+    ("CPY 1.0 Acc 0xF0 Immediate with 0xF4 result Negative  set", InsSourceData(0xC0, InsData(0xF4, AccIyValue(0xF0, 0xF0))), AccIySrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
+    ("CPY 1.1 Acc 0x80 Immediate with 0x40 result overflow set", InsSourceData(0xC0, InsData(0x40, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Carry.mask), memVoidResult()),
+    ("CPY 1.2 Acc 0x80 Immediate with 0x80 result Zero set", InsSourceData(0xC0, InsData(0x80, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Zero.mask), memVoidResult()),
+    ("CPY 2.0 acc (0x64) ZeroPage 101 value 6 ", InsSourceData(0xC4, InsData(101, AccIyValue(0x64, 0x64))), AccIySrResData(0x64, 0x64, Carry.mask), memVoidResult()),
+    ("CPY 3.0 acc (0x20) Absolute (2500) = 0x33", InsSourceData(0xCC, InsData(absTestLocation, AccIyValue(0x20, 0x20))), AccIySrResData(0x20, 0x20, Negative.mask), memVoidResult())
   )
 
 
   // DEC decrement
   val dataDecInstructionTest = List(
-    ("DEC 1.0 zeropage 0x64 = 0x38", InsSourceData(0xC6, InsData(0x64, ZeroValues())), ZeroResData(),  memByteResult(0x64, 0x37)),
-    ("DEC 1.1 zeropage 0x6D = 0x00", InsSourceData(0xC6, InsData(0x6D, ZeroValues())), SrResData(Negative.mask),  memByteResult(0x6D, 0xFF)),
-    ("DEC 1.2 zeropage 0x6E = 0x01", InsSourceData(0xC6, InsData(0x6E, ZeroValues())), SrResData(Zero.mask),  memByteResult(0x6E, 0x00)),
-    ("DEC 2.0 zeropage,X 0x64 + 4 = 0xF0", InsSourceData(0xD6, InsData(0x64, IxValue(0x04))), IxSrResData(0x04, Negative.mask),  memByteResult(0x68, 0xEF)),
+    ("DEC 1.0 ZeroPage 0x64 = 0x38", InsSourceData(0xC6, InsData(0x64, ZeroValues())), ZeroResData(),  memByteResult(0x64, 0x37)),
+    ("DEC 1.1 ZeroPage 0x6D = 0x00", InsSourceData(0xC6, InsData(0x6D, ZeroValues())), SrResData(Negative.mask),  memByteResult(0x6D, 0xFF)),
+    ("DEC 1.2 ZeroPage 0x6E = 0x01", InsSourceData(0xC6, InsData(0x6E, ZeroValues())), SrResData(Zero.mask),  memByteResult(0x6E, 0x00)),
+    ("DEC 2.0 ZeroPage,X 0x64 + 4 = 0xF0", InsSourceData(0xD6, InsData(0x64, IxValue(0x04))), IxSrResData(0x04, Negative.mask),  memByteResult(0x68, 0xEF)),
     ("DEC 3.0 Absolute absTestLocation = 0x33", InsSourceData(0xCE, InsData(absTestLocation, ZeroValues())), ZeroResData(),  memByteResult(absTestLocation, 0x32)),
     ("DEC 3.0 Absolute,X  absTestLocation + 4 = 0x80", InsSourceData(0xDE, InsData(absTestLocation, IxValue(0x04))), IxResData(0x04),  memByteResult(absTestLocation + 4, 0x7F))
   )
 
   // DEX decrement X
   val dataDexInstructionTest = List(
-    ("DEX 1.0 implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x20))), IxResData(0x1F), memVoidResult()),
-    ("DEX 1.1 implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x00))), IxSrResData(0xFF, Negative.mask), memVoidResult()),
-    ("DEX 1.2 implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x01))), IxSrResData(0x00, Zero.mask), memVoidResult()),
+    ("DEX 1.0 Implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x20))), IxResData(0x1F), memVoidResult()),
+    ("DEX 1.1 Implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x00))), IxSrResData(0xFF, Negative.mask), memVoidResult()),
+    ("DEX 1.2 Implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x01))), IxSrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // DEY decrement Y
   val dataDeyInstructionTest = List(
-    ("DEY 1.0 implied", InsSourceData(0x88, InsData(0x64, IyValue(0x20))), IyResData(0x1F), memVoidResult()),
-    ("DEY 1.1 implied", InsSourceData(0x88, InsData(0x64, IyValue(0x00))), IySrResData(0xFF, Negative.mask), memVoidResult()),
-    ("DEY 1.2 implied", InsSourceData(0x88, InsData(0x64, IyValue(0x01))), IySrResData(0x00, Zero.mask), memVoidResult()),
+    ("DEY 1.0 Implied", InsSourceData(0x88, InsData(0x64, IyValue(0x20))), IyResData(0x1F), memVoidResult()),
+    ("DEY 1.1 Implied", InsSourceData(0x88, InsData(0x64, IyValue(0x00))), IySrResData(0xFF, Negative.mask), memVoidResult()),
+    ("DEY 1.2 Implied", InsSourceData(0x88, InsData(0x64, IyValue(0x01))), IySrResData(0x00, Zero.mask), memVoidResult()),
   )
 
-  // EOR exclusive or (with accumulator)
+  // EOR exclusive or (with Accumulator)
   val dataEorInstructionTest = List(
-    ("EOR 1.0 Acc 0xF0 immediate with 0xF4 result Negative  set", InsSourceData(0x49, InsData(0x04, AccValue(0xF0))), AccSrResData(0xF4, Negative.mask), memVoidResult()),
-    ("EOR 1.1 Acc 0x80 immediate with 0x40 result zero set", InsSourceData(0x49, InsData(0x40, AccValue(0x40))), AccSrResData(0x00, Zero.mask), memVoidResult()),
-    ("EOR 1.2 Acc 0x0F immediate with 0x40 flags unchanged", InsSourceData(0x49, InsData(0x40, AccValue(0x0F))), AccResData(0x4F), memVoidResult()),
-    ("EOR 2.0 Acc (0x64) zero page 101 -> 0x06 give 0x62, flags unchanged", InsSourceData(0x45, InsData(101, AccValue(0x64))), AccResData(0x62), memVoidResult()),
-    ("EOR 3.0 Acc (0x64) zero page,X (100 + 2 = 102) value 0x3F result should be 6", InsSourceData(0x55, InsData(100, AccIxValue(0x64, 2))), AccIxResData(0x5B, 2), memVoidResult()),
-    ("EOR 4.0 Acc (0x20) absolute (2500) = 0x33", InsSourceData(0x4D, InsData(absTestLocation, AccValue(0x20))), AccResData(0x13), memVoidResult()),
+    ("EOR 1.0 Acc 0xF0 Immediate with 0xF4 result Negative  set", InsSourceData(0x49, InsData(0x04, AccValue(0xF0))), AccSrResData(0xF4, Negative.mask), memVoidResult()),
+    ("EOR 1.1 Acc 0x80 Immediate with 0x40 result zero set", InsSourceData(0x49, InsData(0x40, AccValue(0x40))), AccSrResData(0x00, Zero.mask), memVoidResult()),
+    ("EOR 1.2 Acc 0x0F Immediate with 0x40 flags unchanged", InsSourceData(0x49, InsData(0x40, AccValue(0x0F))), AccResData(0x4F), memVoidResult()),
+    ("EOR 2.0 Acc (0x64) ZeroPage 101 -> 0x06 give 0x62, flags unchanged", InsSourceData(0x45, InsData(101, AccValue(0x64))), AccResData(0x62), memVoidResult()),
+    ("EOR 3.0 Acc (0x64) ZeroPage,X (100 + 2 = 102) value 0x3F result should be 6", InsSourceData(0x55, InsData(100, AccIxValue(0x64, 2))), AccIxResData(0x5B, 2), memVoidResult()),
+    ("EOR 4.0 Acc (0x20) Absolute (2500) = 0x33", InsSourceData(0x4D, InsData(absTestLocation, AccValue(0x20))), AccResData(0x13), memVoidResult()),
     ("EOR 5.0 Acc (0xCC) absoluteX (2500 + 2) = 0x84", InsSourceData(0x5D, InsData(absTestLocation, AccIxValue(0x48, 2))), AccIxSrResData(0xCC, 2, Negative.mask), memVoidResult()),
     ("EOR 6.0 Acc (0x84) AbsoluteY absTestLocation + IY = 2 gives 0x84", InsSourceData(0x59, InsData(absTestLocation, AccIyValue(0x84, 2))), AccIySrResData(0x00, 2, Zero.mask), memVoidResult()),
     ("EOR 7.0 Acc (0x66) IndirectX 100 + IX = 7 gives absTestLocation2 = 0xF0", InsSourceData(0x41, InsData(100, AccIxValue(0x66, 7))), AccIxSrResData(0x96, 7, Negative.mask), memVoidResult()),
@@ -405,111 +405,111 @@ object ExecutionSpecData:
 
   // INC increment
   val dataIncInstructionTest = List(
-    ("INC 1.0 zero page 0x65 -> 0x06 give 0x62, flags unchanged", InsSourceData(0xE6, InsData(0x65, ZeroValues())), ZeroResData(), memByteResult(0x65, 0x07)),
-    ("INC 2.0 zero page,X (100 + 4 = 102) value 0xF0", InsSourceData(0xF6, InsData(100, IxValue(4))), IxSrResData(4, Negative.mask), memByteResult(0x68, 0xF1)),
-    ("INC 3.0 absolute (absTestLocation2 + 4 (0xA2C)) = 0xFF", InsSourceData(0xEE, InsData(0xA2C, ZeroValues())), SrResData(Zero.mask), memByteResult(0xA2C, 0x00)),
+    ("INC 1.0 ZeroPage 0x65 -> 0x06 give 0x62, flags unchanged", InsSourceData(0xE6, InsData(0x65, ZeroValues())), ZeroResData(), memByteResult(0x65, 0x07)),
+    ("INC 2.0 ZeroPage,X (100 + 4 = 102) value 0xF0", InsSourceData(0xF6, InsData(100, IxValue(4))), IxSrResData(4, Negative.mask), memByteResult(0x68, 0xF1)),
+    ("INC 3.0 Absolute (absTestLocation2 + 4 (0xA2C)) = 0xFF", InsSourceData(0xEE, InsData(0xA2C, ZeroValues())), SrResData(Zero.mask), memByteResult(0xA2C, 0x00)),
     ("INC 4.0 absoluteX (2500 + 3) = 0x00", InsSourceData(0xFE, InsData(absTestLocation, IxValue(3))), IxResData(3), memByteResult(absTestLocation + 3, 0x01)),
   )
 
   // INX increment X
   val dataInxInstructionTest = List(
-    ("INX 1.0 implied, x = 3 flags unchanged", InsSourceData(0xE8, InsData(0x00, IxValue(3))), IxResData(4), memVoidResult()),
-    ("INX 1.1 implied, x = 0xF0 negative flag", InsSourceData(0xE8, InsData(0x00, IxValue(0xF0))), IxSrResData(0xF1, Negative.mask), memVoidResult()),
-    ("INX 1.2 implied, x = 0xFF Zero flag", InsSourceData(0xE8, InsData(0x00, IxValue(0xFF))), IxSrResData(0x00, Zero.mask), memVoidResult()),
+    ("INX 1.0 Implied, x = 3 flags unchanged", InsSourceData(0xE8, InsData(0x00, IxValue(3))), IxResData(4), memVoidResult()),
+    ("INX 1.1 Implied, x = 0xF0 negative flag", InsSourceData(0xE8, InsData(0x00, IxValue(0xF0))), IxSrResData(0xF1, Negative.mask), memVoidResult()),
+    ("INX 1.2 Implied, x = 0xFF Zero flag", InsSourceData(0xE8, InsData(0x00, IxValue(0xFF))), IxSrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // INY increment Y
   val dataInyInstructionTest = List(
-    ("INY 1.0 implied, x = 3 flags unchanged", InsSourceData(0xC8, InsData(0x00, IyValue(3))), IyResData(4), memVoidResult()),
-    ("INY 1.1 implied, x = 0xF0 negative flag", InsSourceData(0xC8, InsData(0x00, IyValue(0xF0))), IySrResData(0xF1, Negative.mask), memVoidResult()),
-    ("INY 1.2 implied, x = 0xFF Zero flag", InsSourceData(0xC8, InsData(0x00, IyValue(0xFF))), IySrResData(0x00, Zero.mask), memVoidResult()),
+    ("INY 1.0 Implied, x = 3 flags unchanged", InsSourceData(0xC8, InsData(0x00, IyValue(3))), IyResData(4), memVoidResult()),
+    ("INY 1.1 Implied, x = 0xF0 negative flag", InsSourceData(0xC8, InsData(0x00, IyValue(0xF0))), IySrResData(0xF1, Negative.mask), memVoidResult()),
+    ("INY 1.2 Implied, x = 0xFF Zero flag", InsSourceData(0xC8, InsData(0x00, IyValue(0xFF))), IySrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // JMP jump test that PC is updated does not execute at the destination
   val dataJmpInstructionTest = List(
-    ("JMP 1.0 absolute absTestLocation", InsSourceData(0x4C, InsData(absTestLocation, ZeroValues())), PcResData(absTestLocation), memVoidResult()),
-    ("JMP 2.0 indirect testLocation2Ptr = 0x9CB -> 0x3FF0", InsSourceData(0x6C, InsData(testLocation2Ptr, ZeroValues())), PcResData(0x3FF0), memVoidResult()),
+    ("JMP 1.0 Absolute absTestLocation", InsSourceData(0x4C, InsData(absTestLocation, ZeroValues())), PcResData(absTestLocation), memVoidResult()),
+    ("JMP 2.0 Indirect testLocation2Ptr = 0x9CB -> 0x3FF0", InsSourceData(0x6C, InsData(testLocation2Ptr, ZeroValues())), PcResData(0x3FF0), memVoidResult()),
   )
 
   def validateJsrStack(): Unit =
     // 2 bytes on stack
     assert(Processor.sp.value == 0xFD, s"Stack pointer NOT CORRECT should be 0xFD is ${asHexStr(Processor.sp.value)}")
     // start of stack should be return address 0x1FF = low byte and 0x1FE = high bye
-    // stach is pushed is reverse order do it appears as a word at 0x1FE not an address
+    // stack is pushed is reverse order do it appears as a word at 0x1FE not an address
     val returnAdd = memoryAccess.getMemoryWrd(0x1FE)
     // @2000, JSR instruction then the 2 byte address so return should be to 2003 but thr RTS does an increment so its only 2002
     assert(returnAdd == 2002, s"Return address on stack incorrect should be 0x7D3 is ${asHexStr(returnAdd)} ($returnAdd)" )
 
   // JSR jump subroutine. Test that PC is updated and return address pushed to stack. Does not execute at the destination
   val dataJsrInstructionTest = List(
-    ("JSR 1.0 absolute absTestLocation", InsSourceData(0x20, InsData(absTestLocation, ZeroValues())), PcSpResData(absTestLocation, validateJsrStack), memVoidResult()),
+    ("JSR 1.0 Absolute absTestLocation", InsSourceData(0x20, InsData(absTestLocation, ZeroValues())), PcSpResData(absTestLocation, validateJsrStack), memVoidResult()),
   )
 
-  // LDA load accumulator
+  // LDA load Accumulator
   val dataLdaInstructionTest = List(
-    ("LDA 1.0 immediate", InsSourceData(0xA9, InsData(10, AccValue(100))), AccResData(10), memVoidResult()),
+    ("LDA 1.0 Immediate", InsSourceData(0xA9, InsData(10, AccValue(100))), AccResData(10), memVoidResult()),
 
-    ("LDA 1.1 immediate", InsSourceData(0xA9, InsData(0xF0, AccValue(100))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
-    ("LDA 1.2 immediate", InsSourceData(0xA9, InsData(0x00, AccValueWithCarry(100))), AccSrResData(0, Zero.mask | Carry.mask), memVoidResult()),
-    ("LDA 2.0 zeropage 101 -> 0x06", InsSourceData(0xA5, InsData(101, AccValue(100))), AccResData(6), memVoidResult()),
-    ("LDA 3.0 zeropage,x", InsSourceData(0xB5, InsData(100, AccIxValue(100, 1))), AccIxResData(6, 1), memVoidResult()),
-    ("LDA 4.0 absolute absTestLocation -> 0x33", InsSourceData(0xAD, InsData(absTestLocation, AccValue(0x64))), AccResData(0x33), memVoidResult()),
-    ("LDA 5.0 absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0xBD, InsData(absTestLocation, AccIxValue(0x24, 6))), AccIxResData(0x40, 6), memVoidResult()),
-    ("LDA 6.0 absolute,y absTestLocation + 6", InsSourceData(0xB9, InsData(absTestLocation, AccIyValue(0x64, 6))), AccIyResData(0x40, 6), memVoidResult()),
-    ("LDA 7.0 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0xA1, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0xF0, 7, Negative.mask), memVoidResult()),
-    ("LDA 8.0 (indirect),y", InsSourceData(0xB1, InsData(100, AccIyValue(99, 3))), AccIyResData(0x04, 3), memVoidResult())
+    ("LDA 1.1 Immediate", InsSourceData(0xA9, InsData(0xF0, AccValue(100))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
+    ("LDA 1.2 Immediate", InsSourceData(0xA9, InsData(0x00, AccValueWithCarry(100))), AccSrResData(0, Zero.mask | Carry.mask), memVoidResult()),
+    ("LDA 2.0 ZeroPage 101 -> 0x06", InsSourceData(0xA5, InsData(101, AccValue(100))), AccResData(6), memVoidResult()),
+    ("LDA 3.0 ZeroPage,x", InsSourceData(0xB5, InsData(100, AccIxValue(100, 1))), AccIxResData(6, 1), memVoidResult()),
+    ("LDA 4.0 Absolute absTestLocation -> 0x33", InsSourceData(0xAD, InsData(absTestLocation, AccValue(0x64))), AccResData(0x33), memVoidResult()),
+    ("LDA 5.0 Absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0xBD, InsData(absTestLocation, AccIxValue(0x24, 6))), AccIxResData(0x40, 6), memVoidResult()),
+    ("LDA 6.0 Absolute,y absTestLocation + 6", InsSourceData(0xB9, InsData(absTestLocation, AccIyValue(0x64, 6))), AccIyResData(0x40, 6), memVoidResult()),
+    ("LDA 7.0 (Indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0xA1, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0xF0, 7, Negative.mask), memVoidResult()),
+    ("LDA 8.0 (Indirect),y", InsSourceData(0xB1, InsData(100, AccIyValue(99, 3))), AccIyResData(0x04, 3), memVoidResult())
   )
 
   // LDX load X
   val dataLdxInstructionTest = List(
-    ("LDX 1.0 immediate", InsSourceData(0xA2, InsData(10, IxValue(100))), IxResData(10), memVoidResult()),
-    ("LDX 1.1 immediate", InsSourceData(0xA2, InsData(0xF0, IxValue(100))), IxSrResData(0xF0, Negative.mask), memVoidResult()),
-    ("LDX 1.2 immediate", InsSourceData(0xA2, InsData(0x00, IxValueWithCarry(100))), IxSrResData(0, Zero.mask | Carry.mask), memVoidResult()),
-    ("LDX 2.0 zeropage 101 -> 0x06", InsSourceData(0xA6, InsData(101, IxValue(100))), IxResData(6), memVoidResult()),
-    ("LDA 3.0 zeropage,y", InsSourceData(0xB6, InsData(100, IxIyValue(100, 1))), IxIyResData(6, 1), memVoidResult()),
-    ("LDX 4.0 absolute absTestLocation -> 0x33", InsSourceData(0xAE, InsData(absTestLocation, IxValue(0x64))), IxResData(0x33), memVoidResult()),
-    ("LDX 54.0 absolute,y absTestLocation + 6", InsSourceData(0xBE, InsData(absTestLocation, IxIyValue(0x64, 6))), IxIyResData(0x40, 6), memVoidResult()),
+    ("LDX 1.0 Immediate", InsSourceData(0xA2, InsData(10, IxValue(100))), IxResData(10), memVoidResult()),
+    ("LDX 1.1 Immediate", InsSourceData(0xA2, InsData(0xF0, IxValue(100))), IxSrResData(0xF0, Negative.mask), memVoidResult()),
+    ("LDX 1.2 Immediate", InsSourceData(0xA2, InsData(0x00, IxValueWithCarry(100))), IxSrResData(0, Zero.mask | Carry.mask), memVoidResult()),
+    ("LDX 2.0 ZeroPage 101 -> 0x06", InsSourceData(0xA6, InsData(101, IxValue(100))), IxResData(6), memVoidResult()),
+    ("LDA 3.0 ZeroPage,y", InsSourceData(0xB6, InsData(100, IxIyValue(100, 1))), IxIyResData(6, 1), memVoidResult()),
+    ("LDX 4.0 Absolute absTestLocation -> 0x33", InsSourceData(0xAE, InsData(absTestLocation, IxValue(0x64))), IxResData(0x33), memVoidResult()),
+    ("LDX 54.0 Absolute,y absTestLocation + 6", InsSourceData(0xBE, InsData(absTestLocation, IxIyValue(0x64, 6))), IxIyResData(0x40, 6), memVoidResult()),
   )
 
   // LDY load Y
   val dataLdyInstructionTest = List(
-    ("LDY 1.0 immediate", InsSourceData(0xA0, InsData(10, IyValue(100))), IyResData(10), memVoidResult()),
-    ("LDY 1.1 immediate", InsSourceData(0xA0, InsData(0xF0, IyValue(100))), IySrResData(0xF0, Negative.mask), memVoidResult()),
-    ("LDY 1.2 immediate", InsSourceData(0xA0, InsData(0x00, IyValueWithCarry(100))), IySrResData(0, Zero.mask | Carry.mask), memVoidResult()),
-    ("LDY 2.0 zeropage 101 -> 0x06", InsSourceData(0xA4, InsData(101, IyValue(100))), IyResData(6), memVoidResult()),
-    ("LDA 3.0 zeropage,x", InsSourceData(0xB4, InsData(100, IxIyValue(1, 99))), IxIyResData(1, 6), memVoidResult()),
-    ("LDY 3.0 absolute absTestLocation -> 0x33", InsSourceData(0xAC, InsData(absTestLocation, IyValue(0x64))), IyResData(0x33), memVoidResult()),
-    ("LDY 4.0 absolute,x absTestLocation + 6", InsSourceData(0xBC, InsData(absTestLocation, IxIyValue(6, 0x64))), IxIyResData(6, 0x40), memVoidResult()),
+    ("LDY 1.0 Immediate", InsSourceData(0xA0, InsData(10, IyValue(100))), IyResData(10), memVoidResult()),
+    ("LDY 1.1 Immediate", InsSourceData(0xA0, InsData(0xF0, IyValue(100))), IySrResData(0xF0, Negative.mask), memVoidResult()),
+    ("LDY 1.2 Immediate", InsSourceData(0xA0, InsData(0x00, IyValueWithCarry(100))), IySrResData(0, Zero.mask | Carry.mask), memVoidResult()),
+    ("LDY 2.0 ZeroPage 101 -> 0x06", InsSourceData(0xA4, InsData(101, IyValue(100))), IyResData(6), memVoidResult()),
+    ("LDA 3.0 ZeroPage,x", InsSourceData(0xB4, InsData(100, IxIyValue(1, 99))), IxIyResData(1, 6), memVoidResult()),
+    ("LDY 3.0 Absolute absTestLocation -> 0x33", InsSourceData(0xAC, InsData(absTestLocation, IyValue(0x64))), IyResData(0x33), memVoidResult()),
+    ("LDY 4.0 Absolute,x absTestLocation + 6", InsSourceData(0xBC, InsData(absTestLocation, IxIyValue(6, 0x64))), IxIyResData(6, 0x40), memVoidResult()),
   )
 
   // LSR logical shift right
   val dataLsrInstructionTest = List(
-    ("LSR 1.0 accumulator", InsSourceData(0x4A, InsData(0xF4, AccValue(0x20))), AccResData(0x10), memVoidResult()),
-    ("LSR 1.1 accumulator", InsSourceData(0x4A, InsData(0xF4, AccValue(0x01))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
-    ("LSR 1.2 accumulator", InsSourceData(0x4A, InsData(0x7F, AccValueWithCarry(0x3F))), AccSrResData(0x1F, Carry.mask), memVoidResult()),
-    ("LSR 1.3 accumulator", InsSourceData(0x4A, InsData(0x7F, AccValueWithCarry(0x3E))), AccResData(0x1F), memVoidResult()),
-    ("LSR 2.0 zeroPage 0x66 -> 0x3F", InsSourceData(0x46, InsData(0x66, ZeroValues())), SrResData(Carry.mask), memByteResult(0x66, 0x1F)),
-    ("LSR 3.0 zeroPageX 100 + IX = 9 contains 0", InsSourceData(0x56, InsData(0x64, IxValue(9))), IxSrResData(9, Zero.mask), memByteResult(0x109, 0)),
-    ("LSR 4.0 absolute absTestLocation2 contains 0xF0", InsSourceData(0x4E, InsData(absTestLocation2, ZeroValues())), ZeroResData(), memByteResult(absTestLocation2, 0x78)),
-    ("LSR 5.0 absoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x5E, InsData(absTestLocation2, IxValue(1))), IxSrResData(1, Carry.mask), memByteResult(absTestLocation2 + 1, 0x1F))
+    ("LSR 1.0 Accumulator", InsSourceData(0x4A, InsData(0xF4, AccValue(0x20))), AccResData(0x10), memVoidResult()),
+    ("LSR 1.1 Accumulator", InsSourceData(0x4A, InsData(0xF4, AccValue(0x01))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
+    ("LSR 1.2 Accumulator", InsSourceData(0x4A, InsData(0x7F, AccValueWithCarry(0x3F))), AccSrResData(0x1F, Carry.mask), memVoidResult()),
+    ("LSR 1.3 Accumulator", InsSourceData(0x4A, InsData(0x7F, AccValueWithCarry(0x3E))), AccResData(0x1F), memVoidResult()),
+    ("LSR 2.0 ZeroPage 0x66 -> 0x3F", InsSourceData(0x46, InsData(0x66, ZeroValues())), SrResData(Carry.mask), memByteResult(0x66, 0x1F)),
+    ("LSR 3.0 ZeroPageX 100 + IX = 9 contains 0", InsSourceData(0x56, InsData(0x64, IxValue(9))), IxSrResData(9, Zero.mask), memByteResult(0x109, 0)),
+    ("LSR 4.0 Absolute absTestLocation2 contains 0xF0", InsSourceData(0x4E, InsData(absTestLocation2, ZeroValues())), ZeroResData(), memByteResult(absTestLocation2, 0x78)),
+    ("LSR 5.0 AbsoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x5E, InsData(absTestLocation2, IxValue(1))), IxSrResData(1, Carry.mask), memByteResult(absTestLocation2 + 1, 0x1F))
   )
 
   // NOP no operation
   val dataNopInstructionTest = List(
   )
 
-  // ORA or with accumulator
+  // ORA or with Accumulator
   val dataOraInstructionTest = List(
-    ("ORA 1.0 immediate", InsSourceData(0x09, InsData(0x0A, AccValue(0x64))), AccResData(0x6E), memVoidResult()),
-    ("ORA 1.1 immediate", InsSourceData(0x09, InsData(0xF0, AccValue(0x64))), AccSrResData(0xF4, Negative.mask), memVoidResult()),
-    ("ORA 1.2 immediate", InsSourceData(0x09, InsData(0x00, AccValueWithCarry(0x00))), SrResData(Zero.mask | Carry.mask), memVoidResult()),
-    ("ORA 2.0 zeropage 101 -> 0x06", InsSourceData(0x05, InsData(0x65, AccValue(0x64))), AccResData(0x66), memVoidResult()),
-    ("ORA 3.0 zeropage,x", InsSourceData(0x15, InsData(0x64, AccIxValue(0x64, 1))), AccIxResData(0x66, 1), memVoidResult()),
-    ("ORA 4.0 absolute absTestLocation -> 0x33", InsSourceData(0x0D, InsData(absTestLocation, AccValue(0x64))), AccResData(0x77), memVoidResult()),
-    ("ORA 5.0 absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0x1D, InsData(absTestLocation, AccIxValue(0x24, 6))), AccIxResData(0x64, 6), memVoidResult()),
-    ("ORA 6.0 absolute,y absTestLocation + 6", InsSourceData(0x19, InsData(absTestLocation, AccIyValue(0x64, 6))), AccIyResData(0x64, 6), memVoidResult()),
-    ("ORA 7.0 (indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x01, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0xF4, 7, Negative.mask), memVoidResult()),
-    ("ORA 8.0 (indirect),y", InsSourceData(0x11, InsData(0x64, AccIyValue(0x63, 3))), AccIyResData(0x67, 3), memVoidResult())
+    ("ORA 1.0 Immediate", InsSourceData(0x09, InsData(0x0A, AccValue(0x64))), AccResData(0x6E), memVoidResult()),
+    ("ORA 1.1 Immediate", InsSourceData(0x09, InsData(0xF0, AccValue(0x64))), AccSrResData(0xF4, Negative.mask), memVoidResult()),
+    ("ORA 1.2 Immediate", InsSourceData(0x09, InsData(0x00, AccValueWithCarry(0x00))), SrResData(Zero.mask | Carry.mask), memVoidResult()),
+    ("ORA 2.0 ZeroPage 101 -> 0x06", InsSourceData(0x05, InsData(0x65, AccValue(0x64))), AccResData(0x66), memVoidResult()),
+    ("ORA 3.0 ZeroPage,x", InsSourceData(0x15, InsData(0x64, AccIxValue(0x64, 1))), AccIxResData(0x66, 1), memVoidResult()),
+    ("ORA 4.0 Absolute absTestLocation -> 0x33", InsSourceData(0x0D, InsData(absTestLocation, AccValue(0x64))), AccResData(0x77), memVoidResult()),
+    ("ORA 5.0 Absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0x1D, InsData(absTestLocation, AccIxValue(0x24, 6))), AccIxResData(0x64, 6), memVoidResult()),
+    ("ORA 6.0 Absolute,y absTestLocation + 6", InsSourceData(0x19, InsData(absTestLocation, AccIyValue(0x64, 6))), AccIyResData(0x64, 6), memVoidResult()),
+    ("ORA 7.0 (Indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0x01, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0xF4, 7, Negative.mask), memVoidResult()),
+    ("ORA 8.0 (Indirect),y", InsSourceData(0x11, InsData(0x64, AccIyValue(0x63, 3))), AccIyResData(0x67, 3), memVoidResult())
   )
 
   def validateStackValue(expected: Int, stackValue: Int): Unit =
@@ -523,9 +523,9 @@ object ExecutionSpecData:
     val stackValue = memoryAccess.getMemoryByte(0x1FF)
     validateStackValue(0x64, stackValue)
 
-  // PHA push accumulator
+  // PHA push Accumulator
   val dataPhaInstructionTest = List(
-    ("PHA 1.0 implied", InsSourceData(0x48, InsData(0x00, AccValue(0x64))), AccPcSpResData(0x64, testLocation + 1, phaValidation), memVoidResult()),
+    ("PHA 1.0 Implied", InsSourceData(0x48, InsData(0x00, AccValue(0x64))), AccPcSpResData(0x64, testLocation + 1, phaValidation), memVoidResult()),
   )
 
   def phpValidation(expectedValue: Int): Unit =
@@ -541,26 +541,26 @@ object ExecutionSpecData:
 
 // PHP push processor status (SR)
   val dataPhpInstructionTest = List(
-    ("PHP 1.0 implied", InsSourceData(0x08, InsData(0x00, SrValue(Carry.mask | Zero.mask))), SrPcSpResData(Carry.mask | Zero.mask, testLocation + 1, phpValidation1), memVoidResult()),
-    ("PHP 1.0 implied", InsSourceData(0x08, InsData(0x00, SrValue(Overflow.mask | Negative.mask))), SrPcSpResData(Overflow.mask | Negative.mask, testLocation + 1, phpValidation2), memVoidResult()),
+    ("PHP 1.0 Implied", InsSourceData(0x08, InsData(0x00, SrValue(Carry.mask | Zero.mask))), SrPcSpResData(Carry.mask | Zero.mask, testLocation + 1, phpValidation1), memVoidResult()),
+    ("PHP 1.0 Implied", InsSourceData(0x08, InsData(0x00, SrValue(Overflow.mask | Negative.mask))), SrPcSpResData(Overflow.mask | Negative.mask, testLocation + 1, phpValidation2), memVoidResult()),
   )
 
   def validateStackClear(): Unit =
     assert(Processor.sp.value == 0xFF, s"Unexpected stack value ${Processor.sp.value }")
 
-  // PLA pull accumulator - updates the zero and negative flags
+  // PLA pull Accumulator - updates the zero and negative flags
   val dataPlaInstructionTest = List(
-    ("PLA 1.0 implied add 0x55 to stack with carry and zero flags set", InsSourceData(0x68, InsData(0x00, SrValue(Carry.mask | Zero.mask), () => {
+    ("PLA 1.0 Implied add 0x55 to stack with carry and zero flags set", InsSourceData(0x68, InsData(0x00, SrValue(Carry.mask | Zero.mask), () => {
       Processor.sp.value = 0xFE // move the point one byte
       memoryAccess.setMemoryByte(0x1FF, 0x55) // write value to stack location
     })), AccSrPcSpResData(0x55, Carry.mask, testLocation + 1, validateStackClear), memVoidResult()),
 
-    ("PLA 2.0 implied add 0x00 to stack with no flags set", InsSourceData(0x68, InsData(0x99, AccValue(0x11), () => {
+    ("PLA 2.0 Implied add 0x00 to stack with no flags set", InsSourceData(0x68, InsData(0x99, AccValue(0x11), () => {
       Processor.sp.value = 0xFE // move the point one byte
       memoryAccess.setMemoryByte(0x1FF, 0x00)
     })), AccSrPcSpResData(0x00, Zero.mask, testLocation + 1, validateStackClear), memVoidResult()),
 
-    ("PLA 2.0 implied add 0x00 to stack with no flags set", InsSourceData(0x68, InsData(0x99, AccValue(0x02), () => {
+    ("PLA 2.0 Implied add 0x00 to stack with no flags set", InsSourceData(0x68, InsData(0x99, AccValue(0x02), () => {
       Processor.sp.value = 0xFE // move the point one byte
       memoryAccess.setMemoryByte(0x1FF, 0xF5)
     })), AccSrPcSpResData(0xF5, Negative.mask, testLocation + 1, validateStackClear), memVoidResult()),
@@ -568,7 +568,7 @@ object ExecutionSpecData:
 
   // PLP pull processor status (SR)
   val dataPlpInstructionTest = List(
-    ("PLP 1.0 implied add sr with carry and zero flags set to stack", InsSourceData(0x28, InsData(0x55, ZeroValues(), () => {
+    ("PLP 1.0 Implied add sr with carry and zero flags set to stack", InsSourceData(0x28, InsData(0x55, ZeroValues(), () => {
       Processor.sp.value = 0xFE // move the point one byte
       memoryAccess.setMemoryByte(0x1FF, Carry.mask | Zero.mask | Unused.mask)
     })), SrPcSpResData(Carry.mask | Zero.mask, testLocation + 1, validateStackClear), memVoidResult()),
@@ -576,6 +576,14 @@ object ExecutionSpecData:
 
   // ROL rotate left
   val dataRolInstructionTest = List(
+    ("ROL 1.0 Accumulator", InsSourceData(0x2A, InsData(0xF4, AccValue(0x20))), AccResData(0x40), memVoidResult()),
+    ("ROL 1.1 Accumulator", InsSourceData(0x2A, InsData(0xF4, AccValue(0x80))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
+    ("ROL 1.2 Accumulator", InsSourceData(0x2A, InsData(0x7F, AccValueWithCarry(0x3F))), AccResData(0x7E), memVoidResult()),
+    ("ROL 2.0 zeroPage ", InsSourceData(0x26, InsData(0x66, ZeroValues())), AccResData(0), memByteResult(0x66, 0x7E)),
+    ("ROL 3.0 zeroPageX 100 -> 0x638, IX = 1 contains 2", InsSourceData(0x36, InsData(0x64, IxValue(1))), IxResData(1), memByteResult(0x65, 0x0C)),
+    ("ROL 3.1 zeroPageX 100 -> 0x638, IX = 3 contains 0x80", InsSourceData(0x36, InsData(0x64, IxValue(3))), IxSrResData(3, Carry.mask | Zero.mask), memByteResult(103, 0)),
+    ("ROL 4.0 Absolute absTestLocation2 contains 0xF0", InsSourceData(0x2E, InsData(absTestLocation2, ZeroValues())), SrResData(Carry.mask | Negative.mask), memByteResult(absTestLocation2, 0xE0)),
+    ("ROL 5.0 absoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x3E, InsData(absTestLocation2, AccIxValue(0,1))), IxResData(1), memByteResult(absTestLocation2 + 1, 0x7E))
   )
 
   // ROR rotate right
@@ -606,7 +614,7 @@ object ExecutionSpecData:
   val dataSeiInstructionTest = List(
   )
 
-  // STA store accumulator
+  // STA store Accumulator
   val dataStaInstructionTest = List(
   )
 
@@ -618,11 +626,11 @@ object ExecutionSpecData:
   val dataStyInstructionTest = List(
   )
 
-  // TAX transfer accumulator to X
+  // TAX transfer Accumulator to X
   val dataTaxInstructionTest = List(
   )
 
-  // TAY transfer accumulator to Y
+  // TAY transfer Accumulator to Y
   val dataTayInstructionTest = List(
   )
 
@@ -630,7 +638,7 @@ object ExecutionSpecData:
   val dataTsxInstructionTest = List(
   )
 
-  // TXA transfer X to accumulator
+  // TXA transfer X to Accumulator
   val dataTxaInstructionTest = List(
   )
 
@@ -638,7 +646,7 @@ object ExecutionSpecData:
   val dataTxsInstructionTest = List(
   )
 
-  // TYA transfer Y to accumulator
+  // TYA transfer Y to Accumulator
   val dataTyaInstructionTest = List(
   )
 
