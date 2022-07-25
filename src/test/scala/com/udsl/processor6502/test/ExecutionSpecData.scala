@@ -17,6 +17,7 @@ import org.scalatest.matchers.should
 trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean = false, val withZero:Boolean = false, val withNegative:Boolean = false, val withOverflow:Boolean = false, val withDecimal:Boolean = false, val withInterrupt:Boolean = false  )
 
 case class ZeroValues() extends RegValues( 0, 0, 0,false, false, false, false, false)
+case class ZeroValuesWithCarry() extends RegValues( 0, 0, 0,true, false, false, false, false)
 case class SrValue( override val withCarry:Boolean = false, override val withZero:Boolean = false, override val withNegative:Boolean = false, override val withOverflow:Boolean = false, override val withDecimal:Boolean = false) extends RegValues( 0, 0, 0, withCarry, withZero, withNegative, withOverflow, withDecimal)
 object SrValue:
   def apply(srValue: Int) : SrValue =
@@ -47,6 +48,9 @@ class InsData( val value: Int, val regValues: RegValues, val initialisation:  ()
   def loByte: Int = value & 255
   def hiByte: Int = (value >> 8) & 255
   def hasHiByte: Boolean = value > 255
+
+// InsData( value, acc, ix, iy)
+case class InsSourceData(opcode: Int, data: InsData)
 
 object InsData extends StrictLogging:
 
@@ -89,9 +93,6 @@ object InsData extends StrictLogging:
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
 
-// InsData( value, acc, ix, iy)
-case class InsSourceData(opcode: Int, data: InsData)
-
 object Validation extends StrictLogging:
   def asHexStr( v: Int): String =
     s"0x${v.toHexString.toUpperCase()}"
@@ -107,7 +108,7 @@ object Validation extends StrictLogging:
 
   def checkSr(shouldBe: Int): Unit =
     val requiredMask: Int = Unused.mask | shouldBe
-    assert(Processor.sr.value == requiredMask, s"SR = (${asHexStr(Processor.sr.value)}) { ${StatusRegister.asFlagsString(Processor.sr.value)} } required (${asHexStr(requiredMask)}) { ${StatusRegister.asFlagsString(shouldBe)} } - ${asHexStr(shouldBe)}")
+    assert(Processor.sr.value == requiredMask, s"SR = (${asHexStr(Processor.sr.value)}) { ${StatusRegister.asFlagsString(Processor.sr.value)} } required (${asHexStr(requiredMask)}) { ${StatusRegister.asFlagsString(requiredMask)} } - ${asHexStr(requiredMask)}")
 
   def checkAcc(shouldBe: Int): Unit =
     assert(Processor.ac.value == shouldBe, s"AC = ${Processor.ac.value} {${asHexStr(Processor.ac.value)}} required $shouldBe {${asHexStr(shouldBe)}}")
@@ -133,6 +134,7 @@ object Validation extends StrictLogging:
 trait ResultData( val ac: Int, val ix: Int, val iy: Int, val sr: Int, val pc: Int, val spValidation: () => Unit = Validation.basicValidation)
 
 case class ZeroResData() extends ResultData(0, 0, 0, 0, 0)
+case class ZeroResDataWithCarry() extends ResultData(0, 0, 0, Carry.mask, 0)
 case class AccResData(override val ac: Int) extends ResultData(ac, 0, 0, 0, 0)
 case class AccSrResData(override val ac: Int, override val sr: Int) extends ResultData(ac, 0, 0, sr, 0)
 case class AccIySrResData(override val ac: Int, override val iy: Int, override val sr: Int) extends ResultData(ac, 0, iy, sr, 0)
@@ -187,13 +189,13 @@ object ExecutionSpecData:
 
   // AND and (with Accumulator)
   val dataAndInstructionTest = List(
-    ("AND 1 acc (0x64) Immediate with 0xF4 result should be 0x64", InsSourceData(0x29, InsData(0xF4, AccValue(100))), AccResData(100), memVoidResult()),
-    ("AND 2  acc (0x64) ZeroPage 101 value 6 result should be 4", InsSourceData(0x25, InsData(101, AccValue(100))), AccResData(4), memVoidResult()),
-    ("AND 3 acc (0x64) ZeroPage,X (99 + 2 = 101) value 6 result should be 6", InsSourceData(0x35, InsData(99, AccIxValue(0x66, 2))), AccIxResData(6, 2), memVoidResult()),
-    ("AND 4 acc (0x64) ZeroPage,X (99 + 2 = 101) value 6 result should be 0", InsSourceData(0x35, InsData(99, AccIxValue(0x88, 2))), IxSrResData(2, Zero.mask), memVoidResult()),
-    ("AND 5", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xE1, 2))), AccIxResData(0x21, 2), memVoidResult()),
-    ("AND 6", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xCC, 2))), IxSrResData(2, Zero.mask), memVoidResult()),
-    ("AND 7", InsSourceData(0x3D, InsData(absTestLocation, AccIxValue(0xCC, 1))), AccIxSrResData(0xCC, 1, Negative.mask), memVoidResult()),
+    ("AND 1.0 acc (0x64) Immediate with 0xF4 result should be 0x64", InsSourceData(0x29, InsData(0xF4, AccValue(100))), AccResData(100), memVoidResult()),
+    ("AND 2.0 acc (0x64) ZeroPage 101 value 6 result should be 4", InsSourceData(0x25, InsData(101, AccValue(100))), AccResData(4), memVoidResult()),
+    ("AND 3.0 acc (0x64) ZeroPage,X (99 + 2 = 101) value 6 result should be 6", InsSourceData(0x35, InsData(99, AccIxValue(0x66, 2))), AccIxResData(6, 2), memVoidResult()),
+    ("AND 4.0 acc (0x64) ZeroPage,X (99 + 2 = 101) value 6 result should be 0", InsSourceData(0x35, InsData(99, AccIxValue(0x88, 2))), IxSrResData(2, Zero.mask), memVoidResult()),
+    ("AND 5.0", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xE1, 2))), AccIxResData(0x21, 2), memVoidResult()),
+    ("AND 6.0", InsSourceData(0x2D, InsData(absTestLocation, AccIxValue(0xCC, 2))), IxSrResData(2, Zero.mask), memVoidResult()),
+    ("AND 7.0", InsSourceData(0x3D, InsData(absTestLocation, AccIxValue(0xCC, 1))), AccIxSrResData(0xCC, 1, Negative.mask), memVoidResult()),
     ("AND 8.1 AbsoluteY absTestLocation + IY = 2 gives 0x84", InsSourceData(0x39, InsData(absTestLocation, AccIyValue(0xCC, 2))), AccIySrResData(0x84, 2, Negative.mask), memVoidResult()),
     ("AND 8.2 AbsoluteY absTestLocation + IY = 3 gives 0x00", InsSourceData(0x39, InsData(absTestLocation, AccIyValue(0xCC, 3))), IySrResData(3, Zero.mask), memVoidResult()),
     ("AND 9.1 IndirectX 100 + IX = 7 gives absTestLocation2 = 0xF0", InsSourceData(0x21, InsData(100, AccIxValue(0x66, 7))), AccIxResData(0x60, 7), memVoidResult()),
@@ -206,8 +208,9 @@ object ExecutionSpecData:
     ("ASL 1.1 Accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x80))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
     ("ASL 1.2 Accumulator", InsSourceData(0x0A, InsData(0x7F, AccValueWithCarry(0x3F))), AccResData(0x7E), memVoidResult()),
     ("ASL 2.0 zeroPage ", InsSourceData(0x06, InsData(0x66, ZeroValues())), AccResData(0), memByteResult(0x66, 0x7E)),
-    ("ASL 3.0 zeroPageX 100 -> 0x638, IX = 1 contains 2", InsSourceData(0x16, InsData(0x64, IxValue(1))), IxResData(1), memByteResult(0x65, 0x0C)),
-    ("ASL 3.1 zeroPageX 100 -> 0x638, IX = 3 contains 0x80", InsSourceData(0x16, InsData(0x64, IxValue(3))), IxSrResData(3, Carry.mask | Zero.mask), memByteResult(103, 0)),
+    // initialisation -> restoring memory location 0x66 to 0x3f
+    ("ASL 3.0 zeroPage,X 100, IX = 2 contains 0x3f", InsSourceData(0x16, InsData(0x64, IxValue(2), () => {memoryAccess.setMemoryByte(0x66, 0x3f)})), IxResData(2), memByteResult(0x66, 0x7E)),
+    ("ASL 3.1 zeroPage,X 100, IX = 3 contains 0x80", InsSourceData(0x16, InsData(0x64, IxValue(3))), IxSrResData(3, Carry.mask | Zero.mask), memByteResult(0x67, 0)),
     ("ASL 4.0 Absolute absTestLocation2 contains 0xF0", InsSourceData(0x0E, InsData(absTestLocation2, ZeroValues())), SrResData(Carry.mask | Negative.mask), memByteResult(absTestLocation2, 0xE0)),
     ("ASL 5.0 absoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x1E, InsData(absTestLocation2, AccIxValue(0,1))), IxResData(1), memByteResult(absTestLocation2 + 1, 0x7E))
   )
@@ -578,10 +581,13 @@ object ExecutionSpecData:
   val dataRolInstructionTest = List(
     ("ROL 1.0 Accumulator", InsSourceData(0x2A, InsData(0xF4, AccValue(0x20))), AccResData(0x40), memVoidResult()),
     ("ROL 1.1 Accumulator", InsSourceData(0x2A, InsData(0xF4, AccValue(0x80))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
-    ("ROL 1.2 Accumulator", InsSourceData(0x2A, InsData(0x7F, AccValueWithCarry(0x3F))), AccResData(0x7E), memVoidResult()),
-    ("ROL 2.0 zeroPage ", InsSourceData(0x26, InsData(0x66, ZeroValues())), AccResData(0), memByteResult(0x66, 0x7E)),
-    ("ROL 3.0 zeroPageX 100 -> 0x638, IX = 1 contains 2", InsSourceData(0x36, InsData(0x64, IxValue(1))), IxResData(1), memByteResult(0x65, 0x0C)),
-    ("ROL 3.1 zeroPageX 100 -> 0x638, IX = 3 contains 0x80", InsSourceData(0x36, InsData(0x64, IxValue(3))), IxSrResData(3, Carry.mask | Zero.mask), memByteResult(103, 0)),
+    ("ROL 1.2 Accumulator", InsSourceData(0x2A, InsData(0x7F, AccValueWithCarry(0x80))), AccSrResData(0x01, Carry.mask), memVoidResult()),
+    ("ROL 2.0 zeroPage 0x66 -> 0x3F", InsSourceData(0x26, InsData(0x66, ZeroValues())), ZeroResData(), memByteResult(0x66, 0x7E)),
+    // Using save fixed data so need to restore after previous test
+    ("ROL 2.1 zeroPage 0x66 -> 0x3F with carry", InsSourceData(0x26, InsData(0x66, ZeroValuesWithCarry(), () => {memoryAccess.setMemoryByte(102, 0x3F)})), ZeroResData(), memByteResult(0x66, 0x7F)),
+    ("ROL 3.0 zeroPageX 100, IX = 11 contains 2", InsSourceData(0x36, InsData(0x64, IxValue(0x0B))), IxResData(0x0B), memByteResult(0x6F, 0x04)),
+    // also using same data as above test, setting back to 2 in initialisation
+    ("ROL 3.1 zeroPageX 100, IX = 11 contains 2 with carry", InsSourceData(0x36, InsData(0x64, IxValueWithCarry(0x0B), () => {memoryAccess.setMemoryByte(0x6F, 2)})), IxResData(0x0B), memByteResult(0x6F, 0x05)),
     ("ROL 4.0 Absolute absTestLocation2 contains 0xF0", InsSourceData(0x2E, InsData(absTestLocation2, ZeroValues())), SrResData(Carry.mask | Negative.mask), memByteResult(absTestLocation2, 0xE0)),
     ("ROL 5.0 absoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x3E, InsData(absTestLocation2, AccIxValue(0,1))), IxResData(1), memByteResult(absTestLocation2 + 1, 0x7E))
   )

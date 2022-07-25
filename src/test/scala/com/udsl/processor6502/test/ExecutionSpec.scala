@@ -10,7 +10,7 @@ import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusFlag, StatusRegister}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest, dataLdaInstructionTest, dataLdxInstructionTest, dataLdyInstructionTest, dataLsrInstructionTest, dataOraInstructionTest, dataPhaInstructionTest, dataPhpInstructionTest, dataPlaInstructionTest, dataPlpInstructionTest}
+import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest, dataLdaInstructionTest, dataLdxInstructionTest, dataLdyInstructionTest, dataLsrInstructionTest, dataOraInstructionTest, dataPhaInstructionTest, dataPhpInstructionTest, dataPlaInstructionTest, dataPlpInstructionTest, dataRolInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import com.udsl.processor6502.test.Validation.{checkAcc, checkIx, checkIy, checkPc, checkSr}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -167,7 +167,11 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
   "Given a valid PLP instruction token" should "should execute to the correct opcode and value" in {
     runTestWithData(dataPlpInstructionTest)
   }
-  
+
+  "Given a valid ROL instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataRolInstructionTest)
+  }
+
 
   def runTestWithData(data: List[(String, InsSourceData, ResultData, ResultMemData)]): Unit =
     val executionUnit = ExecutionUnit.forTest
@@ -177,6 +181,8 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
       ExecutionSpec.initValuesForTest(insData)
       insData.data.initialisation()
       logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
+      // Always get the next instruction, auto fetch on PC change disabled during testing
+      executionUnit.loadInstructionAtPc()
       val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
       ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
     }
@@ -234,8 +240,9 @@ object ExecutionSpec extends StrictLogging:
     AssembleLocation.setMemoryByte(0x40) // 105 (0x69) = 64
     AssembleLocation.setMemoryByte(0xC0) // 106 (0x6A) = 192
     AssembleLocation.setMemoryAddress(absTestLocation2) // 107 (0x6B) pointer to absTestLocation2
-    AssembleLocation.setMemoryByte(0x00) // 109 (0x6D) = 0
-    AssembleLocation.setMemoryByte(0x01) // 110 (0x6E) = 1
+    // 109 (0x6D) onwards
+    for x <- List(0,1,2,3,4) do
+      AssembleLocation.setMemoryByte(x)
 
     AssembleLocation.setAssembleLoc(0x638) // set current location to 0x638
     for x <- List(1,2,3,4, 0x80) do

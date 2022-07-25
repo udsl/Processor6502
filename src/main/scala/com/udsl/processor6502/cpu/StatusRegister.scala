@@ -31,12 +31,12 @@ class StatusRegister(name: String) extends EightBitRegister(name: String):
       clearFlag(flag)
 
   /**
-   * To clear the bit and with the negative mask which we can mahe by xor the mask with 255
+   * To clear the bit AND with 0xFF mask xor with the bit mask
    *
    * @param flag  the flag to clear
    */
   def clearFlag( flag: StatusFlag): Unit =
-    ebr = ebr & (255 ^ flag.mask)
+    ebr = ebr & (0xFF ^ flag.mask)
 
   def reset(): Unit =
     ebr = 32

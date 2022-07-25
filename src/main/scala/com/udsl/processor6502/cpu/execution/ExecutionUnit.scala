@@ -30,8 +30,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     (_, oldValue, newValue) => {
       if !testing then
         logger.debug(s"PC subscription fired - $oldValue, $newValue")
-        opcode = getInstruction(newValue.##)
-        operand = getInstructionOperand(newValue.##)
+        loadInstructionAtPc()
         notifyObservers()
     }
   }
@@ -42,8 +41,6 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
    */
   def singleStep(): OpcodeValue ={
     runMode = RunMode.SingleStepping
-    // Always get the next instruction
-    loadInstructionAtPc()
     val executing = opcode
     executeIns()
     logger.debug(s"Next instruction $opcode, operand $operand")
@@ -127,6 +124,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       case "PHP" => executePHP()
       case "PLA" => executePLA()
       case "PLP" => executePLP()
+      case "ROL" => executeROL()
 
       case "STX" => executeSTX()
       case "TXS" => executeTXS()
@@ -151,7 +149,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
       operand._1
-     
+
   def updateZeroNegativeFlags(from: Int): Unit =
     Processor.sr.updateFlag(StatusFlag.Zero, from == 0)
     Processor.sr.updateFlag(StatusFlag.Negative, (from & 0x80) > 0)
@@ -159,7 +157,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
   def updateZeroNegativeCaryFlags(from: Int): Unit =
     updateZeroNegativeFlags(from)
     Processor.sr.updateFlag(StatusFlag.Carry, from > 0xFF)
-    
+
   def executeADC(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     val value = if effectiveAddr.hasValue then
@@ -501,11 +499,13 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
   def executeROL(): Unit =
     def doRol(value: Int): Int =
       val currentCarryFlag = Processor.sr.testFlag(Carry)
-      Processor.sr.updateFlag(Carry, (value & Carry.mask) > 0)
-      if currentCarryFlag then
+      Processor.sr.updateFlag(Carry, (value & 0x80) > 0)
+      val res = if !currentCarryFlag then
         (value << 1) & 0xFE
       else
-        ((value << 1) & 0xFE) | Carry.mask
+        ((value << 1) & 0xFE) | 0x01
+      updateZeroNegativeFlags(res)
+      res
 
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     if effectiveAddr.hasValue then
