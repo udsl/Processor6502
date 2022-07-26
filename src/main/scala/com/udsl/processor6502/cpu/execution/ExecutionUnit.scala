@@ -125,6 +125,9 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       case "PLA" => executePLA()
       case "PLP" => executePLP()
       case "ROL" => executeROL()
+      case "ROR" => executeROR()
+      case "RTI" => executeRTI()
+      case "RTS" => executeRTS()
 
       case "STX" => executeSTX()
       case "TXS" => executeTXS()
@@ -515,6 +518,39 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       val writeBack = doRol(Processor.ac.value)
       Processor.ac.value = writeBack
     Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeROR(): Unit =
+    def doRor(value: Int): Int =
+      val currentCarryFlag = Processor.sr.testFlag(Carry)
+      Processor.sr.updateFlag(Carry, (value & 0x01) > 0)
+      val res = if !currentCarryFlag then
+        (value >> 1) & 0x7F
+      else
+        ((value >> 1) & 0x7F) | 0x80
+      updateZeroNegativeFlags(res)
+      res
+
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    if effectiveAddr.hasValue then
+      val writeBack = doRor(memoryAccess.getMemoryByte(effectiveAddr.address))
+      memoryAccess.setMemoryByte(effectiveAddr.address, writeBack)
+    else // has no effective address so it must be accumulator
+      val writeBack = doRor(Processor.ac.value)
+      Processor.ac.value = writeBack
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeRTI(): Unit =
+    val retHi = Processor.sp.popByte()
+    val retLo = Processor.sp.popByte()
+    Processor.pc.addr = (retHi * 256) + retLo
+    val popByte = Processor.sp.popByte() & 0xEB // remove unused and interrupt flags
+    Processor.sr.value = popByte
+
+  def executeRTS(): Unit =
+     val retHi = Processor.sp.popByte()
+     val retLo = Processor.sp.popByte()
+     Processor.pc.addr = (retHi * 256) + retLo
+
 
   def executeSTX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)

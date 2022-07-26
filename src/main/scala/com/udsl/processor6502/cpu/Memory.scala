@@ -32,7 +32,11 @@ class Memory extends StrictLogging:
 
   // Memory words are in hi byte low byte order (reverse of addresses)
   def getMemoryWrd(location: Int): Int = {
-    (Memory.getMemoryByte(location) * 256) + Memory.getMemoryByte(location + 1)
+    Memory.getMemoryWord(location)
+  }
+
+  def setMemoryWrd(location: Int, value: Int): Unit = {
+    Memory.setMemoryWord(location, value)
   }
 
 
@@ -87,15 +91,31 @@ object Memory extends StrictLogging:
     val hiByte = getMemoryByte(location + 1)
     loByte + (hiByte * 256)
 
+  /**
+   * Address is low byte hi byte order (little endian)
+   */
   private def setMemoryToAddress(location: Int, address: Int): Unit =
     logger.info(s"Updating contents of $location to address value $address")
-    setMemoryByte(location, address % 256 )
-    setMemoryByte(location + 1, (address / 256) % 256 )
+    setMemoryByte(location, address & 0xFF )
+    setMemoryByte(location + 1, (address >> 8) & 0xFF)
     location match
       case NMI_VECTOR => notifyVectorChangeListeners("NMI", address)
       case INTERRUPT_VECTOR => notifyVectorChangeListeners("IRQ", address)
       case RESET_VECTOR => notifyVectorChangeListeners("RST", address)
       case _ =>
+
+  /**
+   * word is hi byte low byte order (reverse of address)
+  */
+  private def setMemoryWord(location: Int, word: Int): Unit =
+    logger.info(s"Updating contents of $location to word value $word")
+    setMemoryByte(location, (word  >> 8) & 0xFF)
+    setMemoryByte(location + 1, word & 0xFF )
+
+  private def getMemoryWord(location: Int): Int =
+    logger.info(s"Retrieving contents of $location")
+    (getMemoryByte(location) * 256) + getMemoryByte(location + 1)
+
 
   def getMemory: ObservableBuffer[MemoryCell] =
     memory

@@ -135,6 +135,7 @@ trait ResultData( val ac: Int, val ix: Int, val iy: Int, val sr: Int, val pc: In
 
 case class ZeroResData() extends ResultData(0, 0, 0, 0, 0)
 case class ZeroResDataWithCarry() extends ResultData(0, 0, 0, Carry.mask, 0)
+case class ZeroResDataWithNegativeCarry() extends ResultData(0, 0, 0, Negative.mask | Carry.mask, 0)
 case class AccResData(override val ac: Int) extends ResultData(ac, 0, 0, 0, 0)
 case class AccSrResData(override val ac: Int, override val sr: Int) extends ResultData(ac, 0, 0, sr, 0)
 case class AccIySrResData(override val ac: Int, override val iy: Int, override val sr: Int) extends ResultData(ac, 0, iy, sr, 0)
@@ -594,14 +595,35 @@ object ExecutionSpecData:
 
   // ROR rotate right
   val dataRorInstructionTest = List(
+    ("ROR 1.0 Accumulator", InsSourceData(0x6A, InsData(0xF4, AccValue(0x20))), AccResData(0x10), memVoidResult()),
+    ("ROR 1.1 Accumulator", InsSourceData(0x6A, InsData(0xF4, AccValue(0x01))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
+    ("ROR 1.2 Accumulator", InsSourceData(0x6A, InsData(0x7F, AccValueWithCarry(0x01))), AccSrResData(0x80, Negative.mask | Carry.mask), memVoidResult()),
+    ("ROR 2.0 zeroPage 0x66 -> 0x3F", InsSourceData(0x66, InsData(0x66, ZeroValues())), ZeroResDataWithCarry(), memByteResult(0x66, 0x1F)),
+    // Using save fixed data so need to restore after previous test
+    ("ROR 2.1 zeroPage 0x66 -> 0x3F with carry", InsSourceData(0x66, InsData(0x66, ZeroValuesWithCarry(), () => {memoryAccess.setMemoryByte(0x66, 0x3F)})), ZeroResDataWithNegativeCarry(), memByteResult(0x66, 0x9F)),
+    ("ROR 3.0 zeroPageX 100, IX = 11 contains 2", InsSourceData(0x76, InsData(0x64, IxValue(0x0B))), IxResData(0x0B), memByteResult(0x6F, 0x01)),
+    // also using same data as above test, setting back to 2 in initialisation
+    ("ROR 3.1 zeroPageX 100, IX = 11 contains 2 with carry", InsSourceData(0x76, InsData(0x64, IxValueWithCarry(0x0B), () => {memoryAccess.setMemoryByte(0x6F, 2)})), IxSrResData(0x0B, Negative.mask), memByteResult(0x6F, 0x81)),
+    ("ROR 4.0 Absolute absTestLocation2 contains 0xF0", InsSourceData(0x6E, InsData(absTestLocation2, ZeroValues())), ZeroResData(), memByteResult(absTestLocation2, 0x78)),
+    ("ROR 5.0 absoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x7E, InsData(absTestLocation2, AccIxValue(0,1))), IxSrResData(1, Carry.mask), memByteResult(absTestLocation2 + 1, 0x1F))
   )
 
-  // RTI return from interrupt
+  // RTI return from interrupt. On interrupt the status is pushed followed by the return address
+
   val dataRtiInstructionTest = List(
+    ("RTI 1.0 Implied return from interrupt setup stack for return to 2500", InsSourceData(0x40, InsData(0x99, AccValueWithCarry(0x11), () => {
+      Processor.sp.value = 0xFC // move the pointer three bytes
+      memoryAccess.setMemoryByte(0x1FF, Interrupt.mask | Negative.mask | Unused.mask ) // write stack value none break
+      memoryAccess.setMemoryWrd(0x1FD, 2500)
+    })), AccSrPcSpResData(0x11, Negative.mask, 2500, validateStackClear), memVoidResult()),
   )
 
   // RTS return from subroutine
   val dataRtsInstructionTest = List(
+    ("RTs 1.0 Implied return from SUBROUTINE setup stack for return to 3600", InsSourceData(0x60, InsData(0x99, AccValueWithCarry(0x11), () => {
+      Processor.sp.value = 0xFD // move the pointer three bytes
+      memoryAccess.setMemoryWrd(0x1FE, 3600)
+    })), AccSrPcSpResData(0x11, Carry.mask, 3600, validateStackClear), memVoidResult()),
   )
 
   // SBC subtract with carry
