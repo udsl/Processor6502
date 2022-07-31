@@ -129,9 +129,18 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       case "RTI" => executeRTI()
       case "RTS" => executeRTS()
       case "SBC" => executeSBC()
-
+      case "SEC" => executeSEC()
+      case "SED" => executeSED()
+      case "SEI" => executeSEI()
+      case "STA" => executeSTA()
       case "STX" => executeSTX()
+      case "STY" => executeSTY()
+      case "TAX" => executeTAX()
+      case "TAY" => executeTAY()
+      case "TSX" => executeTSX()
+      case "TXA" => executeTXA()
       case "TXS" => executeTXS()
+      case "TYA" => executeTYA()
       case _ => notImplemented()
     }
     if Platform.isFxApplicationThread then
@@ -588,16 +597,61 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     Processor.ac.value = writeBack & 0xFF
     Processor.pc.inc(opcode.addressMode.bytes)
 
+  def executeSEC(): Unit =
+    Processor.sr.setFlag(StatusFlag.Carry)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeSED(): Unit =
+    Processor.sr.setFlag(StatusFlag.Decimal)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeSEI(): Unit =
+    Processor.sr.setFlag(StatusFlag.Interrupt)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeSTA(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    memoryAccess.setMemoryByte(effectiveAddr.address, Processor.ac.value)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
   def executeSTX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     memoryAccess.setMemoryByte(effectiveAddr.address, Processor.ix.ebr)
     Processor.pc.inc(opcode.addressMode.bytes)
 
+  def executeSTY(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    memoryAccess.setMemoryByte(effectiveAddr.address, Processor.iy.ebr)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeTAX(): Unit =
+    Processor.ix.ebr = Processor.ac.value
+    updateZeroNegativeFlags(Processor.ix.ebr)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeTAY(): Unit =
+    Processor.iy.ebr = Processor.ac.value
+    updateZeroNegativeFlags(Processor.iy.ebr)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeTSX(): Unit =
+    Processor.ix.ebr = Processor.sp.ebr
+    updateZeroNegativeFlags(Processor.ix.ebr)
+    Processor.pc.inc(opcode.addressMode.bytes)
+
+  def executeTXA(): Unit =
+    Processor.ac.ebr = Processor.ix.ebr
+    updateZeroNegativeFlags(Processor.ac.ebr)
+    Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeTXS(): Unit =
     Processor.sp.ebr = Processor.ix.ebr
     Processor.pc.inc(opcode.addressMode.bytes)
 
+  def executeTYA(): Unit =
+    Processor.ac.ebr = Processor.iy.ebr
+    updateZeroNegativeFlags(Processor.ac.ebr)
+    Processor.pc.inc(opcode.addressMode.bytes)
 
 
 object ExecutionUnit:

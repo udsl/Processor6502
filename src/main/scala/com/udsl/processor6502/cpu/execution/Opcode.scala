@@ -100,7 +100,7 @@ package com.udsl.processor6502.cpu.execution:
         case 3 => STY(Absolute)
         case 4 => BCC(Relative)
         case 5 => STY(ZeroPageX)
-        case 6 => TAY(Implied)
+        case 6 => TYA(Implied)
         case _ => Illegal(NotApplicable)
 
     def c0a5(bbb: Int): OpcodeValue =
@@ -464,7 +464,7 @@ package com.udsl.processor6502.cpu.execution:
   /**
    * bits 7 and 6 of operand are transfered to bit 7 and 6 of SR (N,V);
    * the zero-flag is set to the result of operand AND accumulator.
-   * @param addressMode
+   * @param addressMode the mode of addressing a trait give the size of the instruction in bytes.
    */
   case class BIT(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "BIT"
@@ -518,7 +518,7 @@ package com.udsl.processor6502.cpu.execution:
   /**
    * The status register is pulled with the break flag
    * and bit 5 ignored. Then PC is pulled from the stack.
-   * @param addressMode
+   * @param addressMode the mode of addressing a trait give the size of the instruction in bytes.
    */
   case class RTI(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "RTI"
@@ -566,6 +566,11 @@ package com.udsl.processor6502.cpu.execution:
 
   case class TAY(addressMode: AddressingMode) extends OpcodeValue {
     override def mnemonic: String = "TAY"
+    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
+  }
+
+  case class TYA(addressMode: AddressingMode) extends OpcodeValue {
+    override def mnemonic: String = "TYA"
     override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
   }
 

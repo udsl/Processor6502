@@ -10,7 +10,7 @@ import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusFlag, StatusRegister}
 import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest, dataLdaInstructionTest, dataLdxInstructionTest, dataLdyInstructionTest, dataLsrInstructionTest, dataOraInstructionTest, dataPhaInstructionTest, dataPhpInstructionTest, dataPlaInstructionTest, dataPlpInstructionTest, dataRolInstructionTest, dataRorInstructionTest, dataRtiInstructionTest, dataRtsInstructionTest, dataSbcInstructionTest}
+import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest, dataLdaInstructionTest, dataLdxInstructionTest, dataLdyInstructionTest, dataLsrInstructionTest, dataOraInstructionTest, dataPhaInstructionTest, dataPhpInstructionTest, dataPlaInstructionTest, dataPlpInstructionTest, dataRolInstructionTest, dataRorInstructionTest, dataRtiInstructionTest, dataRtsInstructionTest, dataSbcInstructionTest, dataSecInstructionTest, dataSedInstructionTest, dataSeiInstructionTest, dataStaInstructionTest, dataStxInstructionTest, dataStyInstructionTest, dataTaxInstructionTest, dataTayInstructionTest, dataTsxInstructionTest, dataTxaInstructionTest, dataTxsInstructionTest, dataTyaInstructionTest}
 import com.udsl.processor6502.test.InsData.{checkValue, logger}
 import com.udsl.processor6502.test.Validation.{checkAcc, checkIx, checkIy, checkPc, checkSr}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -188,6 +188,53 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
     runTestWithData(dataSbcInstructionTest)
   }
 
+  "Given a valid SEC instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataSecInstructionTest)
+  }
+
+  "Given a valid SED instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataSedInstructionTest)
+  }
+
+  "Given a valid SEI instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataSeiInstructionTest)
+  }
+
+  "Given a valid STA instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataStaInstructionTest)
+  }
+
+  "Given a valid STX instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataStxInstructionTest)
+  }
+
+  "Given a valid STY instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataStyInstructionTest)
+  }
+
+  "Given a valid TAX instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataTaxInstructionTest)
+  }
+
+  "Given a valid TAY instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataTayInstructionTest)
+  }
+
+  "Given a valid TSX instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataTsxInstructionTest)
+  }
+
+  "Given a valid TXA instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataTxaInstructionTest)
+  }
+
+  "Given a valid TXS instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataTxsInstructionTest)
+  }
+
+  "Given a valid TYA instruction token" should "should execute to the correct opcode and value" in {
+    runTestWithData(dataTyaInstructionTest)
+  }
 
   def runTestWithData(data: List[(String, InsSourceData, ResultData, ResultMemData)]): Unit =
     val executionUnit = ExecutionUnit.forTest

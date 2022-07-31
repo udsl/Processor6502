@@ -17,7 +17,13 @@ import org.scalatest.matchers.should
 trait RegValues(val acc: Int, val ix: Int, val iy:Int, val withCarry:Boolean = false, val withZero:Boolean = false, val withNegative:Boolean = false, val withOverflow:Boolean = false, val withDecimal:Boolean = false, val withInterrupt:Boolean = false  )
 
 case class ZeroValues() extends RegValues( 0, 0, 0,false, false, false, false, false)
-case class ZeroValuesWithCarry() extends RegValues( 0, 0, 0,true, false, false, false, false)
+case class ZeroValuesWithCarry() extends RegValues( 0, 0, 0,true)
+case class ZeroValuesWithZero() extends RegValues( 0, 0, 0,false, true)
+case class ZeroValuesWithNegative() extends RegValues( 0, 0, 0,false, false, true)
+case class ZeroValuesWithOverflow() extends RegValues( 0, 0, 0,false, false, false, true)
+case class ZeroValuesWithDecimal() extends RegValues( 0, 0, 0,false, false, false, false, true)
+case class ZeroValuesWithInterrupt() extends RegValues( 0, 0, 0,false, false, false, false, false, true)
+
 case class SrValue( override val withCarry:Boolean = false, override val withZero:Boolean = false, override val withNegative:Boolean = false, override val withOverflow:Boolean = false, override val withDecimal:Boolean = false) extends RegValues( 0, 0, 0, withCarry, withZero, withNegative, withOverflow, withDecimal)
 object SrValue:
   def apply(srValue: Int) : SrValue =
@@ -37,6 +43,7 @@ case class IyValue( override val iy: Int) extends RegValues( 0, 0, iy)
 case class IyValueWithCarry( override val iy: Int) extends RegValues( 0, 0, iy, true)
 case class IxIyValue( override val ix: Int, override val iy: Int) extends RegValues( 0, ix, iy)
 case class AccIxValueWithCarry( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0, true)
+case class AccIxValueWithNegative( override val acc: Int, override val ix: Int) extends RegValues( acc, ix, 0, false, false, true)
 case class AccIyValue( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy)
 case class AccIyValueWithCarry( override val acc: Int, override val iy: Int) extends RegValues( acc, 0, iy, true)
 case class AccIxIyValue( override val acc: Int, override val ix: Int, override val iy: Int) extends RegValues( acc, ix, iy)
@@ -98,7 +105,7 @@ object Validation extends StrictLogging:
     s"0x${v.toHexString.toUpperCase()}"
 
   def basicValidation(): Unit =
-    logger.info("not doing any validation")
+    logger.info("Validating only that stack pointer has not changed")
     assert(Processor.sp.value == 0xFF, s"Stack pointer has changed = ${asHexStr(Processor.sp.value)}")
 
   def checkPc(shouldBe: Int): Unit =
@@ -145,6 +152,8 @@ case class AccIxResData(override val ac: Int, override val ix: Int) extends Resu
 case class AccIyResData(override val ac: Int, override val iy: Int) extends ResultData(ac, 0, iy, 0, 0)
 case class IxSrResData(override val ix: Int, override val sr: Int) extends ResultData(0, ix, 0, sr, 0)
 case class IxResData(override val ix: Int) extends ResultData(0, ix, 0, 0, 0)
+case class IxSpResData(override val ix: Int, override val spValidation: () => Unit) extends ResultData(0, ix, 0, 0, 0, spValidation)
+case class IxSrSpResData(override val ix: Int, override val sr: Int, override val spValidation: () => Unit) extends ResultData(0, ix, 0, sr, 0, spValidation)
 case class IyResData(override val iy: Int) extends ResultData(0, 0, iy, 0, 0)
 case class IxIyResData(override val ix: Int, override val iy: Int) extends ResultData(0, ix, iy, 0, 0)
 case class SrResData(override val sr: Int) extends ResultData(0, 0, 0, sr, 0)
@@ -647,49 +656,97 @@ object ExecutionSpecData:
 
   // SEC set carry
   val dataSecInstructionTest = List(
+    ("SEC 1.0 Implied set carry", InsSourceData(0x38, InsData(10, ZeroValues())), SrResData(Carry.mask), memVoidResult()),
+    ("SEC 1.1 Implied set carry", InsSourceData(0x38, InsData(10, ZeroValuesWithCarry())), SrResData(Carry.mask), memVoidResult()),
   )
 
   // SED set decimal
   val dataSedInstructionTest = List(
+    ("SED 1.0 Implied set decimal", InsSourceData(0xF8, InsData(10, ZeroValues())), SrResData(Decimal.mask), memVoidResult()),
+    ("SED 1.1 Implied set decimal", InsSourceData(0xF8, InsData(10, ZeroValuesWithDecimal())), SrResData(Decimal.mask), memVoidResult()),
   )
 
   // SEI set interrupt disable
   val dataSeiInstructionTest = List(
+    ("SEI 1.0 Implied set interrupt", InsSourceData(0x78, InsData(10, ZeroValues())), SrResData(Interrupt.mask), memVoidResult()),
+    ("SEI 1.1 Implied set interrupt", InsSourceData(0x78, InsData(10, ZeroValuesWithInterrupt())), SrResData(Interrupt.mask), memVoidResult()),
   )
 
-  // STA store Accumulator
+  // STA store Accumulator no status registers affected
   val dataStaInstructionTest = List(
+    ("STA 1.0 ZeroPage 102 (0x66) -> ", InsSourceData(0x85, InsData(0x66, AccValueWithCarry(0x20))), AccSrResData(0x20, Carry.mask), memByteResult(0x66, 0x20)),
+    ("STA 2.0 ZeroPage,x 100, x -> 100 (0x66) -> ", InsSourceData(0x95, InsData(100, AccIxValue(0xF0, 2))), AccIxResData(0xF0, 2), memByteResult(0x66, 0xF0)),
+    ("STA 3.0 Absolute absTestLocation -> ", InsSourceData(0x8D, InsData(absTestLocation, AccValue(0x64))), AccResData(0x64), memByteResult(absTestLocation, 0x64)),
+    ("STA 4.0 Absolute,x absTestLocation + 6 -> ", InsSourceData(0x9D, InsData(absTestLocation, AccIxValueWithNegative(0xF0, 6))), AccIxSrResData(0xF0, 6, Negative.mask), memByteResult(absTestLocation + 6, 0xF0)),
+    ("STA 5.0 Absolute,y absTestLocation + 7 ->", InsSourceData(0x99, InsData(absTestLocation, AccIyValueWithCarry(0x64, 7))), AccIySrResData(0x64, 7, Carry.mask), memByteResult(absTestLocation + 7, 0x64)),
+    // ZeroPage 100 set to 0x638 by data initialisation X is added to the immediate value and that is used as the ointer
+    ("STA 6.0 (Indirect,x) zeroPageData (100) is pointer 0x638, X is index into ZP", InsSourceData(0x81, InsData(zeroPageData - 7, AccIxValue(0x73, 7))), AccIxResData(0x73, 7), memByteResult(0x638, 0x73)),
+    ("STA 7.0 (Indirect),y (0x638),1 -> ", InsSourceData(0x91, InsData(100, AccIyValue(99, 1))), AccIyResData(99, 1), memByteResult(0x639, 99)),
   )
 
   // STX store X
   val dataStxInstructionTest = List(
+    ("STX 1.0 ZeroPage 102 (0x66) -> ", InsSourceData(0x86, InsData(0x66, IxValueWithCarry(0x20))), IxSrResData(0x20, Carry.mask), memByteResult(0x66, 0x20)),
+    ("STX 2.0 ZeroPage,Y 100, Y -> 100 (0x66) -> ", InsSourceData(0x96, InsData(100, IxIyValue(0xF0, 2))), IxIyResData(0xF0, 2), memByteResult(0x66, 0xF0)),
+    ("STX 3.0 Absolute absTestLocation -> ", InsSourceData(0x8E, InsData(absTestLocation, IxValue(0x64))), IxResData(0x64), memByteResult(absTestLocation, 0x64)),
   )
 
   // STY store Y
   val dataStyInstructionTest = List(
+    ("STY 1.0 ZeroPage 102 (0x66) -> ", InsSourceData(0x84, InsData(0x66, IyValueWithCarry(0x20))), IySrResData(0x20, Carry.mask), memByteResult(0x66, 0x20)),
+    ("STY 2.0 ZeroPage,X 100, X -> 100 (0x66) -> ", InsSourceData(0x94, InsData(100, IxIyValue(2, 0xF0))), IxIyResData(2, 0xF0), memByteResult(0x66, 0xF0)),
+    ("STY 3.0 Absolute absTestLocation -> ", InsSourceData(0x8C, InsData(absTestLocation, IyValue(0x55))), IyResData(0x55), memByteResult(absTestLocation, 0x55)),
   )
 
   // TAX transfer Accumulator to X
   val dataTaxInstructionTest = List(
+    ("TAX 1.0 copy A to Ix setting Negative and Zero flags", InsSourceData(0xAA, InsData(10, AccValue(0x20))),AccIxResData(0x20, 0x20), memVoidResult()),
+    ("TAX 1.1 copy A to Ix setting Negative and Zero flags", InsSourceData(0xAA, InsData(10, AccValue(0xF0))),AccIxSrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
+    ("TAX 1.2 copy A to Ix setting Negative and Zero flags", InsSourceData(0xAA, InsData(10, AccValue(0x00))),AccIxSrResData(0x00, 0x00, Zero.mask), memVoidResult()),
   )
 
   // TAY transfer Accumulator to Y
   val dataTayInstructionTest = List(
+    ("TAY 1.0 copy A to Iy setting Negative and Zero flags", InsSourceData(0xA8, InsData(10, AccValue(0x20))),AccIyResData(0x20, 0x20), memVoidResult()),
+    ("TAY 1.1 copy A to Iy setting Negative and Zero flags", InsSourceData(0xA8, InsData(10, AccValue(0xF0))),AccIySrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
+    ("TAY 1.2 copy A to Iy setting Negative and Zero flags", InsSourceData(0xA8, InsData(10, AccValue(0x00))),AccIySrResData(0x00, 0x00, Zero.mask), memVoidResult()),
   )
 
-  // TSX transfer stack pointer to X
+  // TSX transfer stack pointer to X - verifies X has been set and SP not changed
   val dataTsxInstructionTest = List(
+    ("TSX 1.0 copy Sp to Ix setting Negative and Zero flags", InsSourceData(0xBA, InsData(10, ZeroValues())),IxSrResData(0xFF, Negative.mask), memVoidResult()),
+
+    ("TSX 1.1 copy Sp to Ix setting Negative and Zero flags", InsSourceData(0xBA, InsData(10, ZeroValues(), () => {
+      Processor.sp.value = 0x20
+    })),IxSpResData(0x20, () => {
+      assert(Processor.sp.value == 0x20, s"Stack pointer not updated should be 0x20! is ${asHexStr(Processor.sp.value)}")
+    }), memVoidResult()),
+
+    ("TSX 1.2 copy Sp to Ix setting Negative and Zero flags", InsSourceData(0xBA, InsData(10, ZeroValues(), () => {
+      Processor.sp.value = 0x00
+    })),IxSrSpResData(0x00, Zero.mask, () => {
+      assert(Processor.sp.value == 0x00, s"Stack pointer not zero!")
+    }), memVoidResult()),
   )
 
   // TXA transfer X to Accumulator
   val dataTxaInstructionTest = List(
+    ("TXA 1.0 copy Ix to A setting Negative and Zero flags", InsSourceData(0x8A, InsData(10, IxValue(0x20))),AccIxResData(0x20, 0x20), memVoidResult()),
+    ("TXA 1.1 copy Ix to A setting Negative and Zero flags", InsSourceData(0x8A, InsData(10, IxValue(0xF0))),AccIxSrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
+    ("TXA 1.2 copy Ix to A setting Negative and Zero flags", InsSourceData(0x8A, InsData(10, IxValue(0x00))),AccIxSrResData(0x00, 0x00, Zero.mask), memVoidResult()),
   )
 
-  // TXS transfer X to stack pointer
+  // TXS transfer X to stack pointer no flags updated
   val dataTxsInstructionTest = List(
+    ("TXS 1.0 copy Ix to Sp", InsSourceData(0x9A, InsData(10, IxValue(0x20))),IxSpResData(0x20, () => {
+      assert(Processor.sp.value == 0x20, s"Stack pointer not updated should be 0x20! is ${asHexStr(Processor.sp.value)}")
+    }), memVoidResult()),
   )
 
   // TYA transfer Y to Accumulator
   val dataTyaInstructionTest = List(
+    ("TYA 1.0 copy Iy to A setting Negative and Zero flags", InsSourceData(0x98, InsData(10, IyValue(0x20))),AccIyResData(0x20, 0x20), memVoidResult()),
+    ("TYA 1.1 copy Iy to A setting Negative and Zero flags", InsSourceData(0x98, InsData(10, IyValue(0xF0))),AccIySrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
+    ("TYA 1.2 copy Iy to A setting Negative and Zero flags", InsSourceData(0x98, InsData(10, IyValue(0x00))),AccIySrResData(0x00, 0x00, Zero.mask), memVoidResult()),
   )
 
