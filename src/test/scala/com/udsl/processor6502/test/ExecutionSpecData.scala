@@ -628,6 +628,21 @@ object ExecutionSpecData:
 
   // SBC subtract with carry
   val dataSbcInstructionTest = List(
+    ("SBC 1.0 Immediate acc = 0x64 subtract 0x0A", InsSourceData(0xE9, InsData(10, AccValue(100))), AccResData(89), memVoidResult()),
+    ("SBC 1.1 Immediate acc = 0x64 subtract 126", InsSourceData(0xE9, InsData(126, AccValueWithCarry(100))), AccSrResData(-26 & 0xFF, Negative.mask | Carry.mask | Overflow.mask), memVoidResult()),
+    ("SBC 1.2 Immediate acc = 0x64 subtract 0x0A carry set", InsSourceData(0xE9, InsData(10, AccValueWithCarry(100))), AccResData(90), memVoidResult()),
+    ("SBC 2.0 ZeroPage 101 -> subtract 0x06 carry set", InsSourceData(0xE5, InsData(101, AccValueWithCarry(100))), AccResData(94), memVoidResult()),
+    ("SBC 3.0 ZeroPage,x 100, x -> 101 -> subtract 0x06 no carry (effective -7)", InsSourceData(0xF5, InsData(100, AccIxValue(100, 1))), AccIxResData(93, 1), memVoidResult()),
+    ("SBC 4.0 Absolute absTestLocation -> 0x33", InsSourceData(0xED, InsData(absTestLocation, AccValue(0x64))), AccResData(0x30), memVoidResult()),
+    ("SBC 5.0 Absolute,x absTestLocation + 6 -> 0x40", InsSourceData(0xFD, InsData(absTestLocation, AccIxValue(0x64, 6))), AccIxResData(0x23, 6), memVoidResult()),
+    ("SBC 6.0 Absolute,y absTestLocation + 6", InsSourceData(0xF9, InsData(absTestLocation, AccIyValueWithCarry(0x64, 6))), AccIyResData(0x24, 6), memVoidResult()),
+    // ZeroPage 100 set to 0x638 by data initialisation
+    ("SBC 7.0 (Indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0xE1, InsData(zeroPageData, AccIxValue(0x64, 7))), AccIxSrResData(0x73, 7, Carry.mask), memVoidResult()),
+    ("SBC 7.1 (Indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0xE1, InsData(zeroPageData, AccIxValueWithCarry(0x64, 7))), AccIxSrResData(0x74, 7, Carry.mask), memVoidResult()),
+    ("SBC 7.2 (Indirect,x) zeroPageData + 7 -> 0xF0", InsSourceData(0xE1, InsData(zeroPageData, AccIxValue(0x04, 7))), AccIxSrResData(0x13, 7, Carry.mask), memVoidResult()),
+    ("SBC 8.0 (Indirect),y (100),1 -> 0x02", InsSourceData(0xF1, InsData(100, AccIyValue(99, 1))), AccIyResData(96, 1), memVoidResult()),
+    ("SBC 8.1 (Indirect),y (100),1 -> 0x02", InsSourceData(0xF1, InsData(100, AccIyValueWithCarry(99, 1))), AccIyResData(97, 1), memVoidResult()),
+    ("SBC 8.2 (Indirect),y (100),1 -> 0x02", InsSourceData(0xF1, InsData(100, AccIyValueWithCarry(1, 1))), AccIySrResData(0xFF, 1, Negative.mask | Overflow.mask | Carry.mask), memVoidResult())
   )
 
   // SEC set carry

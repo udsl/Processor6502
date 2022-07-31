@@ -128,6 +128,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       case "ROR" => executeROR()
       case "RTI" => executeRTI()
       case "RTS" => executeRTS()
+      case "SBC" => executeSBC()
 
       case "STX" => executeSTX()
       case "TXS" => executeTXS()
@@ -159,7 +160,15 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
 
   def updateZeroNegativeCaryFlags(from: Int): Unit =
     updateZeroNegativeFlags(from)
-    Processor.sr.updateFlag(StatusFlag.Carry, from > 0xFF)
+    // for addition the carry happens when from (the result) > 255
+    // for subtraction is when result < 0 - Scala ints are signed so we can get real negative numbers
+    Processor.sr.updateFlag(StatusFlag.Carry, (from > 0xFF) | (from < 0))
+
+  def is8BitPositive(value: Int): Boolean =
+    !is8BitNegative(value)
+
+  def is8BitNegative(value: Int): Boolean =
+    (value & 0x80) > 0
 
   def executeADC(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -170,9 +179,16 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     val accVal = Processor.ac.value
     val carry = if Processor.sr.testFlag(Carry) then 1 else 0
     val writeBack = accVal + value + carry
-    // is accumulator and value +ve (Unsigned value > 127) but result > 127 then overflow because result
-    // should be positive but value as singed is negative there for have overflowed positive 8 bit value
-    val overflow = accVal < 127 && value < 127 && writeBack > 127
+    /*
+      Overflow when either
+        1. Two positive numbers are added, and the result is a negative number.
+        2. Two negative numbers are added, and the result is a positive number.
+      (1) and (2) can be simplified into the following condition:
+
+      Two numbers that have the same sign are added, and the result has a different sign.
+    */
+    val overflow = (is8BitPositive(accVal) && is8BitPositive(value) && is8BitNegative(writeBack)) |
+                   (is8BitNegative(accVal) && is8BitNegative(value) && is8BitPositive(writeBack))
     Processor.sr.updateFlag(StatusFlag.Overflow, overflow)
     updateZeroNegativeCaryFlags(writeBack)
 
@@ -547,10 +563,30 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     Processor.sr.value = popByte
 
   def executeRTS(): Unit =
-     val retHi = Processor.sp.popByte()
-     val retLo = Processor.sp.popByte()
-     Processor.pc.addr = (retHi * 256) + retLo
+    val retHi = Processor.sp.popByte()
+    val retLo = Processor.sp.popByte()
+    Processor.pc.addr = (retHi * 256) + retLo
 
+  def executeSBC(): Unit =
+    val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
+    val value = if effectiveAddr.hasValue then
+       memoryAccess.getMemoryByte(effectiveAddr.address)
+    else // has no effective address so it must be immediate
+       operand._1
+    val accVal = Processor.ac.value
+    val borrow = if Processor.sr.testFlag(Carry) then 0 else 1
+    val writeBack = accVal - value - borrow
+    val overflow = (is8BitPositive(accVal) && is8BitPositive(value) && is8BitNegative(writeBack)) |
+        (is8BitNegative(accVal) && is8BitNegative(value) && is8BitPositive(writeBack))
+    Processor.sr.updateFlag(StatusFlag.Overflow, overflow)
+    updateZeroNegativeCaryFlags(writeBack)
+
+    // As the write back could be greater than 0xFF for example 0xFF (-1) plus 0x01 (1) = 0x100
+    // We have an overflow and result is positive (no -0) but not an overflow
+    // now 0xFC (-4) add 0xFF (-1) we would expect 0xFB (-5) we get 0x1FB which is a negative result no overflow
+    // We have to restrict result to 8 bits and with 0xFF
+    Processor.ac.value = writeBack & 0xFF
+    Processor.pc.inc(opcode.addressMode.bytes)
 
   def executeSTX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
