@@ -4,47 +4,41 @@ package com.udsl.processor6502.cpu.execution:
   import com.udsl.processor6502.cpu.StatusFlag
   import com.udsl.processor6502.cpu.StatusFlag.*
 
-  class Opcode( private val code: OpcodeValue) extends StrictLogging{
+  class Opcode( private val code: OpcodeValue) extends StrictLogging:
     def v: OpcodeValue = { code }
     override def toString: String = code.toString
 
     override def equals(obj: Any): Boolean =
       val x = obj.asInstanceOf[OpcodeValue]
       x.mnemonic == code.mnemonic && x.addressMode == code.addressMode
-  }
+
   
-  object Opcode extends StrictLogging {
+  object Opcode extends StrictLogging :
     val aaaMask: Int = Integer.parseInt("11100000", 2)
     val bbbMask: Int = Integer.parseInt("00011100", 2)
     val ccMask: Int = Integer.parseInt("00000011", 2)
     val groupMask: Int = Integer.parseInt("00010000", 2)
       
-    def disassemble(opcode: Int): Opcode = {
-      val code: OpcodeValue = {
-        cc(opcode) match {
+    def disassemble(opcode: Int): Opcode =
+      val code: OpcodeValue =
+        cc(opcode) match
           case 0 => c0(aaa(opcode), bbb(opcode))
           case 1 => c1(aaa(opcode), bbb(opcode))
           case 2 => c2(aaa(opcode), bbb(opcode))
           case _ => illegalOpcode
-        }
-      }
       new Opcode(code)
-    }
     
-    def cc(i: Int): Int = {
+    def cc(i: Int): Int =
       i & ccMask
-    }
 
-    def bbb(i: Int): Int = {
+    def bbb(i: Int): Int =
       (i & bbbMask) >> 2
-    }
 
-    def aaa(i: Int): Int = {
+    def aaa(i: Int): Int =
       (i & aaaMask) >> 5
-    }
 
-    def c0(aaa: Int, bbb: Int): OpcodeValue = {
-      aaa match {
+    def c0(aaa: Int, bbb: Int): OpcodeValue =
+      aaa match
         case 0 => c0a0(bbb)
         case 1 => c0a1(bbb)
         case 2 => c0a2(bbb)
@@ -54,8 +48,6 @@ package com.udsl.processor6502.cpu.execution:
         case 6 => c0a6(bbb)
         case 7 => c0a7(bbb)
         case _ => Illegal(NotApplicable)
-      }
-    }
 
     def c0a0(bbb: Int): OpcodeValue =
       bbb match
@@ -135,9 +127,8 @@ package com.udsl.processor6502.cpu.execution:
         case 6 => SED(Implied)
         case _ => Illegal(NotApplicable)
 
-
-    def c1(aaa: Int, bbb: Int): OpcodeValue = {
-      aaa match {
+    def c1(aaa: Int, bbb: Int): OpcodeValue =
+      aaa match
         case 0 => c1a0(bbb)
         case 1 => c1a1(bbb)
         case 2 => c1a2(bbb)
@@ -147,8 +138,7 @@ package com.udsl.processor6502.cpu.execution:
         case 6 => c1a6(bbb)
         case 7 => c1a7(bbb)
         case _ => Illegal(NotApplicable)
-      }
-    }
+
 
     def c1a0(bbb: Int): OpcodeValue =
       bbb match
@@ -246,8 +236,8 @@ package com.udsl.processor6502.cpu.execution:
         case _ => Illegal(NotApplicable)
 
 
-    def c2(aaa: Int, bbb: Int): OpcodeValue = {
-      aaa match {
+    def c2(aaa: Int, bbb: Int): OpcodeValue =
+      aaa match
         case 0 => c2a0(bbb)
         case 1 => c2a1(bbb)
         case 2 => c2a2(bbb)
@@ -257,8 +247,7 @@ package com.udsl.processor6502.cpu.execution:
         case 6 => c2a6(bbb)
         case 7 => c2a7(bbb)
         case _ => Illegal(NotApplicable)
-      }
-    }
+
 
     def c2a0(bbb: Int): OpcodeValue =
       bbb match
@@ -334,306 +323,200 @@ package com.udsl.processor6502.cpu.execution:
         case 7 => INC(AbsoluteX)
         case _ => Illegal(NotApplicable)
 
-    def t2(): OpcodeValue = {
+    def t2(): OpcodeValue =
       NULL(Invalid)
-    }
-  
-    def illegalOpcode: OpcodeValue ={
+
+    def illegalOpcode: OpcodeValue =
       logger.info( "Found opcode with illegal bits 1 and 2")
       Illegal(NotApplicable)
-    }
-  }
+
   
   sealed trait OpcodeValue:
     val addressMode: AddressingMode
     def mnemonic: String  = ""
-    def flagsEffected: Array[StatusFlag] = Array[StatusFlag]()
     override def toString: String = s"$mnemonic - $addressMode"
-  
-  case class NULL(addressMode: AddressingMode) extends OpcodeValue {
+
+  case class NULL(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "NULL"
-  }
   
-  case class Illegal(addressMode: AddressingMode) extends OpcodeValue {
+  case class Illegal(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "Undefined instruction"
-  }
   
-  case class ORA(addressMode: AddressingMode) extends OpcodeValue {
+  case class ORA(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "ORA"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Zero)
-  }
 
-  case class JSR(addressMode: AddressingMode) extends OpcodeValue {
+  case class JSR(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "JSR"
-  }
 
-  case class PLP(addressMode: AddressingMode) extends OpcodeValue {
+  case class PLP(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "PLP"
-  }
 
-  case class BMI(addressMode: AddressingMode) extends OpcodeValue {
+  case class BMI(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BMI"
-  }
 
-  case class SEC(addressMode: AddressingMode) extends OpcodeValue {
+  case class SEC(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "SEC"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Carry)
-  }
 
-  case class AND(addressMode: AddressingMode) extends OpcodeValue {
+  case class AND(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "AND"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Zero)
-  }
   
-  case class EOR(addressMode: AddressingMode) extends OpcodeValue {
+  case class EOR(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "EOR"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Zero)
-  }
   
-  case class ADC(addressMode: AddressingMode) extends OpcodeValue {
+  case class ADC(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "ADC"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
-      StatusFlag.Zero, StatusFlag.Carry, StatusFlag.Overflow)
-  }
   
-  case class STA(addressMode: AddressingMode) extends OpcodeValue {
+  case class STA(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "STA"
-  }
   
-  case class LDA(addressMode: AddressingMode) extends OpcodeValue {
+  case class LDA(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "LDA"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative)
-  }
   
-  case class CMP(addressMode: AddressingMode) extends OpcodeValue {
+  case class CMP(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "CMP"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Carry)
-  }
   
-  case class SBC(addressMode: AddressingMode) extends OpcodeValue {
+  case class SBC(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "SBC"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
-      StatusFlag.Zero, StatusFlag.Carry, StatusFlag.Overflow)
-  }
   
-  case class ASL(addressMode: AddressingMode) extends OpcodeValue {
+  case class ASL(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "ASL"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
-      StatusFlag.Zero, StatusFlag.Carry)
-  }
   
-  case class ROL(addressMode: AddressingMode) extends OpcodeValue {
+  case class ROL(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "ROL"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
-      StatusFlag.Zero, StatusFlag.Carry)
-  }
   
-  case class LSR(addressMode: AddressingMode) extends OpcodeValue {
+  case class LSR(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "LSR"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
-      StatusFlag.Zero, StatusFlag.Carry)
-  }
   
-  case class ROR(addressMode: AddressingMode) extends OpcodeValue {
+  case class ROR(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "ROR"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
-      StatusFlag.Zero, StatusFlag.Carry)
-  }
   
-  case class STX(addressMode: AddressingMode) extends OpcodeValue {
+  case class STX(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "STX"
-  }
   
-  case class LDX(addressMode: AddressingMode) extends OpcodeValue {
+  case class LDX(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "LDX"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative, StatusFlag.Zero)
-  }
   
-  case class DEC(addressMode: AddressingMode) extends OpcodeValue {
+  case class DEC(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "DEC"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
-      StatusFlag.Zero)
-  }
   
-  case class INC(addressMode: AddressingMode) extends OpcodeValue {
+  case class INC(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "INC"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
-      StatusFlag.Zero)
-  }
 
   /**
    * bits 7 and 6 of operand are transfered to bit 7 and 6 of SR (N,V);
    * the zero-flag is set to the result of operand AND accumulator.
    * @param addressMode the mode of addressing a trait give the size of the instruction in bytes.
    */
-  case class BIT(addressMode: AddressingMode) extends OpcodeValue {
+  case class BIT(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BIT"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Negative,
-      StatusFlag.Zero, StatusFlag.Overflow)
-  }
 
-  case class BRK(addressMode: AddressingMode) extends OpcodeValue {
+  case class BRK(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BRK"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Interrupt)
-  }
 
-  case class PHP(addressMode: AddressingMode) extends OpcodeValue {
+  case class PHP(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "PHP"
-  }
 
-  case class BPL(addressMode: AddressingMode) extends OpcodeValue {
+  case class BPL(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BPL"
-  }
 
-  case class CLC(addressMode: AddressingMode) extends OpcodeValue {
+  case class CLC(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "CLC"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Carry)
-  }
 
-  case class JMP(addressMode: AddressingMode) extends OpcodeValue {
+  case class JMP(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "JMP"
-  }
   
-  case class STY(addressMode: AddressingMode) extends OpcodeValue {
+  case class STY(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "STY"
-  }
   
-  case class LDY(addressMode: AddressingMode) extends OpcodeValue {
+  case class LDY(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "LDY"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
   
-  case class CPY(addressMode: AddressingMode) extends OpcodeValue {
+  case class CPY(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "CPY"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative,
-      StatusFlag.Carry)
-  }
   
-  case class CPX(addressMode: AddressingMode) extends OpcodeValue {
+  case class CPX(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "CPX"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative,
-      StatusFlag.Carry)
-  }
 
   /**
    * The status register is pulled with the break flag
    * and bit 5 ignored. Then PC is pulled from the stack.
    * @param addressMode the mode of addressing a trait give the size of the instruction in bytes.
    */
-  case class RTI(addressMode: AddressingMode) extends OpcodeValue {
+  case class RTI(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "RTI"
-  }
 
-  case class PHA(addressMode: AddressingMode) extends OpcodeValue {
+  case class PHA(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "PHA"
-  }
 
-  case class BVC(addressMode: AddressingMode) extends OpcodeValue {
+  case class BVC(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BVC"
-  }
 
-  case class CLI(addressMode: AddressingMode) extends OpcodeValue {
+  case class CLI(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "CLI"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Interrupt)
-  }
 
-  case class RTS(addressMode: AddressingMode) extends OpcodeValue {
+  case class RTS(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "RTS"
-  }
 
-  case class PLA(addressMode: AddressingMode) extends OpcodeValue {
+  case class PLA(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "PLA"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
 
-  case class BVS(addressMode: AddressingMode) extends OpcodeValue {
+  case class BVS(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BVS"
-  }
 
-  case class SEI(addressMode: AddressingMode) extends OpcodeValue {
+  case class SEI(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "SEI"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Interrupt)
-  }
 
-  case class DEY(addressMode: AddressingMode) extends OpcodeValue {
+  case class DEY(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "DEY"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
 
-  case class BCC(addressMode: AddressingMode) extends OpcodeValue {
+  case class BCC(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BCC"
-  }
 
-  case class TAY(addressMode: AddressingMode) extends OpcodeValue {
+  case class TAY(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "TAY"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
 
-  case class TYA(addressMode: AddressingMode) extends OpcodeValue {
+  case class TYA(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "TYA"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
 
-  case class INY(addressMode: AddressingMode) extends OpcodeValue {
+  case class INY(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "INY"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
 
-  case class BNE(addressMode: AddressingMode) extends OpcodeValue {
+  case class BNE(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BNE"
-  }
 
-  case class CLD(addressMode: AddressingMode) extends OpcodeValue {
+  case class CLD(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "CLD"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Decimal)
-  }
 
-  case class INX(addressMode: AddressingMode) extends OpcodeValue {
+  case class INX(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "INX"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
 
-  case class BEQ(addressMode: AddressingMode) extends OpcodeValue {
+  case class BEQ(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BEQ"
-  }
 
-  case class BCS(addressMode: AddressingMode) extends OpcodeValue {
+  case class BCS(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "BCS"
-  }
 
-  case class CLV(addressMode: AddressingMode) extends OpcodeValue {
+  case class CLV(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "CLV"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Overflow)
-  }
 
-  case class SED(addressMode: AddressingMode) extends OpcodeValue {
+  case class SED(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "SED"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Decimal)
-  }
 
-  case class TXA(addressMode: AddressingMode) extends OpcodeValue {
+  case class TXA(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "TXA"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
 
-  case class TXS(addressMode: AddressingMode) extends OpcodeValue {
+  case class TXS(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "TXS"
-  }
 
-  case class TAX(addressMode: AddressingMode) extends OpcodeValue {
+  case class TAX(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "TAX"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
 
-  case class TSX(addressMode: AddressingMode) extends OpcodeValue {
+  case class TSX(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "TSX"
-  }
 
-  case class DEX(addressMode: AddressingMode) extends OpcodeValue {
+  case class DEX(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "DEX"
-    override def flagsEffected: Array[StatusFlag] = Array[StatusFlag](StatusFlag.Zero, StatusFlag.Negative)
-  }
 
-  case class NOP(addressMode: AddressingMode) extends OpcodeValue {
+  case class NOP(addressMode: AddressingMode) extends OpcodeValue:
     override def mnemonic: String = "NOP"
-  }
+

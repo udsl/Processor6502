@@ -1,88 +1,51 @@
-package com.udsl.processor6502.cpu.execution:
+package com.udsl.processor6502.cpu.execution
 
-  import com.udsl.processor6502.cpu.execution
+sealed trait AddressingMode(val bytes: Int)
 
-  sealed trait AddressingMode:
-    def bytes: Int
-  
+case object Accumulator extends AddressingMode(1):
+  override def toString: String = "Accumulator"
 
-  case object Accumulator extends AddressingMode {
-    override def toString: String = "A accumulator"
+case object Absolute extends AddressingMode(3):
+  override def toString: String = "Absolute"
 
-    override def bytes: Int = 1
-  }
+case object AbsoluteX extends AddressingMode(3):
+  override def toString: String = "Absolute,X"
 
-  case object Absolute extends AddressingMode {
-    override def toString: String = "$LLHH absolute"
-    override def bytes: Int = 3
-  }
+case object AbsoluteY extends AddressingMode(3):
+  override def toString: String = "Absolute,Y"
 
-  case object AbsoluteX extends AddressingMode {
-    override def toString: String = "$LLHH,X AbsoluteX"
-    override def bytes: Int = 3
-  }
+case object Immediate extends AddressingMode(2):
+  override def toString: String = "Immediate"
 
-  case object AbsoluteY extends AddressingMode {
-    override def toString: String = "$LLHH,Y AbsoluteY"
-    override def bytes: Int = 3
-  }
+case object Implied extends AddressingMode(1):
+  override def toString: String = "Implied"
 
-  case object Immediate extends AddressingMode {
-    override def toString: String = "#$LL Immediate"
-    override def bytes: Int = 2
-  }
+case object Indirect extends AddressingMode(2):
+  override def toString: String = "Indirect"
 
-  case object Implied extends AddressingMode {
-    override def toString: String = "implied"
-    override def bytes: Int = 1
-  }
+case object IndirectX extends AddressingMode(2):
+  override def toString: String = "Indirect,X"
 
-  case object Indirect extends AddressingMode {
-    override def toString: String = "($LLHH) Indirect"
-    override def bytes: Int = 2
-  }
+case object IndirectY extends AddressingMode(2):
+  override def toString: String = "Indirect,Y"
 
-  case object IndirectX extends AddressingMode {
-    override def toString: String = "($LL,X) IndirectX"
-    override def bytes: Int = 2
-  }
+case object Relative extends AddressingMode(2):
+  override def toString: String = "Relative"
 
-  case object IndirectY extends AddressingMode {
-    override def toString: String = "($LL),Y IndirectY"
-    override def bytes: Int = 2
-  }
+case object ZeroPage extends AddressingMode(2):
+  override def toString: String = "ZeroPage"
 
-  case object Relative extends AddressingMode {
-    override def toString: String = "Relative"
-    override def bytes: Int = 2
-  }
+case object ZeroPageX extends AddressingMode(2):
+  override def toString: String = "ZeroPage,X"
 
-  case object ZeroPage extends AddressingMode {
-    override def toString: String = "$LL ZeroPage"
-    override def bytes: Int = 2
-  }
+case object ZeroPageY extends AddressingMode(2):
+  override def toString: String = "ZeroPage,Y"
 
-  case object ZeroPageX extends AddressingMode {
-    override def toString: String = "$LL,X ZeroPageX"
-    override def bytes: Int = 2
-  }
+case object Invalid extends AddressingMode(1):
+  override def toString: String = "invalid addressing mode"
 
-  case object ZeroPageY extends AddressingMode {
-    override def toString: String = "$LL,Y ZeroPageY"
-    override def bytes: Int = 2
-  }
+case object Unknown extends AddressingMode(1):
+  override def toString: String = "Unknown"
 
-  case object Invalid extends AddressingMode {
-    override def toString: String = "invalid addressing mode"
-    override def bytes: Int = 1
-  }
-
-  case object Unknown extends AddressingMode {
-    override def toString: String = "NONE"
-    override def bytes: Int = 0
-  }
-
-  case object NotApplicable extends AddressingMode {
-    override def toString: String = "Not applicable"
-    override def bytes: Int = 0
-  }
+case object NotApplicable extends AddressingMode(0):
+  override def toString: String = "Not applicable"
