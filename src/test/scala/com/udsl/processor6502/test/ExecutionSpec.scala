@@ -246,7 +246,7 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
       logger.info(s"Single stepping instruction 0x${insData.opcode.toHexString.toUpperCase} at ${Processor.pc.addr}")
       // Always get the next instruction, auto fetch on PC change disabled during testing
       executionUnit.loadInstructionAtPc()
-      val opcodeExecuted: OpcodeValue = executionUnit.singleStep()
+      val opcodeExecuted: Opcode = executionUnit.singleStep()
       ExecutionSpec.checkRes(resData, memRes, title, opcodeExecuted)
     }
 
@@ -262,7 +262,7 @@ object ExecutionSpec extends StrictLogging:
   def asHexStr( v: Int): String =
     s"0x${v.toHexString.toUpperCase()}"
 
-  def checkRes(resData: ResultData, memRes: ResultMemData, title: String, opcodeExecuted: OpcodeValue): Unit =
+  def checkRes(resData: ResultData, memRes: ResultMemData, title: String, opcodeExecuted: Opcode): Unit =
     logger.info(s"Checking results for $title")
 
     checkAcc(resData.ac)

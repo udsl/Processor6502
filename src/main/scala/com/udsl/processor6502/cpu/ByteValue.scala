@@ -4,7 +4,7 @@ import com.udsl.processor6502.cpu.ByteValue.validate
 import com.udsl.processor6502.NumericFormatType
 import com.udsl.processor6502.ui.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.Utilities.{numToByteString, numToString}
-import com.udsl.processor6502.cpu.execution.{NULL, NotApplicable, OpcodeValue}
+import com.udsl.processor6502.cpu.execution.NotApplicable
 import scalafx.beans.property.IntegerProperty
 
 class ByteValue {

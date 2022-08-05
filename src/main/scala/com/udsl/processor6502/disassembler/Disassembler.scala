@@ -11,7 +11,7 @@ object Disassembler extends StrictLogging{
   val memoryAccess = Memory.apply
 
   def disassemble(opcodeByte: Int): Opcode =
-    val disassembled = Opcode.disassemble(opcodeByte)
+    val disassembled = Opcode(opcodeByte)
     logger.info(s"Disassembled ${numToByteString(opcodeByte, NumericFormatType.HEX )} $disassembled")
     disassembled
 }

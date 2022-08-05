@@ -90,11 +90,11 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
     if !CpuInstructions.isValidInstruction(t.mnemonic) then
       logger.error(s"Invalid instruction ${t}")
     else
-      // By this time we should have an idea of any foreword reference values so we can work out the actual addresing mode.
+      // By this time we should have an idea of any foreword reference values so we can work out the actual addressing mode.
       if t.predictedAddressingModes.length == 1 then
         // only 1 predicted mode so lets assume it right :)
         // Now we can move the program counter along by the instruction size.
-        AssembleLocation.addInstructionSize(t.predictedAddressingModes.head.bytes)
+        AssembleLocation.addInstructionSize(t.predictedAddressingModes.head.size)
 
 
   /**
@@ -117,15 +117,15 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
   def advanceAssemLocForBytes(fields: Array[String]): Unit =
     logger.debug("advance current assembly location for each byte")
     for (value <- fields)
-      AssembleLocation.addInstructionSize(1)
+      AssembleLocation.addInstructionSize(InstructionSize(1))
 
   def advanceAssemLocForWords(fields: Array[String]): Unit =
     logger.debug("advance current assembly location by 2 for each word")
     for (value <- fields)
-      AssembleLocation.addInstructionSize(2)
+      AssembleLocation.addInstructionSize(InstructionSize(2))
 
   def advanceAssemLocForAddresses(fields: Array[String]): Unit =
     logger.debug("advance current assembly location by 2 for each address")
     for (v <- fields)
-      AssembleLocation.addInstructionSize(2)
+      AssembleLocation.addInstructionSize(InstructionSize(2))
 

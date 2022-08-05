@@ -8,7 +8,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 
 
-val testData: List[(Int, OpcodeValue, Boolean)] = List(
+val testData: List[(Int, Opcode, Boolean)] = List(
   (0xA9, LDA(Immediate), true),
   (0xA5, LDA(ZeroPage), true),
   (0xB5, LDA(ZeroPageX), true),
@@ -30,15 +30,15 @@ val undefinedInstructionTestData: List[(Int)] = List(
 class DisassembleSpec extends AnyFlatSpec, should.Matchers {
   "Given a valid opcode" should "disassemble to the correct instruction and addressing mode" in {
     for ((opcode, expected, result) <- testData) {
-      val disassembled = disassemble(opcode)
+      val disassembled = Opcode(opcode)
       assert(disassembled.equals(expected) == result)
     }
   }
 
   "Given an invalid opcode" should "disassemble to an undefined instruction without an applicable addressing mode" in {
     for ((opcode) <- undefinedInstructionTestData) {
-      val disassembled = disassemble(opcode)
-      assert(disassembled.equals(Illegal(NotApplicable)))
+      val disassembled = Opcode(opcode)
+      assert(disassembled.equals(Illegal))
     }
   }
 

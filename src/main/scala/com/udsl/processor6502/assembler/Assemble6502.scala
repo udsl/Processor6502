@@ -10,9 +10,9 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Dialogues.errorAlert
 import com.udsl.processor6502.Utilities.numericValue
 import com.udsl.processor6502.assembler.Assemble6502.logger
-import com.udsl.processor6502.assembler.Assemble6502FirstPass.{assembleCommandToken, assembleCommentLineToken, assembleInstructionToken, logger, procesLabel, processClear, advanceAssemLocForAddresses, advanceAssemLocForBytes, advanceAssemLocForWords}
+import com.udsl.processor6502.assembler.Assemble6502FirstPass.{advanceAssemLocForAddresses, advanceAssemLocForBytes, advanceAssemLocForWords, assembleCommandToken, assembleCommentLineToken, assembleInstructionToken, logger, procesLabel, processClear}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.assemble
-import com.udsl.processor6502.cpu.execution.OpcodeValue
+import com.udsl.processor6502.cpu.execution.InstructionSize
 
 
 /**
@@ -194,10 +194,8 @@ object AssembleLocation extends StrictLogging :
    * 
    * @param insSize the size of the instruction 1, 2 0r 3 bytes only
    */
-  def addInstructionSize(insSize: Int) : Unit =
-    if insSize < 1 || insSize > 3 then
-      throw new Exception(s"No instruction with size $insSize")
-    currentLocation += insSize
+  def addInstructionSize(insSize: InstructionSize) : Unit =
+    currentLocation += insSize.bytes
 
 
 object Assemble6502 extends StrictLogging :

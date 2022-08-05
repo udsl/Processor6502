@@ -99,7 +99,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
         getValue(op1.substring(0, op1.length() - 1)) // (indirect)
 
     def validateAddressingMode: (AddressingMode, Int) =
-      val sortedModes = t.predictedAddressingModes.sortBy(_.bytes)
+      val sortedModes = t.predictedAddressingModes.sortBy(addrMode => addrMode.size.bytes)
       for mode: AddressingMode <- sortedModes do
         mode match {
           case Immediate =>

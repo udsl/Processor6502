@@ -203,15 +203,17 @@ object Tokeniser extends StrictLogging :
     logger.debug(s"processValue: ${token.fields}")
 
     logger.debug(s"No operand for ${token}")
-    // Possible values and associated addressing mode:
-    //      missing - just the instruction them accumilator or implied
-    //      numeric - starts with a digit or $ for hex - absolute or zero page
-    //      label - starts with an alph but not ( absolute mode to label
-    //      imeadiate address mode starts with #
-    //      indirect addresing mode starts with ( some for of indexed addressing
-    //      nothing implied addressing
+    /*
+      Possible values and associated addressing mode:
+          missing - just the instruction them accumilator or implied
+          numeric - starts with a digit or $ for hex - absolute or zero page
+          label - starts with an alph but not ( absolute mode to label
+      imeadiate address mode starts with #
+      indirect addresing mode starts with ( some for of indexed addressing
+      nothing implied addressing
 
-    // At this point we only need to tokenise the addressign mode not work out if its valid.
+      At this point we only need to tokenise the addressing mode not work out if its valid.
+    */
     if token.fields.isEmpty then // Implied addressing mode
       token.addPredictions(List(Implied))
     else

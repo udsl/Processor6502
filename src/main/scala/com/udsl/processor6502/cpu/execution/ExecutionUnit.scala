@@ -22,7 +22,7 @@ import scalafx.event.subscriptions.Subscription
  */
 
 class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject[ExecutionUnit]:
-  var opcode: OpcodeValue = NULL(NotApplicable)
+  var opcode: Opcode = NULL_Instruction
   var operand: (Int, Int) = (0, 0)
   var runMode: RunMode = RunMode.Stopped
 
@@ -37,9 +37,9 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
 
   /**
    * Get the current instruction from the PC location and execute it.
-   * @return returns the OpcodeValue of the instruction executed
+   * @return returns the Opcode of the instruction executed
    */
-  def singleStep(): OpcodeValue ={
+  def singleStep(): Opcode ={
     runMode = RunMode.SingleStepping
     val executing = opcode
     executeIns()
@@ -64,7 +64,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
   def run(): Unit =
     // make sure we have a current instruction
     opcode match {
-      case NULL(NotApplicable) => loadInstructionAtPc()
+      case NULL_Instruction => loadInstructionAtPc()
       case _ => ()
     }
 
@@ -152,9 +152,9 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
 
   def decodeInstruction(): String =
     opcode match
-      case NULL(_) => ""
+      case NULL_Instruction => ""
       case _ =>
-        constructSourceLine(opcode.mnemonic, opcode.addressMode, operand)
+        constructSourceLine(opcode.mnemonic, opcode.addressingMode, operand)
 
   def valueFromAddressOrOperand(): Int =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -206,7 +206,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     // now 0xFC (-4) add 0xFF (-1) we would expect 0xFB (-5) we get 0x1FB which is a negative result no overflow
     // We have to restrict result to 8 bits and with 0xFF
     Processor.ac.value = writeBack & 0xFF
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeAND(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -217,7 +217,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     val writeBack = Processor.ac.value & value
     updateZeroNegativeFlags(writeBack)
     Processor.ac.value = writeBack
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeASL(): Unit =
     def calcWriteBackAndUpdateFlags( value: Int ): Int =
@@ -232,28 +232,28 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       memoryAccess.setMemoryByte(effectiveAddr.address, calcWriteBackAndUpdateFlags(value))
     else // must be accumulator if no effective address as no immediate for ASL
       Processor.ac.value = calcWriteBackAndUpdateFlags(Processor.ac.value)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeBCC(): Unit =
     if !Processor.sr.testFlag(StatusFlag.Carry) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+      val newPc = Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeBCS(): Unit =
     if Processor.sr.testFlag(StatusFlag.Carry) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeBEQ(): Unit =
     if Processor.sr.testFlag(StatusFlag.Zero) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      val newPc = Processor.pc.inc(opcode.addressMode.bytes)
+      val newPc = Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeBIT(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -268,21 +268,21 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeBNE(): Unit =
     if !Processor.sr.testFlag(StatusFlag.Zero) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeBPL(): Unit =
     if !Processor.sr.testFlag(StatusFlag.Negative) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeBRK(): Unit =
       if (runMode == RunMode.Running || runMode == RunMode.RunningSlow) && operand._1 == 0 then
@@ -303,30 +303,30 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeBVS(): Unit =
     if Processor.sr.testFlag(StatusFlag.Overflow) then
       val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
       Processor.pc.addr = effectiveAddr.address
     else
-      Processor.pc.inc(opcode.addressMode.bytes)
+      Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeCLC(): Unit =
     Processor.sr.clearFlag(StatusFlag.Carry)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeCLD(): Unit =
     Processor.sr.clearFlag(StatusFlag.Decimal)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeCLI(): Unit =
     Processor.sr.clearFlag(StatusFlag.Interrupt)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeCLV(): Unit =
     Processor.sr.clearFlag(StatusFlag.Overflow)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   /**
    *
@@ -346,7 +346,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     else // has no effective address so it must be immediate
       operand._1
     doTheCompare(value, Processor.ac.value)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeCPX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -355,7 +355,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     else // has no effective address so it must be immediate
       operand._1
     doTheCompare(value, Processor.ix.value)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeCPY(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -364,7 +364,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     else // has no effective address so it must be immediate
       operand._1
     doTheCompare(value, Processor.iy.value)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeDEC(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -372,7 +372,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     val res = (value -1) & 255
     updateZeroNegativeFlags(res)
     memoryAccess.setMemoryByte(effectiveAddr.address, res)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeDEX(): Unit =
     val currentIx = Processor.ix.ebr
@@ -385,7 +385,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       val newIx = (currentIx - 1) & 255
       updateZeroNegativeFlags(newIx)
       Processor.ix.ebr = newIx
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeDEY(): Unit =
     val currentIy = Processor.iy.ebr
@@ -397,7 +397,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       val newIy = (currentIy - 1) & 255
       updateZeroNegativeFlags(newIy)
       Processor.iy.ebr = newIy
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeEOR(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -408,7 +408,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     val res =  Processor.ac.value ^ value
     updateZeroNegativeFlags(res)
     Processor.ac.value = res
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeINC(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -416,21 +416,21 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     val res =  (value + 1) & 0xFF
     updateZeroNegativeFlags(res)
     memoryAccess.setMemoryByte(effectiveAddr.address, res)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeINX(): Unit =
     val value = Processor.ix.value
     val res =  (value + 1) & 0xFF
     updateZeroNegativeFlags(res)
     Processor.ix.value = res
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeINY(): Unit =
     val value = Processor.iy.value
     val res =  (value + 1) & 0xFF
     updateZeroNegativeFlags(res)
     Processor.iy.value = res
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeJMP(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -452,7 +452,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     val value = valueFromAddressOrOperand()
     updateZeroNegativeFlags(value)
     Processor.ac.ebr = value
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeLDX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -462,7 +462,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       operand._1
     updateZeroNegativeFlags(value)
     Processor.ix.ebr = value
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeLDY(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -473,7 +473,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     Processor.sr.updateFlag(StatusFlag.Negative, (value & 0x80)  > 0)
     Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
     Processor.iy.ebr = value
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeLSR(): Unit =
     def calcWriteBackAndUpdateFlags( value: Int ): Int =
@@ -489,10 +489,10 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
       memoryAccess.setMemoryByte(effectiveAddr.address, calcWriteBackAndUpdateFlags(value))
     else // must be accumulator if no effective address as no immediate for ASL
       Processor.ac.value = calcWriteBackAndUpdateFlags(Processor.ac.value)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeNOP(): Unit =
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeORA(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
@@ -503,26 +503,26 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     val writeBack = Processor.ac.value | value
     updateZeroNegativeFlags(writeBack)
     Processor.ac.value = writeBack
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executePHA(): Unit =
     Processor.sp.pushByte(Processor.ac.value)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executePHP(): Unit =
     Processor.sp.pushByte(Processor.sr.value)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executePLA(): Unit =
     val writeBack = Processor.sp.popByte()
     updateZeroNegativeFlags(writeBack)
     Processor.ac.value = writeBack
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executePLP(): Unit =
     val popByte = Processor.sp.popByte() & 0xEF
     Processor.sr.value = popByte
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeROL(): Unit =
     def doRol(value: Int): Int =
@@ -542,7 +542,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     else // has no effective address so it must be accumulator
       val writeBack = doRol(Processor.ac.value)
       Processor.ac.value = writeBack
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeROR(): Unit =
     def doRor(value: Int): Int =
@@ -562,7 +562,7 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     else // has no effective address so it must be accumulator
       val writeBack = doRor(Processor.ac.value)
       Processor.ac.value = writeBack
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeRTI(): Unit =
     val retHi = Processor.sp.popByte()
@@ -595,63 +595,63 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
     // now 0xFC (-4) add 0xFF (-1) we would expect 0xFB (-5) we get 0x1FB which is a negative result no overflow
     // We have to restrict result to 8 bits and with 0xFF
     Processor.ac.value = writeBack & 0xFF
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeSEC(): Unit =
     Processor.sr.setFlag(StatusFlag.Carry)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeSED(): Unit =
     Processor.sr.setFlag(StatusFlag.Decimal)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeSEI(): Unit =
     Processor.sr.setFlag(StatusFlag.Interrupt)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeSTA(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     memoryAccess.setMemoryByte(effectiveAddr.address, Processor.ac.value)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeSTX(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     memoryAccess.setMemoryByte(effectiveAddr.address, Processor.ix.ebr)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeSTY(): Unit =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)
     memoryAccess.setMemoryByte(effectiveAddr.address, Processor.iy.ebr)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeTAX(): Unit =
     Processor.ix.ebr = Processor.ac.value
     updateZeroNegativeFlags(Processor.ix.ebr)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeTAY(): Unit =
     Processor.iy.ebr = Processor.ac.value
     updateZeroNegativeFlags(Processor.iy.ebr)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeTSX(): Unit =
     Processor.ix.ebr = Processor.sp.ebr
     updateZeroNegativeFlags(Processor.ix.ebr)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeTXA(): Unit =
     Processor.ac.ebr = Processor.ix.ebr
     updateZeroNegativeFlags(Processor.ac.ebr)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeTXS(): Unit =
     Processor.sp.ebr = Processor.ix.ebr
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeTYA(): Unit =
     Processor.ac.ebr = Processor.iy.ebr
     updateZeroNegativeFlags(Processor.ac.ebr)
-    Processor.pc.inc(opcode.addressMode.bytes)
+    Processor.pc.inc(opcode.addressingMode.size.bytes)
 
 
 object ExecutionUnit:
@@ -663,11 +663,11 @@ object ExecutionUnit:
     val eu = new ExecutionUnit(true)
     eu
 
-  def getEffectiveAddress(opcode: OpcodeValue, operand: (Int, Int)): EffectiveAddress =
+  def getEffectiveAddress(opcode: Opcode, operand: (Int, Int)): EffectiveAddress =
     def readEffectiveAddress(addr: Int): Int =
       memoryAccess.getMemoryByte(addr) + (memoryAccess.getMemoryByte(addr + 1) * 256)
 
-    opcode.addressMode match
+    opcode.addressingMode match
     case Accumulator | Implied | Immediate =>
       EffectiveAddress()
     case ZeroPage =>

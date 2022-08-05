@@ -4,7 +4,7 @@ package com.udsl.processor6502.cpu:
   import com.udsl.processor6502.{NumericFormatType, Utilities}
   import com.udsl.processor6502.Utilities.{numToString, writeStringToFile, writeToFile}
   import com.udsl.processor6502.cpu.Memory.{INTERRUPT_VECTOR, NMI_VECTOR, RESET_VECTOR}
-  import com.udsl.processor6502.cpu.execution.{Opcode, OpcodeValue}
+  import com.udsl.processor6502.cpu.execution.Opcode
   import scalafx.collections.ObservableBuffer
 
   import java.io.{BufferedWriter, FileWriter}
@@ -54,8 +54,8 @@ package com.udsl.processor6502.cpu:
       pc.addr = address
     }
 
-    def getNextInstruction: OpcodeValue =
-      Opcode.disassemble(memoryAccess.getMemoryByte(pc.addr)).v
+    def getNextInstruction: Opcode =
+      Opcode(memoryAccess.getMemoryByte(pc.addr))
 
     def getNextInstructionOperand: (Int, Int) =
       (memoryAccess.getMemoryByte(pc.addr + 1), memoryAccess.getMemoryByte(pc.addr + 2))
@@ -65,8 +65,8 @@ package com.udsl.processor6502.cpu:
      * @param address the location in memory of the instruction to retrieve
      * @return the retrieved instruction
      */
-    def getInstruction(address: Int): OpcodeValue =
-      Opcode.disassemble(memoryAccess.getMemoryByte(address)).v
+    def getInstruction(address: Int): Opcode =
+      Opcode(memoryAccess.getMemoryByte(address))
 
     def getInstructionOperand(address: Int): (Int, Int) =
       (memoryAccess.getMemoryByte(address + 1), memoryAccess.getMemoryByte(address + 2))
