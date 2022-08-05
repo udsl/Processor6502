@@ -15,7 +15,7 @@ import com.udsl.processor6502.cpu.execution.*
 object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 
   def assemble(tokenisedLine: TokenisedLine) : Unit =
-    logger.info(s"Parsing line ${tokenisedLine.sourceLine.lineNumber} ")
+    logger.info(s"Parsing line ${tokenisedLine.lineNumber} ")
     for (token <- tokenisedLine.tokens)
       token match {
         case BlankLineToken( _, _ ) => // extends AssemblerTokenType("BlankLineToken")
@@ -32,8 +32,6 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
           assembleCommandToken(token)
         case InstructionToken( _, _ ) => // extends AssemblerTokenType("InstructionToken")
           assembleInstructionToken(token)
-        case SyntaxErrorToken( _, _ ) => // extends AssemblerTokenType("SyntaxErrorToken")
-          logger.info("\tSyntaxErrorToken ")
         case ClearToken( _, _ ) =>
           logger.info("\tClear Token")
           processClear(token, tokenisedLine)
@@ -43,9 +41,9 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
           processOrigin(token)
         case DefToken( _, _ ) =>
           processDefinition(token)
-        case _ => logger.error(s"unsupported case ${token}")
+        case _ => logger.error(s"unsupported case $token")
       }
-    logger.debug(tokenisedLine.sourceLine.source)
+    logger.debug(tokenisedLine.sourceText)
 
   def processOrigin(t: AssemblerToken) : Unit =
     logger.info(s"\tOrigin Token '${t.mnemonic}'")
@@ -75,20 +73,20 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
       case "BYT" => advanceAssemLocForBytes(t.fields)
       case "WRD" => advanceAssemLocForWords(t.fields)
       case "ADDR" => advanceAssemLocForAddresses(t.fields)
-      case _ => logger.info(s"\tInvalid command ${t} ")
+      case _ => logger.info(s"\tInvalid command $t ")
 
   def processClear(t: AssemblerToken, tl: TokenisedLine) : Unit =
     logger.info("Processing CLR command")
-    if tl.sourceLine.lineNumber > 1 then
+    if tl.lineNumber > 1 then
       val errorText = "CLR command only valid on first line"
       logger.error(errorText)
       throw new Exception(errorText)
 
   def assembleInstructionToken(t: AssemblerToken) : Unit =
-    logger.info(s"\tInstructionToken '${t}' - location: $currentLocation")
+    logger.info(s"\tInstructionToken '$t' - location: $currentLocation")
     // Do we have a valid instruction?
     if !CpuInstructions.isValidInstruction(t.mnemonic) then
-      logger.error(s"Invalid instruction ${t}")
+      logger.error(s"Invalid instruction $t")
     else
       // By this time we should have an idea of any foreword reference values so we can work out the actual addressing mode.
       if t.predictedAddressingModes.length == 1 then
@@ -101,7 +99,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
    * For 2nd pass we just need to verify that the label is defined and that if the value is set verify its the same
    * other wise update it.
    *
-   * @param t
+   * @param t the AssemblerToken to process
    */
   def processDefinition(t: AssemblerToken) : Unit =
     logger.info(s"\tDefinition of label ${t.value} with value ")

@@ -3,8 +3,9 @@ package com.udsl.processor6502.assembler
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.Utilities.{constructSourceLine, isLabel, isNumeric, numToByteString, numToWordString, numericValue}
-import com.udsl.processor6502.assembler.Assemble6502FirstPass.{logger, processClear, advanceAssemLocForAddresses, advanceAssemLocForBytes, advanceAssemLocForWords}
+import com.udsl.processor6502.assembler.Assemble6502FirstPass.{advanceAssemLocForAddresses, advanceAssemLocForBytes, advanceAssemLocForWords, logger, processClear}
 import com.udsl.processor6502.assembler.Assemble6502SecondPass.logger
+import com.udsl.processor6502.assembler.Parser.addSyntaxError
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.CpuInstructions.{getInstruction, isValidInstruction}
 import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Invalid, NotApplicable, Relative, Unknown, ZeroPage, ZeroPageX, ZeroPageY}
@@ -16,7 +17,7 @@ import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Acc
 object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
   def assemble(tokenisedLine: TokenisedLine) : AssemblerToken =
-    logger.info(s"\n\n2nd Pass ${tokenisedLine.sourceLine.lineNumber} ")
+    logger.info(s"\n\n2nd Pass ${tokenisedLine.lineNumber} ")
     for (token <- tokenisedLine.tokens)
       token match {
         case BlankLineToken( _, _ ) => // extends AssemblerTokenType("BlankLineToken")
@@ -33,14 +34,12 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
           assembleCommandToken(token)
         case InstructionToken( _, _ ) => // extends AssemblerTokenType("InstructionToken")
           return assembleInstructionToken(token, tokenisedLine)
-        case SyntaxErrorToken( _, _ ) => // extends AssemblerTokenType("SyntaxErrorToken")
-          logger.info("\tSyntaxErrorToken ")
         case ClearToken( _, _ ) =>
           logger.info("\tClear Token - but we dont clear on 2nd pass!")
         case OriginToken( _, _ ) =>
           processOrigin(token)
 
-        case _ => logger.error(s"unsupported case ${token}")
+        case _ => logger.error(s"unsupported case $token")
       }
     NoTokenToken("", Array[String]())
 
@@ -49,7 +48,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
     logger.info("\tprocesLabel ")
 
   def assembleCommandToken(t: AssemblerToken): Unit =
-    logger.info(s"\tassembleCommandToken '${t}' - ")
+    logger.info(s"\tassembleCommandToken '$t' - ")
     t.mnemonic.toUpperCase() match
       case "BYT" => setBytes(t.fields)
       case "WRD" => setWords(t.fields)
@@ -59,7 +58,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
   def processOrigin(t: AssemblerToken): Unit =
     logger.info("\tOrigin Token 2nd pass")
     val value = Utilities.numericValue(t.mnemonic)
-    if (0 to 65535 contains value) then
+    if 0 to 65535 contains value then
       AssembleLocation.setAssembleLoc(value)
 
 
@@ -72,7 +71,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
           case Some((v, bool)) =>
             v
           case None =>
-            tl.tokens.addOne(SyntaxErrorToken(s"Undefined label '$operand'", t.fields))
+            addSyntaxError(SyntaxErrorRecord(s"Undefined label '$operand'", tl))
             -1
 
     def getOperandValue: Int =
@@ -118,13 +117,13 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
           case ZeroPageX =>
             if t.fields.head.toUpperCase.contains(",X") && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageX) then
               val operandValue = getIndexedOperandValue
-              if (0 to 255 contains operandValue) then
+              if 0 to 255 contains operandValue then
                 return (ZeroPageX, operandValue)
 
           case ZeroPageY =>
             if t.fields.head.toUpperCase.contains(",Y") && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageY) then
               val operandValue = getIndexedOperandValue
-              if (0 to 255 contains operandValue) then
+              if 0 to 255 contains operandValue then
                 return (ZeroPageY, operandValue)
 
           case AbsoluteX =>
@@ -147,13 +146,13 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
           case IndirectX =>
             if t.fields.head.toUpperCase.contains(",X)") && CpuInstructions.isAddressingModeValid(t.mnemonic, IndirectX) then
               val operandValue = getIndirectOperandValue
-              if (0 to 255 contains operandValue) then
+              if 0 to 255 contains operandValue then
                 return (IndirectX, operandValue)
 
           case IndirectY =>
             if t.fields.head.toUpperCase.contains("),Y") && CpuInstructions.isAddressingModeValid(t.mnemonic, IndirectY) then
               val operandValue = getIndirectOperandValue
-              if (0 to 255 contains operandValue) then
+              if 0 to 255 contains operandValue then
                 return (IndirectY, operandValue)
 
           case Indirect =>
@@ -198,7 +197,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       logger.info(s"validateAddressingMode - $addrMode")
       addrMode match
         case Invalid =>
-          return SyntaxErrorToken(s"Invalid addressing mode for '${t.mnemonic}'", t.fields)
+          addSyntaxError(SyntaxErrorRecord(s"Invalid addressing mode for '${t.mnemonic}'", tl))
         case _ =>
           //TODO
           // Need details of the instruction for the disassembly byte string

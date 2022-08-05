@@ -1,40 +1,35 @@
 package com.udsl.processor6502.assembler
 
-import com.udsl.processor6502.assembler.SyntaxErrorToken
 import com.udsl.processor6502.assembler.AssemblerToken
 import scala.collection.mutable.ListBuffer
 
-class TokenisedLine(val sourceLine: UntokenisedLine):
+class TokenisedLine(val sourceText: String, val lineNumber: Int):
   val tokens = new ListBuffer[AssemblerToken]()
 
-  def +(other: AssemblerToken) = {
+  def +(other: AssemblerToken): tokens.type = {
     tokens += other
   }
 
   def hasSyntaxError: Boolean =
-    tokens.exists(_ match {
-      case SyntaxErrorToken(_, _) => true;
-      case _ => false
-    })
+    Parser.sytaxErrorList.exists(s => s.lineNumber == lineNumber)
 
-  
-  override def toString =
-    var str: String = s"Line number: ${sourceLine.lineNumber} has ${tokens.length} tokens,  Source: '${sourceLine.source}', Tokens: \n"
+  override def toString: String =
+    var str: String = s"Line number: $lineNumber has ${tokens.length} tokens,  Source: '$sourceText', Tokens: \n"
     for t <- tokens do
-      str += s"\t${t} - ${t.predictedAddressingModes}\n"
+      str += s"\t$t - ${t.predictedAddressingModes}\n"
     str
 
 object TokenisedLine:
   def apply(line: UntokenisedLine) : TokenisedLine =
-    new TokenisedLine(line)
+    new TokenisedLine(line.sourceText, line.lineNumber)
 
   def apply(line: String) : TokenisedLine =
-    new TokenisedLine(UntokenisedLine( -1, line))
+    new TokenisedLine(line, -1)
 
 
-class UntokenisedLine( val lineNumber: Int, val source: String):
-  override def toString(): String =
-    s"lineNumber: ${lineNumber}, source: '${source}'"
+class UntokenisedLine( val lineNumber: Int, val sourceText: String):
+  override def toString: String =
+    s"lineNumber: $lineNumber, source: '$sourceText'"
 
 
 

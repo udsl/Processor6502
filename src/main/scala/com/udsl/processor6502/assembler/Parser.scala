@@ -8,6 +8,8 @@ import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Relative, Unknown, ZeroPage, ZeroPageX, ZeroPageY}
 
 object Parser extends StrictLogging :
+  val sytaxErrorList: List[SyntaxErrorRecord] = List[SyntaxErrorRecord]()
+
   def parse(line: String, lineNumber: Int) : ParsedLine =
     logger.debug(s"\nparsing line: $line")
     // determine basic line type
@@ -60,6 +62,9 @@ object Parser extends StrictLogging :
     else
       text
 
+  def addSyntaxError(syn: SyntaxErrorRecord): Unit =
+    sytaxErrorList.appended(syn)
+
   private def parseCommand(text: Array[String], parsedLine: ParsedLine  ) : Boolean =
     logger.debug(s"processCommand: ${text.mkString(" ")}")
     if !text.isEmpty then
@@ -92,9 +97,9 @@ object Parser extends StrictLogging :
               parsedLine + token
               logger.info(s"Origin added from defined label '$str")
             else
-              parsedLine + SyntaxErrorToken( "Value for ORIG not numeric or defined label", value)
+              addSyntaxError(SyntaxErrorRecord( "Value for ORIG not numeric or defined label", parsedLine))
           else
-            parsedLine + SyntaxErrorToken("Invalid ORIG command!", value)
+            addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", parsedLine))
           return true
 
         // clr only valid on the first line
@@ -102,7 +107,7 @@ object Parser extends StrictLogging :
           val token = ClearToken(head, text.tail)
           parsedLine + token
           if parsedLine.lineNumber > 1 then
-            parsedLine + SyntaxErrorToken(head, text.tail)
+            addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", parsedLine))
           AssemblyData.clear()
           logger.debug(s"token added: $token")
           return true
@@ -112,48 +117,53 @@ object Parser extends StrictLogging :
           // fist part must be the label being defined
           // 2nd is the value which must not be a label
           if parts.length != 2  then
-            parsedLine + SyntaxErrorToken("Bad DEF", text)
+            addSyntaxError(SyntaxErrorRecord("Bad DEF", parsedLine))
           else if !isLabel(parts(0)) || !isNumeric(parts(1)) then
-            parsedLine + SyntaxErrorToken("DEF should be label number", text)
+            addSyntaxError(SyntaxErrorRecord("DEF should be label number", parsedLine))
           else
             val value = numericValue(parts(1))
-            if (0 to 65535 contains value) then
+            if 0 to 65535 contains value then
               AssemblyData.addLabel(parts(0), value)
               val token = DefToken(parts(0), Array[String](parts(1)))
               token.value = parts(1)
               parsedLine + token
               logger.debug(s"token added: $token")
             else
-              parsedLine + SyntaxErrorToken(s"Invalid defined value ${parts(0)} - ${parts(1)}", text)
+              addSyntaxError(SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", parsedLine))
           return true
 
         case _ =>
       }
     false
 
+
   def parseInstruction(text: Array[String], parsedLine: ParsedLine ) : AssemblerToken =
     logger.debug(s"processInstruction: ${text.mkString(" ")}")
     val instruction = text.head.toUpperCase()
-    val token = if CpuInstructions.isValidInstruction(instruction) then
-      val tail = text.tail
-      if tail.length > 1 then
-        val head = tail.head
+
+    def getTocken(values: Array[String]): AssemblerToken =
+      if values.length > 1 then
+        val head = values.head
         val fields = if head.substring(head.length() - 1).equals(",") then
-          Array[String](tail.mkString)
+          Array[String](values.mkString)
         else
-          text.tail
+          values.tail
         InstructionToken(instruction, fields)
       else
-        InstructionToken(instruction, text.tail)
+        InstructionToken(instruction, values.tail)
+
+    if !CpuInstructions.isValidInstruction(instruction) then
+      addSyntaxError(SyntaxErrorRecord(s"Invalid instruction: $instruction", parsedLine))
+      NoTokenToken(instruction, text.tail)
     else
-      SyntaxErrorToken( s"Invalid instruction: $instruction", text)
-    parsedLine + token
-    token
+      val token = getTocken(text.tail)
+      parsedLine + token
+      token
 
   def parseValue(parsedLine: ParsedLine, token: AssemblerToken ): Unit =
-    logger.debug(s"processValue: ${token.fields}")
+    logger.debug(s"processValue: ${token.fields.mkString("Array(", ", ", ")")}")
 
-    logger.debug(s"No operand for ${token}")
+    logger.debug(s"No operand for $token")
     // Possible values and associated addressing mode:
     //      missing - just the instruction them accumilator or implied
     //      numeric - starts with a digit or $ for hex - absolute or zero page

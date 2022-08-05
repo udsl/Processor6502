@@ -88,8 +88,8 @@ val newTestData: List[(Int, Opcode, Boolean, String)] = List(
   (0x02, Illegal, true, "Illegal instruction test!")
 )
 
-val undefinedInstructionTestData: List[(Int)] = List(
-  (0x02)
+val undefinedOpcodeTestData: List[Int] = List(
+  0x02
 )
 
 class OpcodeSpec extends AnyFlatSpec, should.Matchers {
@@ -100,4 +100,12 @@ class OpcodeSpec extends AnyFlatSpec, should.Matchers {
       assert(disassembled.equals(expected) == result, s"$title test failed")
     }
   }
+
+  "Given an invalid opcode" should "disassemble to an undefined instruction without an applicable addressing mode" in {
+    for (opcode <- undefinedOpcodeTestData) {
+      val disassembled = Opcode(opcode)
+      assert(disassembled.equals(Illegal))
+    }
+  }
+
 }

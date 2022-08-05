@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.StrictLogging
 
 import scala.collection.mutable.ListBuffer
 
-class ParsedLine(val source: String, val lineNumber: Int) extends StrictLogging :
+class ParsedLine(val sourceText: String, val lineNumber: Int) extends StrictLogging :
   val tokens = new ListBuffer[AssemblerToken]()
 
   def +(other: AssemblerToken): tokens.type = {
@@ -12,9 +12,9 @@ class ParsedLine(val source: String, val lineNumber: Int) extends StrictLogging 
   }
   
   override def toString: String =
-    var str: String = s"Line number: ${lineNumber} has ${tokens.length} tokens,  Source: '${source}', Tokens: \n"
+    var str: String = s"Line number: $lineNumber has ${tokens.length} tokens,  Source: '$sourceText', Tokens: \n"
     for t <- tokens do
-      str += s"\t${t} - ${t.predictedAddressingModes}\n"
+      str += s"\t$t - ${t.predictedAddressingModes}\n"
     str
 
 

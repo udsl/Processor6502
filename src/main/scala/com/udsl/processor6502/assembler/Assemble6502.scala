@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assembler
 
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
-import com.udsl.processor6502.assembler.{BlankLineToken, CommentLineToken, ExceptionToken, LabelToken, ReferenceToken, SyntaxErrorToken}
+import com.udsl.processor6502.assembler.{BlankLineToken, CommentLineToken, LabelToken, ReferenceToken}
 import com.udsl.processor6502.cpu.{CpuInstructions, Memory, Processor}
 
 import scala.collection.mutable
@@ -57,37 +57,32 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
    * Verify that the first pass is without error
    */
   def verification(): Boolean =
-    val syntax = tokenisedLines.filter(x => x.tokens.contains(SyntaxErrorToken))
-    if syntax.nonEmpty then
+    if Parser.sytaxErrorList.nonEmpty then
       errorAlert("Errors", "Syntax errors")
     // Check that all references have associated labels defined
     val (result, errors) = AssemblyData.isValid
     if !result then
       errorAlert( "Validation failure", errors.mkString("\n"))
-    syntax.isEmpty & result
+    Parser.sytaxErrorList.isEmpty & result
 
   def firstPass(): Unit =
     for (tokenisedLine <- tokenisedLines)
-      try
-        Assemble6502FirstPass.assemble(tokenisedLine)
-      catch
-        case e: Exception => throw new Exception(s"${e.getMessage}\nOn line ${tokenisedLine.sourceLine.lineNumber}" )
-        case a => logger.error(s"Unknown exception! $a\nOn line ${tokenisedLine.sourceLine.lineNumber}")
+      Assemble6502FirstPass.assemble(tokenisedLine)
+
 
   def secondPass(): Unit =
     for (tokenisedLine <- tokenisedLines)
-      try
+//      try
         val resultToken = Assemble6502SecondPass.assemble(tokenisedLine)
         resultToken match
           case NoTokenToken( _, _ ) =>
           case _ =>
             tokenisedLine.tokens.addOne(resultToken)
-      catch
-        case e: Exception => throw new Exception(s"${e.getMessage}\nOn line ${tokenisedLine.sourceLine.lineNumber}" )
-        case a => logger.error(s"Unknown exception! $a\nOn line ${tokenisedLine.sourceLine.lineNumber}")
+//      catch
+//        case e: Exception => throw new Exception(s"${e.getMessage}\nOn line ${tokenisedLine.sourceLine.lineNumber}" )
+//        case a => logger.error(s"Unknown exception! $a\nOn line ${tokenisedLine.sourceLine.lineNumber}")
 
   def listExceptions(): Unit =
-    val exceptions = tokenisedLines.filter(x => x.tokens.contains(ExceptionToken))
     logger.info(
       """
         |*****************
@@ -97,17 +92,12 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
         |*****************
         |
         |""".stripMargin )
-    logger.info(s"  exceptions found: ${if exceptions.isEmpty then "ZERO" else exceptions.length}!")
+    logger.info(s"  exceptions found: ${if Tokeniser.exceptionList.isEmpty then "ZERO" else Tokeniser.exceptionList.length}!")
+    for exp <- Tokeniser.exceptionList do
+      logger.info(s"Exception \"${exp.exceptionMessage}\" at: ${exp.lineNumber} - '${exp.sourceText}'\n")
+
 
   def listSyntaxErrors(): Unit =
-    val syntax = tokenisedLines.filter(x => x.hasSyntaxError)
-    val syntax0 = tokenisedLines.flatMap(_.tokens.filter( _ match {
-                                                case SyntaxErrorToken( _,_ ) => true;
-                                                case _ => false
-                                              }))
-    val syntax2 = tokenisedLines.filter( _.hasSyntaxError)
-
-    //   val syntax = tokenisedLines.flatMap(_.tokens.filter( _ == SyntaxErrorToken))
     logger.info(
       """
         |*****************
@@ -117,23 +107,15 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
         |*****************
         |
         |""".stripMargin )
-    logger.info(s"  syntax errors found ${if syntax.isEmpty then "ZERO" else s"in ${syntax.length} lines"}!")
-    for syn <- syntax do
-      val str = new StringBuilder(s"Line number: ${syn.sourceLine.lineNumber} - '${syn.sourceLine.source}'\n")
-      val errs = syn.tokens.filter( _ match {
-        case SyntaxErrorToken( _,_ ) => true;
-        case _ => false
-      })
-
-      for err <- errs do
-        str.append(s"\tError ${err.mnemonic}\n")
-      logger.info(str.toString())
+    logger.info(s"  syntax errors found ${if Parser.sytaxErrorList.isEmpty then "ZERO" else s"in ${Parser.sytaxErrorList.length} lines"}!")
+    for syn <- Parser.sytaxErrorList do
+      logger.info(s"Syntax error \"${syn.errorMessage}\" at: ${syn.lineNumber} - '${syn.sourceText}'\n")
 
   def hasException: Boolean =
-    tokenisedLines.exists(x => x.tokens.contains(ExceptionToken))
+    Tokeniser.exceptionList.nonEmpty
 
   def hasSyntaxError: Boolean =
-    tokenisedLines.exists(x => x.hasSyntaxError)
+    Parser.sytaxErrorList.nonEmpty
 
   def printTokenisedLines(): Unit =
     logger.debug("\n\nTokenisedLines\n")
