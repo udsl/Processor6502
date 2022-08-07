@@ -6,7 +6,7 @@ import scala.language.postfixOps
 class StatusRegister(name: String) extends EightBitRegister(name: String):
 
   def value: Int = _ebr.value
-
+  
   def value_= (value: Int): Unit = {
     ebr = value
   }

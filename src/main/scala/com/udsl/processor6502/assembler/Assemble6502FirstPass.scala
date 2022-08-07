@@ -102,7 +102,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
    * @param t the AssemblerToken to process
    */
   def processDefinition(t: AssemblerToken) : Unit =
-    logger.info(s"\tDefinition of label ${t.value} with value ")
+    logger.info(s"\tDefinition of label ${t.fields.head} with value ${t.value}")
     if AssemblyData.labelIsDefined(t.mnemonic) then
       val v = AssemblyData.labelValue(t.mnemonic)
       if v != t.intValue then

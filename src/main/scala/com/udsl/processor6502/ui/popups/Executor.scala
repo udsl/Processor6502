@@ -6,7 +6,7 @@ package com.udsl.processor6502.ui.popups:
   import com.udsl.processor6502.cpu.execution.ExecutionUnit
   import com.udsl.processor6502.cpu.{Processor, StatusFlag}
   import com.udsl.processor6502.ui.popups.Executor.executor
-  import scalafx.application.JFXApp
+  import scalafx.application.{JFXApp, Platform}
   import scalafx.scene.Scene
   import scalafx.scene.control.{Button, Label, TextField}
   import scalafx.scene.layout.{BorderPane, HBox, VBox}
@@ -30,7 +30,7 @@ package com.udsl.processor6502.ui.popups:
 
     val currentInsLabel: Label = new Label(Executor.executionUnit.get.decodeInstruction())
 
-    val currentInsBox = new HBox{
+    val currentInsBox: HBox = new HBox{
       spacing = 20
 
       val currentLabel: Label = new Label("Current Instruction")
@@ -39,23 +39,25 @@ package com.udsl.processor6502.ui.popups:
       children = List(currentLabel, currentInsLabel)
     }
 
-    val pcSubscription: Subscription = Processor.pc._addr.onChange {
+    Processor.pc._addr.onChange {
       (_, oldValue, newValue) => {
-        logger.debug(s"PC subscription fired - ${oldValue}, ${newValue}")
+        logger.debug(s"PC subscription fired - $oldValue, $newValue")
         Executor.executor match
           case Some(_) =>
-            currentInsLabel.text = Executor.executionUnit.get.decodeInstruction()
+            Platform.runLater(() -> {
+              currentInsLabel.text = Executor.executionUnit.get.decodeInstruction()
+            })
           case _ =>
             // No executor
       }
     }
 
-    override def receiveUpdate(subject: ExecutionUnit ) =
+    override def receiveUpdate(subject: ExecutionUnit ): Unit =
       logger.info(s"Recived notification of ExecutionUnit update")
 
     scene = new Scene {
       root = {
-        val pushButtons = new HBox {
+        val pushButtons: HBox = new HBox {
           spacing = 20
           val stepButton: Button = new Button {
             text = "Step"
@@ -84,19 +86,19 @@ package com.udsl.processor6502.ui.popups:
           children = List(startButton, runSlowButton, stepButton)
         }
 
-        def togle(flag: StatusFlag) = {
+        def togle(flag: StatusFlag): Unit = {
           logger.info(flag.toString)
           val state = Processor.sr.testFlag(flag)
           logger.info(s"  $state")
           if (state) Processor.sr.clearFlag(flag) else Processor.sr.setFlag(flag)
         }
 
-        val flagTest = new HBox {
+        val flagTest: HBox = new HBox {
           val toggleButton: Button = new Button {
             text = "Togle"
             onAction = _ => {
               logger.info("Executing toggle!")
-              val c = toToggle.text.value.toString.toUpperCase().take(1)
+              val c = toToggle.text.value.toUpperCase().take(1)
               c match {
                 case "N" => togle(StatusFlag.Negative)
                 case "O" => togle(StatusFlag.Overflow)
@@ -110,7 +112,7 @@ package com.udsl.processor6502.ui.popups:
             }
           }
 
-          val toToggle = new TextField {
+          val toToggle: TextField = new TextField {
           }
           children = List(toggleButton, toToggle)
         }

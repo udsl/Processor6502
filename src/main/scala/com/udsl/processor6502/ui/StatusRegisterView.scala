@@ -5,6 +5,7 @@ package com.udsl.processor6502.ui:
   import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource
   import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}
   import com.udsl.processor6502.cpu.{Processor, StatusFlag}
+  import javafx.application.Platform
   import scalafx.event.subscriptions.Subscription
   import scalafx.geometry.Insets
   import scalafx.scene.control.Label
@@ -14,10 +15,12 @@ package com.udsl.processor6502.ui:
 
   class StatusRegisterView extends VBox, StrictLogging {
 
-    val srSubscription: Subscription = Processor.sr._ebr.onChange {
+    Processor.sr._ebr.onChange {
       (_, oldValue, newValue) => {
-        logger.info(s"Status register subscription fired - ${oldValue}, ${newValue}")
-        updateDisplayedValues(newValue.intValue())
+        logger.info(s"Status register subscription fired - $oldValue, $newValue")
+        Platform.runLater(() => {
+          updateDisplayedValues(newValue.intValue())
+        })
       }
     }
 
@@ -40,8 +43,8 @@ package com.udsl.processor6502.ui:
     val zero = new StatusFlagControl("Zero")
     val carry = new StatusFlagControl("Carry")
 
-    val display = new StackPane:
-      val titleBox = new HBox {
+    val display: StackPane = new StackPane:
+      val titleBox: HBox = new HBox {
         val title: Label = new Label {
           text = "  Status Flags  "
           style = "-fx-content-display: top; -fx-background-color: white; -fx-translate-y: -12; -fx-translate-x: 8;"
@@ -50,8 +53,8 @@ package com.udsl.processor6502.ui:
         children = List(title)
       }
 
-      val statusBits = new VBox {
-        val bits = new VBox {
+      val statusBits: VBox = new VBox {
+        val bits: VBox = new VBox {
           padding = Insets(4, 4, 4, 4)
           children = List(neg, ovr, u, brk, dec, inter, zero, carry)
         }

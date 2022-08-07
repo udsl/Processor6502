@@ -7,6 +7,7 @@ import com.udsl.processor6502.cpu.Memory.INTERRUPT_VECTOR
 import com.udsl.processor6502.cpu.{ByteValue, Processor, StatusFlag}
 import com.udsl.processor6502.cpu.Processor.{getNextInstruction, *}
 import com.udsl.processor6502.cpu.StatusFlag.{Break, Carry, Decimal, Interrupt, Negative, Overflow, Zero}
+import com.udsl.processor6502.cpu.execution.ExecutionUnit.isTesting
 import com.udsl.processor6502.disassembler.Disassembler
 import com.udsl.processor6502.ui.popups.Executor
 import scalafx.application.Platform
@@ -21,20 +22,20 @@ import scalafx.event.subscriptions.Subscription
  * see https://llx.com/Neil/a2/opcodes.html
  */
 
-class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject[ExecutionUnit]:
+class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
   var opcode: Opcode = NULL_Instruction
   var operand: (Int, Int) = (0, 0)
   var runMode: RunMode = RunMode.Stopped
 
-  val pcSubscription: Subscription = Processor.pc._addr.onChange {
+  Processor.pc._addr.onChange {
     (_, oldValue, newValue) => {
-      if !testing then
+      if !isTesting() then
         logger.debug(s"PC subscription fired - $oldValue, $newValue")
         loadInstructionAtPc()
         notifyObservers()
     }
   }
-
+   
   /**
    * Get the current instruction from the PC location and execute it.
    * @return returns the Opcode of the instruction executed
@@ -655,13 +656,16 @@ class ExecutionUnit(val testing: Boolean = false) extends StrictLogging, Subject
 
 
 object ExecutionUnit:
+  var testing = false
   def apply: ExecutionUnit =
-    val eu = new ExecutionUnit()
-    eu
-
+    new ExecutionUnit()
+    
   def forTest: ExecutionUnit =
-    val eu = new ExecutionUnit(true)
-    eu
+    testing = true
+    new ExecutionUnit()
+    
+  def isTesting(): Boolean =
+    testing
 
   def getEffectiveAddress(opcode: Opcode, operand: (Int, Int)): EffectiveAddress =
     def readEffectiveAddress(addr: Int): Int =

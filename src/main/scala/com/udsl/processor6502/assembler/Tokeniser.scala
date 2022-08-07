@@ -181,7 +181,7 @@ object Tokeniser extends StrictLogging :
     logger.debug(s"processInstruction: ${text.mkString(" ")}")
     val instruction = text.head.toUpperCase()
 
-    def getTocken(values: Array[String]): AssemblerToken =
+    def getToken(values: Array[String]): AssemblerToken =
       if values.length > 1 then
         val head = values.head
         val fields = if head.substring(head.length() - 1).equals(",") then
@@ -190,20 +190,19 @@ object Tokeniser extends StrictLogging :
           values.tail
         InstructionToken(instruction, fields)
       else
-        InstructionToken(instruction, values.tail)
+        InstructionToken(instruction, values)
 
     if !CpuInstructions.isValidInstruction(instruction) then
       addSyntaxError(SyntaxErrorRecord(s"Invalid instruction: $instruction", tokenisedLine))
       NoTokenToken(instruction, text.tail)
     else
-      val token = getTocken(text.tail)
+      val token = getToken(text.tail)
       tokenisedLine + token
       token
 
   def processValue(tokenisedLine: TokenisedLine, token: AssemblerToken ): Unit = {
     logger.debug(s"processValue: ${token.fields.mkString("Array(", ", ", ")")}")
 
-    logger.debug(s"No operand for $token")
     /*
       Possible values and associated addressing mode:
           missing - just the instruction them accumilator or implied
@@ -216,6 +215,7 @@ object Tokeniser extends StrictLogging :
       At this point we only need to tokenise the addressing mode not work out if its valid.
     */
     if token.fields.isEmpty then // Implied addressing mode
+      logger.debug(s"No operand for ${token.mnemonic} Implied?")
       token.addPredictions(List(Implied))
     else
       token.fields.head match {

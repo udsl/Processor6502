@@ -4,15 +4,30 @@ package com.udsl.processor6502.cpu:
   import com.udsl.processor6502.ui.NumericFormatSelector.numericFormatProperty
   import com.udsl.processor6502.Utilities.numToString
   import com.udsl.processor6502.cpu.EightBitRegister.validate
+  import com.udsl.processor6502.cpu.execution.ExecutionUnit.isTesting
+  import com.udsl.processor6502.ui.popups.Executor
+  import scalafx.application.Platform
   import scalafx.beans.property.IntegerProperty
 
   class EightBitRegister(private val name: String) :
     val _ebr: IntegerProperty = IntegerProperty(0)
-
+    var updateValue: Int = 0
     def ebr_= (ebr: Int): Unit = {
       validate( ebr )
       _ebr.value = ebr
     }
+
+    def update(): Unit =
+      if isTesting() then
+          performUpdate()
+      else
+        Platform.runLater(() -> {
+          performUpdate()
+        })
+
+    def performUpdate(): Unit =
+      if updateValue != _ebr.value then
+        _ebr.value = ebr
 
     def ebr: Int = _ebr.value
 
