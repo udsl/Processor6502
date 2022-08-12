@@ -39,7 +39,7 @@ package com.udsl.processor6502.ui:
         val title: Label = new Label {
 
           text = "  Vectors  "
-          style = "-fx-content-display: top; -fx-background-color: white; -fx-translate-y: -12; -fx-translate-x: 8;"
+          style = "-fx-font-weight:bold; -fx-content-display: top; -fx-background-color: white; -fx-translate-y: -12; -fx-translate-x: 8;"
         }
         prefWidth = title.prefWidth.value
         children = List(title)

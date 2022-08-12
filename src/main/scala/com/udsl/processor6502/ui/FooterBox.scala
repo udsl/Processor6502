@@ -14,13 +14,16 @@ import scalafx.scene.layout.{GridPane, HBox}
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
-class FooterBox(val memoryBox: MemoryBox) extends GridPane, StrictLogging{
+trait ScrollToView:
+  def doScroll(scrollTo: Int): Unit
+
+class FooterBox() extends GridPane, StrictLogging:
 
   val saveItem: MenuItem = new MenuItem("Save"){
     onAction = _ => {
       logger.info(s"Save Button pressed")
 
-      var out: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
+      val out: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
       out ++= DataCollector.collectData()
 
       val formatStr = currentFormat.toString
@@ -66,11 +69,11 @@ class FooterBox(val memoryBox: MemoryBox) extends GridPane, StrictLogging{
       else {
         val loc: Int = Integer.parseInt(disassembleLocation.text.value)
         logger.info(s"Disassembling location ${loc}!")
-        memoryBox.memoryView.scrollTo(loc)
+        for stv <- scrolToViewHanlers do
+          stv.doScroll(loc)
       }
     }
   }
-
 
   val assembleFile: MenuItem = new MenuItem("Assemble from file"){
     onAction = _ => {
@@ -107,4 +110,11 @@ class FooterBox(val memoryBox: MemoryBox) extends GridPane, StrictLogging{
   margin = Insets(8)
 
   children ++= Seq(menuButton, codeActionButton, disassembleLable, disassembleLocation)
-}
+
+  private var scrolToViewHanlers = Set[ScrollToView]()
+
+  def registerScrolToViewEventHandler( handler: ScrollToView): Unit =
+    scrolToViewHanlers = scrolToViewHanlers + handler
+
+
+

@@ -153,7 +153,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
 
   def decodeInstruction(): String =
     opcode match
-      case NULL_Instruction => ""
+      case NULL_Instruction => "NULL instruction"
       case _ =>
         constructSourceLine(opcode.mnemonic, opcode.addressingMode, operand)
 
