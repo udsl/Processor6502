@@ -30,7 +30,9 @@ class Address:
      */
     def toAddressString(format: NumericFormatType): String =
         format match {
-            case NumericFormatType.HEX => addr.toHexString
+            case NumericFormatType.HEX => s"$$${addr.toHexString.toUpperCase}"
+            case NumericFormatType.OCT => s"o${addr.toOctalString.toUpperCase}"
+            case NumericFormatType.BIN => s"b${addr.toBinaryString}"
             case _ => addr.toString
         }
 

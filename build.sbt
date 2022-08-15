@@ -1,6 +1,6 @@
 name := "Processor6502"
 
-version := "0.1"
+version := "0.1.0"
 
 scalaVersion := "3.1.3"
 
@@ -33,4 +33,12 @@ libraryDependencies ++= {
 
 // Fork a new JVM for 'run' and 'test:run', to avoid JavaFX double initialization problems
 fork := true
+
+ThisBuild / assemblyMergeStrategy  := {
+  case PathList("module-info.class") => MergeStrategy.discard
+  case x if x.endsWith("/module-info.class") => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
+    oldStrategy(x)
+}
 

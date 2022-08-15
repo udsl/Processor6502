@@ -43,7 +43,6 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
   lineAss.onAction =  _ => {
     val selected = memoryView.selectionModel.apply().getSelectedItems.get(0)
     logger.info(s"menu action - '${selected}'")
-//      logger.info(selected.getLocation())
     val lineAssembler = new LineAssemblerPopup(selected.getLocation)
     lineAssembler.showAndWait()
   }

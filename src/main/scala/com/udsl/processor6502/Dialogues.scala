@@ -17,7 +17,7 @@ import scala.io.Source
 object Dialogues extends StrictLogging:
   var theStage: PrimaryStage = null
 
-  def errorAlert(header: String, content: String = "Please correct the issue and assemble again."): Unit = {
+  def errorAlert(header: String, content: String = "Please correct the issue and assemble again."): Unit =
     val alert = new Alert(AlertType.Error) {
       initOwner(theStage)
       title = "Error Alert"
@@ -27,15 +27,14 @@ object Dialogues extends StrictLogging:
 
     alert.showAndWait()
 
-    //    result match
-    //      case Some(ButtonType.OK) => logger.info("OK"); true
-    //      case _ => logger.info("Cancel or closed"); false
-  }
-
   def getAddressSettingDialogue(dialogueTitle: String, currentValue: Int): TextInputDialog = {
     var lastChange = ""
     var lastFormat: NumericFormatType = currentFormat
-    
+
+    def validateCharacterInString(toValidate: String): Boolean =
+      val invadidCharacters = toValidate.filter(c => !"ABCDEF0123456789".contains(c)).toList
+      invadidCharacters.isEmpty
+
     new TextInputDialog(defaultValue = "100"){ // todo correct this: String.valueOf(Main.pc.toString)) {
       initOwner(theStage)
       title = dialogueTitle
@@ -44,9 +43,11 @@ object Dialogues extends StrictLogging:
 
       var lastKeyValid = false
       var lastKeyCode = 8
+      var currentCaretPos: Int = editor.getCaretPosition
+
       editor.text = numToString(currentValue)
 
-      editor.onKeyPressed = e => {
+      editor.onKeyPressed = e =>
         val et = e.getEventType
         et.getName
         val k = e.getCode
@@ -56,24 +57,25 @@ object Dialogues extends StrictLogging:
           case OCT => "01234567".contains(k.getChar)
           case BIN => "10".contains(k.getChar)
           case DEC => "0123456789".contains(k.getChar)
-          //            case _ => false
         }) || (k.getCode == 8) || (k.getCode == 127) // TODO add other key codes for valid keys
         logger.info(s"${et.getName} occurred ${e.getCode} which is ${if (lastKeyValid) "VALID" else "INVALID"}")
-      }
 
       editor.text.onChange({
         (_, oldValue, newValue) =>
           logger.info(s"$oldValue => $newValue last keyCode: $lastKeyCode")
-          if (!oldValue.equals(newValue)) {
-            if (!lastKeyValid) {
+
+          if (!oldValue.equals(newValue)) then
+            // If the last key press was not valid or the string contains a none valid character restore the old text.
+            if !lastKeyValid || !validateCharacterInString(newValue) then
               Platform.runLater(new Runnable() {
                 override def run(): Unit = {
                   //TODO deal with repositioning the cursor!
+                  val caretPos: Int = editor.getCaretPosition
                   editor.text = lastChange
+                  editor.positionCaret(caretPos - 1)
                 }
               })
-            }
-            else if (!lastChange.equals(newValue)) { // Only the is a change in the text
+            else if (!lastChange.equals(newValue)) then // Only the is a change in the text
               logger.info(s"$oldValue => $newValue")
               if (lastFormat.equals(currentFormat)) { // not due to changing format
                 if (newValue.length > oldValue.length) { // if text is longer then user has typed a char
@@ -85,7 +87,6 @@ object Dialogues extends StrictLogging:
                     case OCT => "01234567".contains(k) && change.length <= 6
                     case BIN => "10".contains(k) && change.length <= 16
                     case DEC => "0123456789".contains(k) && change.length <= 5 && stringToNum(change) <= 65535
-                    //                      case _ => false
                   }) {
                     editor.text.value = change
                     lastChange = change
@@ -103,8 +104,6 @@ object Dialogues extends StrictLogging:
                 lastFormat = currentFormat
                 lastChange = newValue.toUpperCase
               }
-            }
-          }
       })
     }
   }
@@ -144,7 +143,7 @@ object Dialogues extends StrictLogging:
   /**
    * write a `Seq[String]` to the `filename` with a terminating CR
    */
-  def writeConfigFile(data: List[ConfigDatum]): Unit = {
+  def writeConfigFile(data: List[ConfigDatum]): Unit =
     val saveFile = selectConfigFileToSave
     if saveFile != null then
       val lines = data.map(f => f.toString())
@@ -153,13 +152,13 @@ object Dialogues extends StrictLogging:
         bw.write(line)
         bw.write("\n")
       bw.close()
-  }
+
 
   /**
    * read the selected config file returning a seq of strings
    *
    */
-  def readConfigFile: List[ConfigDatum] = {
+  def readConfigFile: List[ConfigDatum] =
     val r: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
     val configFile = selectConfigFileToLoad
     if configFile != null then
@@ -173,9 +172,9 @@ object Dialogues extends StrictLogging:
 
       bufferedSource.close
     r.toList
-  }
 
-  def confirmation(header: String, content: String = "Are you ok with this?"): Boolean = {
+
+  def confirmation(header: String, content: String = "Are you ok with this?"): Boolean =
     val alert = new Alert(AlertType.Confirmation) {
       initOwner(theStage)
       title = "Confirmation Dialog"
@@ -188,7 +187,3 @@ object Dialogues extends StrictLogging:
     result match
       case Some(ButtonType.OK) => logger.info("OK"); true
       case _ => logger.info("Cancel or closed"); false
-  }
-
-
-

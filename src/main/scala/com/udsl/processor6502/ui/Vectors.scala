@@ -61,7 +61,7 @@ package com.udsl.processor6502.ui:
     children = List(display)
   }
 
-  class Vector(vectorName: String, vectorAddress: Int, initalValue: Int = 0) extends HBox, DataProvider, DataConsumer, StrictLogging {
+  class Vector(val vectorName: String, val vectorAddress: Int, initalValue: Int = 0) extends HBox, DataProvider, DataConsumer, StrictLogging {
 
     registerDataSource(this)
 
@@ -88,7 +88,9 @@ package com.udsl.processor6502.ui:
 
         val result = dialog.showAndWait()
         result match
-          case Some(value) => updateDisplay(numericValue(value))
+          case Some(value) =>
+            updateDisplay(numericValue(value))
+            memoryAccess.setMemoryToAddress(vectorAddress, numericValue(value))
           case None => logger.info("Dialog was canceled.")
       }
     }
