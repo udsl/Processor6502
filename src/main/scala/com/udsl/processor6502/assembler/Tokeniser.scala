@@ -30,8 +30,6 @@ object Tokeniser extends StrictLogging :
         tokenisedLines.addOne(tokeniseLine(lineToTokenise))
       catch
         case e: Exception =>  exceptionList.appended(AssembleExceptionRecord(e.getMessage, lineToTokenise))
-    val f = java.io.File("code.tock")
-    writeToFile( f, tokenisedLines.toList)
     tokenisedLines.toList
 
   def tokeniseLine(line: UntokenisedLine): TokenisedLine =

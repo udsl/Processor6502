@@ -2,11 +2,13 @@ package com.udsl.processor6502.ui
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Dialogues.*
-import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue}
+import com.udsl.processor6502.Utilities
+import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, numToString, numericValue, stringToNum}
 import com.udsl.processor6502.assembler.Assembler
 import com.udsl.processor6502.config.DataSupplier.provideData
 import com.udsl.processor6502.config.{ConfigDatum, DataCollector}
 import com.udsl.processor6502.ui.NumericFormatSelector.updateDisplay
+import scalafx.application.Platform
 import scalafx.geometry.{Insets, Pos}
 import scalafx.print.PaperSource.Main
 import scalafx.scene.control.{Button, Label, MenuButton, MenuItem, TextField, Tooltip}
@@ -18,6 +20,16 @@ trait ScrollToView:
   def doScroll(scrollTo: Int): Unit
 
 class FooterBox() extends GridPane, StrictLogging:
+
+  var currentDisassemblyLocation = 0
+
+  disassemblyLocationUpdateDisplay()
+
+
+  NumericFormatSelector.numericFormatProperty.onChange {
+    (_, oldValue, newValue) =>
+      disassemblyLocationUpdateDisplay()
+  }
 
   val saveItem: MenuItem = new MenuItem("Save"){
     onAction = _ => {
@@ -52,7 +64,7 @@ class FooterBox() extends GridPane, StrictLogging:
   }
 
   menuButton.setTooltip(new Tooltip(s"Save or load configuration."))
-  GridPane.setConstraints(menuButton, 23, 0, 2, 1)
+  GridPane.setConstraints(menuButton, 20, 0, 2, 1)
 
 
   val openEditor: MenuItem = new MenuItem("Open Editor"){
@@ -67,6 +79,7 @@ class FooterBox() extends GridPane, StrictLogging:
       if disassembleLocation.text.value == "" then
         errorAlert("Input Error", "Disassemble location not set")
       else {
+
         val loc: Int = Integer.parseInt(disassembleLocation.text.value)
         logger.info(s"Disassembling location ${loc}!")
         for stv <- scrolToViewHanlers do
@@ -90,9 +103,9 @@ class FooterBox() extends GridPane, StrictLogging:
   }
 
   codeActionButton.setTooltip(new Tooltip(s"Open code editor, assemble from file or disassemble code."))
-  GridPane.setConstraints(codeActionButton, 45, 0, 2, 1)
+  GridPane.setConstraints(codeActionButton, 40, 0, 2, 1)
 
-  val  disassembleLable: Label = new Label("Disassemble from:") {
+  val disassembleLable: Label = new Label("Disassemble from:") {
     alignmentInParent = Pos.BaselineLeft
     padding = Insets(10, 0, 0, 0)
   }
@@ -102,19 +115,45 @@ class FooterBox() extends GridPane, StrictLogging:
 
   val disassembleLocation: TextField = new TextField {
     prefColumnCount = 6
+    disable = true
   }
   GridPane.setConstraints(disassembleLocation, 53, 0, 2, 1)
+
+  val setDisassembleLocationButton: Button = new Button {
+    text = "Set"
+    onAction = _ => {
+      logger.info("Setting disassembly location")
+
+      val dialog = getNumberSettingDialogue(s"Setting disassembly location", currentDisassemblyLocation)
+
+      val result: Option[String] = dialog.showAndWait()
+      result match
+        case Some(value) =>
+          val validationResult = Utilities.verifyNumberEntry(value)
+          if !validationResult._1 then
+            errorAlert("Input Error", validationResult._2)
+          else
+            currentDisassemblyLocation = stringToNum(value)
+            disassemblyLocationUpdateDisplay()
+        case None => logger.info("Dialog was canceled.")
+    }
+  }
+  GridPane.setConstraints(setDisassembleLocationButton, 56, 0, 2, 1)
+
 
   hgap = 4
   vgap = 16
   margin = Insets(8)
 
-  children ++= Seq(menuButton, codeActionButton, disassembleLable, disassembleLocation)
+  children ++= Seq(menuButton, codeActionButton, disassembleLable, disassembleLocation, setDisassembleLocationButton)
 
   private var scrolToViewHanlers = Set[ScrollToView]()
 
   def registerScrolToViewEventHandler( handler: ScrollToView): Unit =
     scrolToViewHanlers = scrolToViewHanlers + handler
 
-
+  private def disassemblyLocationUpdateDisplay(): Unit =
+    Platform.runLater(() -> {
+      disassembleLocation.text = numToString(currentDisassemblyLocation)
+    })
 

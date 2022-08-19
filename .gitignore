@@ -5,10 +5,10 @@
 /.vscode
 /processor6502.save
 /config2.save
-/test1.asm
+/examples/test1.asm
 /Processor6502-3.log
 /Processor6502-token.log
-/quicktest.asm
-/quicktest2.asm
+/examples/quicktest.asm
+/examples/quicktest2.asm
 /code.tock
-/ldx_addressiming_mode-tests.asm
+/examples/ldx_addressiming_mode-tests.asm

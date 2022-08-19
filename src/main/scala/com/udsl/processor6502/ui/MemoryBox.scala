@@ -1,8 +1,9 @@
 package com.udsl.processor6502.ui
 
 import com.typesafe.scalalogging.StrictLogging
+import com.udsl.processor6502.Dialogues.{errorAlert, getNumberSettingDialogue}
 import com.udsl.processor6502.cpu.{Memory, MemoryCell, Processor}
-import com.udsl.processor6502.NumericFormatType
+import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.ui.popups.{Executor, LineAssemblerPopup}
 import com.udsl.processor6502.cpu.MemoryCell.*
 import com.udsl.processor6502.disassembler.Disassembler
@@ -14,7 +15,8 @@ import scalafx.geometry.{Insets, Orientation}
 import scalafx.scene.control.{Button, ContextMenu, Label, ListView, MenuItem, TextField, Tooltip}
 import scalafx.scene.input.{KeyEvent, MouseEvent}
 import scalafx.scene.layout.{HBox, StackPane, VBox}
-import com.udsl.processor6502.Utilities.numericValue
+import com.udsl.processor6502.Utilities.{numToString, numericValue, stringToNum}
+import scalafx.application.Platform
 
 import scala.language.implicitConversions
 
@@ -22,11 +24,27 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
 
   implicit def toShort(x: Int): Short = x.toShort
 
+  var currentViewLocation: Int = 0
+
+  viewLocationUpdateDisplay()
+
   NumericFormatSelector.numericFormatProperty.onChange {
     (_, oldValue, newValue) =>
       changeDisplayMode(newValue)
       memoryView.refresh()
+      viewLocationUpdateDisplay()
   }
+
+  val viewLocation: TextField = new TextField {
+    text = Processor.sp.toString
+    disable = true
+    prefColumnCount = 6
+  }
+
+  def viewLocationUpdateDisplay(): Unit =
+    Platform.runLater(() -> {
+      viewLocation.text = numToString(currentViewLocation)
+    })
 
   val memoryBoxCaption: Label = new Label {
     text = "Memory View"
@@ -69,20 +87,36 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
     val viewLocationButton: Button = new Button {
       text = "View "
       onAction = _ => {
-        logger.info(s"Viewing location ${toView.text.value}!")
+        logger.info(s"Viewing location ${viewLocation.text.value}!")
         val loc: Int =
-          numericValue(toView.text.value)
+          numericValue(viewLocation.text.value)
         memoryView.scrollTo(loc)
       }
     }
 
-    val toView: TextField = new TextField {
-      text = Processor.sp.toString
-      prefColumnCount = 6
+    val setViewLocationButton: Button = new Button {
+      text = "Set"
+      onAction = _ => {
+        logger.info("Setting disassembly location")
+
+        val dialog = getNumberSettingDialogue(s"Setting memory view location", currentViewLocation)
+
+        val result: Option[String] = dialog.showAndWait()
+        result match
+          case Some(value) =>
+            val validationResult = Utilities.verifyNumberEntry(value)
+            if !validationResult._1 then
+              errorAlert("Input Error", validationResult._2)
+            else
+              currentViewLocation = stringToNum(value)
+              viewLocationUpdateDisplay()
+          case None => logger.info("Dialog was canceled.")
+      }
     }
+
     viewLocationButton.setTooltip(new Tooltip(s"Click to view given location."))
-    toView.setTooltip(new Tooltip(s"The location to view."))
-    children = List( viewPcButton, viewLocationButton, toView)
+    viewLocation.setTooltip(new Tooltip(s"The location to view."))
+    children = List( viewPcButton, viewLocationButton, viewLocation, setViewLocationButton)
   }
 
   val memoryButtons = new HBox{
@@ -105,4 +139,3 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
 
   def doScroll(scrollTo: Int): Unit =
     memoryView.scrollTo(scrollTo)
-

@@ -1,7 +1,7 @@
 package com.udsl.processor6502.ui:
 
   import com.typesafe.scalalogging.StrictLogging
-  import com.udsl.processor6502.Dialogues.getAddressSettingDialogue
+  import com.udsl.processor6502.Dialogues.getNumberSettingDialogue
   import com.udsl.processor6502.Main.stage
   import com.udsl.processor6502.ui.popups.Executor
   import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, stringToNum}
@@ -70,7 +70,7 @@ package com.udsl.processor6502.ui:
         text = "set"
         onAction = _ => {
           logger.info("Setting PC!")
-          val dialog: TextInputDialog = getAddressSettingDialogue("New Program Counter", Processor.pc.addr)
+          val dialog: TextInputDialog = getNumberSettingDialogue("New Program Counter", Processor.pc.addr)
 
           val result = dialog.showAndWait()
           result match {

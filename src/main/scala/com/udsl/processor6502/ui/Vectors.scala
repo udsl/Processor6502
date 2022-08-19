@@ -9,7 +9,7 @@ package com.udsl.processor6502.ui:
   import scalafx.application.Platform
   import scalafx.event.subscriptions.Subscription
   import scalafx.scene.layout.{HBox, StackPane, VBox}
-  import com.udsl.processor6502.Dialogues.getAddressSettingDialogue
+  import com.udsl.processor6502.Dialogues.getNumberSettingDialogue
   import com.udsl.processor6502.cpu.Memory.{INTERRUPT_VECTOR, NMI_VECTOR, RESET_VECTOR}
 
   import scala.collection.IterableOnce.iterableOnceExtensionMethods
@@ -84,7 +84,7 @@ package com.udsl.processor6502.ui:
       text = "set"
       onAction = _ => {
         logger.info("Setting PC!")
-        val dialog = getAddressSettingDialogue(s"New ${vectorName} Vector", currentValue)
+        val dialog = getNumberSettingDialogue(s"New ${vectorName} Vector", currentValue)
 
         val result = dialog.showAndWait()
         result match

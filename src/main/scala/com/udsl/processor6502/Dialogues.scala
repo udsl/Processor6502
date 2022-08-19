@@ -2,7 +2,7 @@ package com.udsl.processor6502
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.NumericFormatType.{BIN, DEC, HEX, OCT}
-import com.udsl.processor6502.Utilities.{currentFormat, numToString, stringToNum}
+import com.udsl.processor6502.Utilities.{currentFormat, numToString, stringToNum, verifyNumberEntry}
 import com.udsl.processor6502.config.ConfigDatum
 import scalafx.application.JFXApp3.PrimaryStage
 import scalafx.application.Platform
@@ -27,15 +27,15 @@ object Dialogues extends StrictLogging:
 
     alert.showAndWait()
 
-  def getAddressSettingDialogue(dialogueTitle: String, currentValue: Int): TextInputDialog = {
+  def getNumberSettingDialogue(dialogueTitle: String, currentValue: Int, addressNotByte: Boolean = true): TextInputDialog = {
     var lastChange = ""
     var lastFormat: NumericFormatType = currentFormat
 
     def validateCharacterInString(toValidate: String): Boolean =
-      val invadidCharacters = toValidate.filter(c => !"ABCDEF0123456789".contains(c)).toList
-      invadidCharacters.isEmpty
+      verifyNumberEntry(toValidate)._1
 
-    new TextInputDialog(defaultValue = "100"){ // todo correct this: String.valueOf(Main.pc.toString)) {
+
+    new TextInputDialog(){
       initOwner(theStage)
       title = dialogueTitle
       headerText = s"Current format is: $currentFormat"
@@ -61,12 +61,12 @@ object Dialogues extends StrictLogging:
         logger.info(s"${et.getName} occurred ${e.getCode} which is ${if (lastKeyValid) "VALID" else "INVALID"}")
 
       editor.text.onChange({
-        (_, oldValue, newValue) =>
+        (_, oldValue: String, newValue: String) =>
           logger.info(s"$oldValue => $newValue last keyCode: $lastKeyCode")
 
           if (!oldValue.equals(newValue)) then
             // If the last key press was not valid or the string contains a none valid character restore the old text.
-            if !lastKeyValid || !validateCharacterInString(newValue) then
+            if !lastKeyValid || !validateCharacterInString(newValue.toUpperCase()) then
               Platform.runLater(new Runnable() {
                 override def run(): Unit = {
                   //TODO deal with repositioning the cursor!
@@ -83,10 +83,10 @@ object Dialogues extends StrictLogging:
                   val change = newValue.toUpperCase
                   val k = change diff oldValue
                   if (currentFormat match {
-                    case HEX => "ABCDEF0123456789".contains(k) && change.length <= 4
-                    case OCT => "01234567".contains(k) && change.length <= 6
-                    case BIN => "10".contains(k) && change.length <= 16
-                    case DEC => "0123456789".contains(k) && change.length <= 5 && stringToNum(change) <= 65535
+                    case HEX => "ABCDEF0123456789".contains(k) && change.length <= (if addressNotByte then 4 else 2)
+                    case OCT => "01234567".contains(k) && change.length <= (if addressNotByte then 6 else 3)
+                    case BIN => "10".contains(k) && change.length <= (if addressNotByte then 16 else 8)
+                    case DEC => "0123456789".contains(k) && change.length <= (if addressNotByte then 5 else 3) && stringToNum(change) <= (if addressNotByte then 65535 else 255)
                   }) {
                     editor.text.value = change
                     lastChange = change

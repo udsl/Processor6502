@@ -20,6 +20,20 @@ import scala.util.matching.Regex
 object Utilities {
   var currentFormat: NumericFormatType = NumericFormatType.DEC
 
+  def verifyNumberEntry(text: String): (Boolean, String) =
+    val pattern: Regex = currentFormat match {
+      case NumericFormatType.HEX => "^[0-9a-fA-F]+$".r
+      case NumericFormatType.OCT => "^[0-7]+$".r
+      case NumericFormatType.BIN => "^[0-1]+$".r
+      case NumericFormatType.DEC => "^[0-9]+$".r
+    }
+    pattern.findFirstMatchIn(text) match {
+      case Some(_) =>
+        (true, "")
+      case None =>
+        (false, s"Not a ${currentFormat.toString} number")
+    }
+
   def stringToNum(text: String): Int =
     currentFormat match {
       case NumericFormatType.HEX => Integer.parseInt(text, 16)
