@@ -54,7 +54,9 @@ Clicking the set button for the PC sets th evalue of the programe counter to the
 ### Status Flags <img width="16" alt="paleyellow" src="images/paleorangedot.jpg">
 
 Displays the curent state of the staus register flags.
+
 Each flag has a toggle button which toggles the flag between it 2 possible states.
+
 This enables for example a loop to be terminated during debugging by updating the approprite flags.
 
 ### Vectors <img width="16" alt="paleyellow" src="images/palereddot.jpg">
@@ -75,18 +77,23 @@ The **Reset**, **NMI** and **IRQ** buttons perform the associated interrupt acti
 ### Memory View <img width="16" alt="palegreen" src="images/palegreendot.jpg">
 
 Displays the contents of all 65536 memory locations with disasembly of contents if valid.
-The **View** button scrolls the view to the location entered.
+
+**Save Image** button saves the current contents of memory to an image file.
+
 The **View PC** button scrolls the view to the current PC location.
-**Save Image** saves the current contents of memory to an image file.
+
+The **View** button scrolls the view to the location entered. The loaction is displaye din the associated field in the format selected (DEC, HEX, OCT or BIN) and set by clicking the set button which pops up an input form.
 
 ### Actions Area <img width="16" alt="palepurple" src="images/palepurpledot.jpg">
 
-**Config Actions**
+**Config Actions** menu button.
 * Load - Load a confoguration from a save file
 * Save - save current configuration to a save file
 
-**Code Actions**
+**Code Actions** menu button.
 * Open Editor - opens the code editor
 * Assemble from file - assembles a file without loading into the editor.
 * Disassemble from location - disassembles instruction from the given location.
 
+***Disassemble Location***
+Displayed in the format selected (DEC, HEX, OCT or BIN) and set by clicking the set button which pops up an input form.
