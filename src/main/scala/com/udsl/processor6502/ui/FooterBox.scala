@@ -1,9 +1,9 @@
 package com.udsl.processor6502.ui
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.Dialogues.*
-import com.udsl.processor6502.Utilities
-import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, numToString, numericValue, stringToNum}
+import com.udsl.processor6502.Dialogues.{errorAlert, getNumberSettingDialogue}
+import com.udsl.processor6502.FileIOUtilities.{readConfigFile, selectSourceFileToLoad, writeConfigFile}
+import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, numToString, numericValue, stringToNum, verifyNumberEntry}
 import com.udsl.processor6502.assembler.Assembler
 import com.udsl.processor6502.config.DataSupplier.provideData
 import com.udsl.processor6502.config.{ConfigDatum, DataCollector}
@@ -81,7 +81,7 @@ class FooterBox() extends GridPane, StrictLogging:
       else {
 
         val loc: Int = Integer.parseInt(disassembleLocation.text.value)
-        logger.info(s"Disassembling location ${loc}!")
+        logger.info(s"Disassembling location $loc!")
         for stv <- scrolToViewHanlers do
           stv.doScroll(loc)
       }
@@ -90,11 +90,12 @@ class FooterBox() extends GridPane, StrictLogging:
 
   val assembleFile: MenuItem = new MenuItem("Assemble from file"){
     onAction = _ => {
-      val sourceFile = selectSourceFileToLoad
-      if sourceFile != null then
-        logger.info(s"Assembling file $sourceFile")
-        val sfa: Assembler = Assembler.apply(sourceFile)
-        sfa.startAssembly()
+      selectSourceFileToLoad match
+        case Some(file) =>
+          logger.info(s"Assembling file $file")
+          val sfa: Assembler = Assembler.apply(file)
+          sfa.startAssembly()
+        case _ =>
     }
   }
 
@@ -129,7 +130,7 @@ class FooterBox() extends GridPane, StrictLogging:
       val result: Option[String] = dialog.showAndWait()
       result match
         case Some(value) =>
-          val validationResult = Utilities.verifyNumberEntry(value)
+          val validationResult = verifyNumberEntry(value)
           if !validationResult._1 then
             errorAlert("Input Error", validationResult._2)
           else

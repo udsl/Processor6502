@@ -1,6 +1,7 @@
 package com.udsl.processor6502
 
 import com.udsl.processor6502.*
+import com.udsl.processor6502.Dialogues.theStage
 import com.udsl.processor6502.assembler.TokenisedLine
 import com.udsl.processor6502.cpu.*
 import com.udsl.processor6502.ui.NumericFormatSelector.numericFormatProperty
@@ -17,7 +18,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import scala.util.matching.Regex
 
-object Utilities {
+object Utilities:
   var currentFormat: NumericFormatType = NumericFormatType.DEC
 
   def verifyNumberEntry(text: String): (Boolean, String) =
@@ -141,61 +142,7 @@ object Utilities {
       case None => None
     }
   }
-
-
-  def writeToFile(file: File, tokenisedList: List[TokenisedLine]): Unit = {
-    val bw = new BufferedWriter(new FileWriter(file))
-    for (token <- tokenisedList)
-      bw.write(token.toString)
-      bw.write("\n")
-    bw.close()
-  }
   
-  def writeStringToFile(file: File, str: String): Unit = {
-    val bw = new BufferedWriter(new FileWriter(file))
-    bw.write(str)
-    bw.close()
-  }
-
-  def writeStringToFile(file: File, str: List[String]): Unit = {
-    val bw = new BufferedWriter(new FileWriter(file))
-    for (s <- str)
-      bw.write(s)
-    bw.close()
-  }
-
-  def selectSourceFileToSave: File =
-    getChosenSaveFile(getSourceFileChooser)
-
-  def selectSourceFileToLoad: File =
-    getChosenLoadFile(getSourceFileChooser)
-
-  private def getSourceFileChooser: FileChooser =
-    val chooser = new FileChooser
-    val saveFilter = new FileChooser.ExtensionFilter("Code Save Files", "*.asm")
-    chooser.getExtensionFilters.add(saveFilter)
-    chooser
-
-  def selectConfigFileToSave: File =
-    getChosenSaveFile(getConfigFileChooser)
-
-  def selectConfigFileToLoad: File =
-    getChosenLoadFile(getConfigFileChooser)
-
-  private def getConfigFileChooser: FileChooser =
-    val chooser = new FileChooser
-    val saveFilter = new FileChooser.ExtensionFilter("Config Save Files", "*.save")
-    chooser.getExtensionFilters.add(saveFilter)
-    chooser
-
-  private def getChosenSaveFile(chooser: FileChooser): File =
-    chooser.setInitialDirectory(new File("."));
-    chooser.showSaveDialog(Main.stage)
-
-  private def getChosenLoadFile(chooser: FileChooser): File =
-    chooser.setInitialDirectory(new File("."));
-    chooser.showOpenDialog(Main.stage)
-
   def constructSourceLine(mnemonic: String, addrMode: AddressingMode, value: (Int, Int)): String =
     val adr = addrMode match
       case Accumulator => "A"
@@ -213,8 +160,8 @@ object Utilities {
       case AbsoluteY => s"${numToWordString(value, NumericFormatType.HEX)}, Y"
       case Invalid | Unknown | NotApplicable => ""
     if adr.nonEmpty then
-      s" - ${mnemonic} $adr"
+      s" - $mnemonic $adr"
     else
       adr
 
-}
+

@@ -2,7 +2,7 @@ package com.udsl.processor6502.cpu
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.{NumericFormatType, Utilities}
-import com.udsl.processor6502.Utilities.{numToString, writeStringToFile, writeToFile}
+import com.udsl.processor6502.Utilities.numToString
 import com.udsl.processor6502.cpu.Memory.{INTERRUPT_VECTOR, NMI_VECTOR, RESET_VECTOR}
 import com.udsl.processor6502.cpu.execution.Opcode
 import scalafx.collections.ObservableBuffer

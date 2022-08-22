@@ -1,11 +1,12 @@
 package com.udsl.processor6502.cpu
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.NumericFormatType
+import com.udsl.processor6502.FileIOUtilities.{selectMemoryImageFileToLoad, selectMemoryImageFileToSave}
+import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import scalafx.collections.ObservableBuffer
 
-import java.io.{BufferedWriter, FileWriter}
+import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter}
 import scala.collection.mutable.ListBuffer
 
 class Memory extends StrictLogging:
@@ -120,45 +121,59 @@ object Memory extends StrictLogging:
   def getMemory: ObservableBuffer[MemoryCell] =
     memory
 
+  def loadMemoryImage(): Unit =
+    logger.info("Loading memory image!")
+
+    val file = selectMemoryImageFileToLoad
+    val br = new BufferedReader(new FileReader(file))
+
+    for l <- Iterator.continually(br.readLine()).takeWhile(_ != null) do
+      val values = l.split(",").map(_.trim)
+      val cells = values.map( c => MemoryCell(c)) // break the line to individual records
+      // get the records as (Int, Int)
+      cells.foreach(m => memory.update(m.getLocation, m))
+    br.close()
+
   def saveMemoryImage(): Unit =
-      logger.info("Saving memory image!")
-      val file = java.io.File("mem.dmp")
-      val bw = new BufferedWriter(new FileWriter(file))
+    logger.info("Saving memory image!")
+    val file = selectMemoryImageFileToSave
+    val bw = new BufferedWriter(new FileWriter(file))
 
-      val cells = memory.toList.map[Int](f => f.getValue)
-      val memoryImage = new ListBuffer[String]()
-      val image = new StringBuilder()
-      var count = 0
-      var lines = 0
-      for( x <- cells)
-        image.append(x)
-        if count == 9 then
-          count = 0
-          image.append("\n")
-          bw.write(image.toString())
-          image.clear()
-          lines += 1
-        else
-          image.append(", ")
-          count += 1
-      bw.write(image.toString().dropRight(2)) // write the last line - the comma and space
-      bw.close()
-      logger.info(s"Memory size: ${memory.size}, Lines: $lines")
+    val strList = memory.toList.map( c => c.asString )
+    val memoryImage = new ListBuffer[String]()
+    val image = new StringBuilder()
+    var count = 0
+    var lines = 0
+    for( x <- strList)
+      image.append(x)
+      if count == 9 then
+        count = 0
+        image.append("\n")
+        bw.write(image.toString())
+        image.clear()
+        lines += 1
+      else
+        image.append(",")
+        count += 1
+    bw.write(image.toString().dropRight(2)) // write the last line - the comma and space
+    bw.close()
+    logger.info(s"Memory size: ${memory.size}, Lines: $lines")
 
 
-class MemoryCell(private val location: Address, private var value: ByteValue = ByteValue.apply) {
+class MemoryCell(private val location: Address, private var value: ByteValue = ByteValue.apply):
 
   override def toString: String =
     s"[${location.toAddressString(MemoryCell.currentMemoryFormat)}] ${value.toDisplayString(MemoryCell.currentMemoryFormat)} ${value.getDisassembly}"
 
-  def getValue: Int = {
-    value._byte.value
-  }
+  def asString: String =
+    s"$location:$value"
 
-  def getLocation: Int = {
+  def getValue: Int =
+    value._byte.value
+
+  def getLocation: Int =
     location.addr
-  }
-}
+
 
 
 object MemoryCell:
@@ -169,13 +184,11 @@ object MemoryCell:
     val m = new MemoryCell(Address(index))
     m
 
-
   def apply(index: Int, byt: Int): MemoryCell =
     Address.validate(index)
     ByteValue.validate(byt)
     val m = new MemoryCell(Address(index), ByteValue(byt))
     m
-
 
   def apply(index: Int, byt: Int, disassembly: String): MemoryCell =
     Address.validate(index)
@@ -184,6 +197,11 @@ object MemoryCell:
     val m = new MemoryCell(Address(index), b)
     m
 
+  def apply(str: String): MemoryCell =
+    val strs = str.split(":")
+    if strs.length != 2 then throw new Exception(s"String format error expected 2 strings seperated by ':' got '$str'")
+    val m = new MemoryCell(Address(strs(0).toInt), ByteValue(strs(1).toInt))
+    m
 
   def changeDisplayMode( displayMode: NumericFormatType): Unit =
     currentMemoryFormat = displayMode

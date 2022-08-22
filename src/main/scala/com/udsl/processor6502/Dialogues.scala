@@ -64,7 +64,7 @@ object Dialogues extends StrictLogging:
         (_, oldValue: String, newValue: String) =>
           logger.info(s"$oldValue => $newValue last keyCode: $lastKeyCode")
 
-          if (!oldValue.equals(newValue)) then
+          if !oldValue.equals(newValue) then
             // If the last key press was not valid or the string contains a none valid character restore the old text.
             if !lastKeyValid || !validateCharacterInString(newValue.toUpperCase()) then
               Platform.runLater(new Runnable() {
@@ -75,7 +75,7 @@ object Dialogues extends StrictLogging:
                   editor.positionCaret(caretPos - 1)
                 }
               })
-            else if (!lastChange.equals(newValue)) then // Only the is a change in the text
+            else if lastChange.equals(newValue) then // Only the is a change in the text
               logger.info(s"$oldValue => $newValue")
               if (lastFormat.equals(currentFormat)) { // not due to changing format
                 if (newValue.length > oldValue.length) { // if text is longer then user has typed a char
@@ -107,72 +107,6 @@ object Dialogues extends StrictLogging:
       })
     }
   }
-
-  def selectConfigFileToSave: File =
-    getChosenSaveFile(getConfigFileChooser)
-
-  def selectConfigFileToLoad: File =
-    getChosenLoadFile(getConfigFileChooser)
-
-  private def getConfigFileChooser: FileChooser =
-    val chooser = new FileChooser
-    val saveFilter = new FileChooser.ExtensionFilter("Config Save Files", "*.save")
-    chooser.getExtensionFilters.add(saveFilter)
-    chooser
-
-  private def getChosenSaveFile(chooser: FileChooser): File =
-    chooser.setInitialDirectory(new File("."));
-    chooser.showSaveDialog(theStage)
-
-  private def getChosenLoadFile(chooser: FileChooser): File =
-    chooser.setInitialDirectory(new File("."));
-    chooser.showOpenDialog(theStage)
-
-  def selectSourceFileToSave: File =
-    getChosenSaveFile(getSourceFileChooser)
-
-  def selectSourceFileToLoad: File =
-    getChosenLoadFile(getSourceFileChooser)
-
-  private def getSourceFileChooser: FileChooser =
-    val chooser = new FileChooser
-    val saveFilter = new FileChooser.ExtensionFilter("Code Save Files", "*.asm")
-    chooser.getExtensionFilters.add(saveFilter)
-    chooser
-
-  /**
-   * write a `Seq[String]` to the `filename` with a terminating CR
-   */
-  def writeConfigFile(data: List[ConfigDatum]): Unit =
-    val saveFile = selectConfigFileToSave
-    if saveFile != null then
-      val lines = data.map(f => f.toString())
-      val bw = new BufferedWriter(new FileWriter(saveFile))
-      for line <- lines do
-        bw.write(line)
-        bw.write("\n")
-      bw.close()
-
-
-  /**
-   * read the selected config file returning a seq of strings
-   *
-   */
-  def readConfigFile: List[ConfigDatum] =
-    val r: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
-    val configFile = selectConfigFileToLoad
-    if configFile != null then
-      val bufferedSource = Source.fromFile(configFile)
-      for (line <- bufferedSource.getLines) {
-        val colonIndex = line.indexOf(':')
-        val key = line.substring(0, colonIndex)
-        val value = line.substring(colonIndex + 1)
-        r += ConfigDatum.apply(key, value)
-      }
-
-      bufferedSource.close
-    r.toList
-
 
   def confirmation(header: String, content: String = "Are you ok with this?"): Boolean =
     val alert = new Alert(AlertType.Confirmation) {

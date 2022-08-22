@@ -1,7 +1,7 @@
 package com.udsl.processor6502.ui
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.Dialogues.{errorAlert, getNumberSettingDialogue}
+import com.udsl.processor6502.Dialogues.{confirmation, errorAlert, getNumberSettingDialogue}
 import com.udsl.processor6502.cpu.{Memory, MemoryCell, Processor}
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.ui.popups.{Executor, LineAssemblerPopup}
@@ -60,19 +60,19 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
   val lineAss = new MenuItem("Line assembler")
   lineAss.onAction =  _ => {
     val selected = memoryView.selectionModel.apply().getSelectedItems.get(0)
-    logger.info(s"menu action - '${selected}'")
+    logger.info(s"menu action - '$selected'")
     val lineAssembler = new LineAssemblerPopup(selected.getLocation)
     lineAssembler.showAndWait()
   }
 
   memoryView.contextMenu = new ContextMenu( lineAss )
 
-  val st = new StackPane {
+  val st: StackPane = new StackPane {
     padding = Insets(10)
     children = memoryView
   }
 
-  val viewButtons = new HBox{
+  val viewButtons: HBox = new HBox{
     spacing = 20
 
     val viewPcButton: Button = new Button {
@@ -119,7 +119,7 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
     children = List( viewPcButton, viewLocationButton, viewLocation, setViewLocationButton)
   }
 
-  val memoryButtons = new HBox{
+  val memoryButtons: HBox = new HBox{
     spacing = 20
 
     val saveMemoryImageButton: Button = new Button {
@@ -130,7 +130,16 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
     }
     saveMemoryImageButton.setTooltip(new Tooltip("Save a memory image"))
 
-    children = List(saveMemoryImageButton)
+    val loadMemoryImageButton: Button = new Button {
+      text = "Load Image"
+      onAction = _ => {
+        if confirmation("Loading image wil overwrite all current memory!") then
+          Memory.loadMemoryImage()
+      }
+    }
+    loadMemoryImageButton.setTooltip(new Tooltip("Load a memory image"))
+
+    children = List(saveMemoryImageButton, loadMemoryImageButton)
   }
 
   padding = Insets(20)
