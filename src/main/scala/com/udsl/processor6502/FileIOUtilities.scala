@@ -51,8 +51,8 @@ object FileIOUtilities:
   def selectSourceFileToSave: Option[File] =
     Option(getChosenSaveFile(getSourceFileChooser))
 
-  def selectMemoryImageFileToSave: File =
-    getChosenSaveFile(getDumpFileChooser)
+  def selectMemoryImageFileToSave: Option[File] =
+    Option(getChosenSaveFile(getDumpFileChooser))
 
   def selectMemoryImageFileToLoad: File =
     getChosenLoadFile(getDumpFileChooser)

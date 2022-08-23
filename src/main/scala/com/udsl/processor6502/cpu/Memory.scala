@@ -6,7 +6,7 @@ import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import scalafx.collections.ObservableBuffer
 
-import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter}
+import java.io.{BufferedReader, BufferedWriter, File, FileReader, FileWriter}
 import scala.collection.mutable.ListBuffer
 
 class Memory extends StrictLogging:
@@ -134,9 +134,7 @@ object Memory extends StrictLogging:
       cells.foreach(m => memory.update(m.getLocation, m))
     br.close()
 
-  def saveMemoryImage(): Unit =
-    logger.info("Saving memory image!")
-    val file = selectMemoryImageFileToSave
+  private def doSaveImage( file: File): Unit =
     val bw = new BufferedWriter(new FileWriter(file))
 
     val strList = memory.toList.map( c => c.asString )
@@ -159,6 +157,11 @@ object Memory extends StrictLogging:
     bw.close()
     logger.info(s"Memory size: ${memory.size}, Lines: $lines")
 
+  def saveMemoryImage(): Unit =
+    logger.info("Saving memory image!")
+    selectMemoryImageFileToSave match
+      case Some(file) => doSaveImage( file )
+      case _ =>
 
 class MemoryCell(private val location: Address, private var value: ByteValue = ByteValue.apply):
 
@@ -173,6 +176,8 @@ class MemoryCell(private val location: Address, private var value: ByteValue = B
 
   def getLocation: Int =
     location.addr
+
+  def getByte: ByteValue = value
 
 
 

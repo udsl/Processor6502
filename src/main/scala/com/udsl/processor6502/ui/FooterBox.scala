@@ -7,6 +7,7 @@ import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, numToStr
 import com.udsl.processor6502.assembler.Assembler
 import com.udsl.processor6502.config.DataSupplier.provideData
 import com.udsl.processor6502.config.{ConfigDatum, DataCollector}
+import com.udsl.processor6502.disassembler.Disassembler
 import com.udsl.processor6502.ui.NumericFormatSelector.updateDisplay
 import scalafx.application.Platform
 import scalafx.geometry.{Insets, Pos}
@@ -20,8 +21,6 @@ trait ScrollToView:
   def doScroll(scrollTo: Int): Unit
 
 class FooterBox() extends GridPane, StrictLogging:
-
-  var currentDisassemblyLocation = 0
 
   disassemblyLocationUpdateDisplay()
 
@@ -79,11 +78,14 @@ class FooterBox() extends GridPane, StrictLogging:
       if disassembleLocation.text.value == "" then
         errorAlert("Input Error", "Disassemble location not set")
       else {
-
         val loc: Int = Integer.parseInt(disassembleLocation.text.value)
         logger.info(s"Disassembling location $loc!")
+        Disassembler.disassemble()
+
         for stv <- scrolToViewHanlers do
           stv.doScroll(loc)
+
+        com.udsl.processor6502.Main.memoryBox.get.memoryView.delegate.refresh()
       }
     }
   }
@@ -125,7 +127,7 @@ class FooterBox() extends GridPane, StrictLogging:
     onAction = _ => {
       logger.info("Setting disassembly location")
 
-      val dialog = getNumberSettingDialogue(s"Setting disassembly location", currentDisassemblyLocation)
+      val dialog = getNumberSettingDialogue(s"Setting disassembly location", Disassembler.disassemblyLocation)
 
       val result: Option[String] = dialog.showAndWait()
       result match
@@ -134,7 +136,7 @@ class FooterBox() extends GridPane, StrictLogging:
           if !validationResult._1 then
             errorAlert("Input Error", validationResult._2)
           else
-            currentDisassemblyLocation = stringToNum(value)
+            Disassembler.disassemblyLocation = stringToNum(value)
             disassemblyLocationUpdateDisplay()
         case None => logger.info("Dialog was canceled.")
     }
@@ -155,6 +157,6 @@ class FooterBox() extends GridPane, StrictLogging:
 
   private def disassemblyLocationUpdateDisplay(): Unit =
     Platform.runLater(() -> {
-      disassembleLocation.text = numToString(currentDisassemblyLocation)
+      disassembleLocation.text = numToString(Disassembler.disassemblyLocation)
     })
 

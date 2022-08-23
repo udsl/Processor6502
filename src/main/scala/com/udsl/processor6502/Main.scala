@@ -19,14 +19,12 @@ import java.io.File
 
 
 object Main extends JFXApp3 with StrictLogging {
-  //  val memoryBox = new MemoryBox()
-  //  val footer = new FooterBox()
-  //
-  //  def register(): Unit =
-  //    footer.registerScrolToViewEventHandler(memoryBox.doScroll)
-
+  var memoryBox: Option[MemoryBox] = None
+  
   def start(): Unit = {
     val registersBox = new RegistersBox()
+    memoryBox = Some(new MemoryBox())
+    val footer = new FooterBox()
 
     stage = new JFXApp3.PrimaryStage {
       title.value = "6502 Processor"
@@ -36,10 +34,10 @@ object Main extends JFXApp3 with StrictLogging {
 
       scene = new Scene {
         root =
-          val memoryBox = new MemoryBox()
-          val footer = new FooterBox()
+//          val memoryBox = new MemoryBox()
+//          val footer = new FooterBox()
 
-          footer.registerScrolToViewEventHandler(memoryBox)
+          footer.registerScrolToViewEventHandler(memoryBox.get)
 
           new BorderPane {
             maxWidth = 400
@@ -47,7 +45,7 @@ object Main extends JFXApp3 with StrictLogging {
             padding = Insets(20)
             top = NumericFormatSelector.apply
             left = registersBox
-            right = memoryBox
+            right = memoryBox.get
             bottom = footer
           }
       }

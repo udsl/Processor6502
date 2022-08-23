@@ -12,7 +12,7 @@ import javafx.scene.input.ContextMenuEvent
 import scalafx.event.{ActionEvent, EventHandler}
 import scalafx.event.subscriptions.Subscription
 import scalafx.geometry.{Insets, Orientation}
-import scalafx.scene.control.{Button, ContextMenu, Label, ListView, MenuItem, TextField, Tooltip}
+import scalafx.scene.control.{Button, ContextMenu, Label, ListView, MenuButton, MenuItem, TextField, Tooltip}
 import scalafx.scene.input.{KeyEvent, MouseEvent}
 import scalafx.scene.layout.{HBox, StackPane, VBox}
 import com.udsl.processor6502.Utilities.{numToString, numericValue, stringToNum}
@@ -122,24 +122,27 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
   val memoryButtons: HBox = new HBox{
     spacing = 20
 
-    val saveMemoryImageButton: Button = new Button {
+    val saveMemoryImage: MenuItem = new MenuItem("Save Image"){
       text = "Save Image"
       onAction = _ => {
         Memory.saveMemoryImage()
       }
     }
-    saveMemoryImageButton.setTooltip(new Tooltip("Save a memory image"))
 
-    val loadMemoryImageButton: Button = new Button {
-      text = "Load Image"
+    val loadMemoryImage: MenuItem = new MenuItem("Load Image"){
       onAction = _ => {
         if confirmation("Loading image wil overwrite all current memory!") then
           Memory.loadMemoryImage()
       }
     }
-    loadMemoryImageButton.setTooltip(new Tooltip("Load a memory image"))
 
-    children = List(saveMemoryImageButton, loadMemoryImageButton)
+    val memoryImageuButton: MenuButton = new MenuButton("Memory Image", null){
+      items = List( saveMemoryImage, loadMemoryImage )
+    }
+
+    memoryImageuButton.setTooltip(new Tooltip(s"Save or load memory image."))
+
+    children = List(memoryImageuButton)
   }
 
   padding = Insets(20)
