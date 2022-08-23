@@ -78,11 +78,12 @@ The **Reset**, **NMI** and **IRQ** buttons perform the associated interrupt acti
 
 Displays the contents of all 65536 memory locations with disasembly of contents if valid.
 
-**Save Image** button saves the current contents of memory to an image file.
+**Memory Image** Menu button with options to save and load the current contents of memory to an image file.
 
 The **View PC** button scrolls the view to the current PC location.
 
-The **View** button scrolls the view to the location entered. The loaction is displaye din the associated field in the format selected (DEC, HEX, OCT or BIN) and set by clicking the set button which pops up an input form.
+The **View Location** button scrolls the view to the location entered using the set button which pops up a numeric input form enabling the value to be entered in the current selected Number Format (DEC, HEX, OCT or BIN).
+
 
 ### Actions Area <img width="16" alt="palepurple" src="images/palepurpledot.jpg">
 
@@ -93,7 +94,8 @@ The **View** button scrolls the view to the location entered. The loaction is di
 **Code Actions** menu button.
 * Open Editor - opens the code editor
 * Assemble from file - assembles a file without loading into the editor.
-* Disassemble from location - disassembles instruction from the given location.
 
-***Disassemble Location***
-Displayed in the format selected (DEC, HEX, OCT or BIN) and set by clicking the set button which pops up an input form.
+
+***Disassemble From***
+Disassembles the current memory contents from the given location until the first ZERO byte or the end of memory.
+The current disassembly location is set using the set button which pops up a numeric input form enabling the value to be entered in the current selected Number Format (DEC, HEX, OCT or BIN).

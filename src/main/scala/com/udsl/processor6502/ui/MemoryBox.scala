@@ -72,7 +72,34 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
     children = memoryView
   }
 
-  val viewButtons: HBox = new HBox{
+  val memoryButtons: HBox = new HBox{
+    spacing = 20
+
+    val saveMemoryImage: MenuItem = new MenuItem("Save Image"){
+      text = "Save Image"
+      onAction = _ => {
+        Memory.saveMemoryImage()
+      }
+    }
+
+    val loadMemoryImage: MenuItem = new MenuItem("Load Image"){
+      onAction = _ => {
+        if confirmation("Loading image wil overwrite all current memory!") then
+          Memory.loadMemoryImage()
+      }
+    }
+
+    val memoryImageuButton: MenuButton = new MenuButton("Memory Image", null){
+      items = List( saveMemoryImage, loadMemoryImage )
+    }
+
+    memoryImageuButton.setTooltip(new Tooltip(s"Save or load memory image."))
+
+    children = List(memoryImageuButton)
+  }
+
+
+  val viewPCButtonBox: HBox = new HBox{
     spacing = 20
 
     val viewPcButton: Button = new Button {
@@ -82,10 +109,16 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
         memoryView.scrollTo(Processor.pc.addr)
       }
     }
-    viewPcButton.setTooltip(new Tooltip("Click to view PC location."))
+
+    viewPcButton.setTooltip(new Tooltip(s"Scroll memory view to current PC."))
+    children = List( viewPcButton)
+  }
+
+  val viewButtons: HBox = new HBox{
+    spacing = 20
 
     val viewLocationButton: Button = new Button {
-      text = "View "
+      text = "View Location"
       onAction = _ => {
         logger.info(s"Viewing location ${viewLocation.text.value}!")
         val loc: Int =
@@ -114,40 +147,15 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
       }
     }
 
-    viewLocationButton.setTooltip(new Tooltip(s"Click to view given location."))
-    viewLocation.setTooltip(new Tooltip(s"The location to view."))
-    children = List( viewPcButton, viewLocationButton, viewLocation, setViewLocationButton)
+    viewLocationButton.setTooltip(new Tooltip(s"Scroll memory view to given location."))
+    setViewLocationButton.setTooltip(new Tooltip(s"Set location to scroll to."))
+    children = List( viewLocationButton, viewLocation, setViewLocationButton)
   }
 
-  val memoryButtons: HBox = new HBox{
-    spacing = 20
-
-    val saveMemoryImage: MenuItem = new MenuItem("Save Image"){
-      text = "Save Image"
-      onAction = _ => {
-        Memory.saveMemoryImage()
-      }
-    }
-
-    val loadMemoryImage: MenuItem = new MenuItem("Load Image"){
-      onAction = _ => {
-        if confirmation("Loading image wil overwrite all current memory!") then
-          Memory.loadMemoryImage()
-      }
-    }
-
-    val memoryImageuButton: MenuButton = new MenuButton("Memory Image", null){
-      items = List( saveMemoryImage, loadMemoryImage )
-    }
-
-    memoryImageuButton.setTooltip(new Tooltip(s"Save or load memory image."))
-
-    children = List(memoryImageuButton)
-  }
 
   padding = Insets(20)
   spacing = 8
-  children = List(memoryBoxCaption, st, memoryButtons, viewButtons)
+  children = List(memoryBoxCaption, st, memoryButtons, viewPCButtonBox, viewButtons)
 
   def doScroll(scrollTo: Int): Unit =
     memoryView.scrollTo(scrollTo)

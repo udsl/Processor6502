@@ -30,7 +30,7 @@ class FooterBox() extends GridPane, StrictLogging:
       disassemblyLocationUpdateDisplay()
   }
 
-  val saveItem: MenuItem = new MenuItem("Save"){
+  val saveItem: MenuItem = new MenuItem("Save Config"){
     onAction = _ => {
       logger.info(s"Save Button pressed")
 
@@ -44,7 +44,7 @@ class FooterBox() extends GridPane, StrictLogging:
     }
   }
 
-  val loadItem: MenuItem = new MenuItem("Load"){
+  val loadItem: MenuItem = new MenuItem("Load Config"){
     onAction = _ => {
       logger.info(s"Load Button pressed")
       val lines = readConfigFile
@@ -62,8 +62,8 @@ class FooterBox() extends GridPane, StrictLogging:
     items = List( saveItem, loadItem )
   }
 
-  menuButton.setTooltip(new Tooltip(s"Save or load configuration."))
-  GridPane.setConstraints(menuButton, 20, 0, 2, 1)
+  menuButton.setTooltip(new Tooltip(s"Save or load a configuration."))
+  GridPane.setConstraints(menuButton, 10, 0, 5, 1)
 
 
   val openEditor: MenuItem = new MenuItem("Open Editor"){
@@ -73,7 +73,28 @@ class FooterBox() extends GridPane, StrictLogging:
     }
   }
 
-  val disassemble: MenuItem = new MenuItem("Disassemble from location"){
+
+  val assembleFile: MenuItem = new MenuItem("Assemble from file"){
+    onAction = _ => {
+      selectSourceFileToLoad match
+        case Some(file) =>
+          logger.info(s"Assembling file $file")
+          val sfa: Assembler = Assembler.apply(file)
+          sfa.startAssembly()
+        case _ =>
+    }
+  }
+
+  val codeActionButton: MenuButton = new MenuButton("Code Action", null){
+    items = List( openEditor, assembleFile )
+  }
+
+  codeActionButton.setTooltip(new Tooltip(s"Open code editor or assemble from file."))
+  GridPane.setConstraints(codeActionButton, 30, 0, 5, 1)
+
+
+  val disassembleButton: Button = new Button {
+    text = "Disassemble from"
     onAction = _ => {
       if disassembleLocation.text.value == "" then
         errorAlert("Input Error", "Disassemble location not set")
@@ -90,31 +111,7 @@ class FooterBox() extends GridPane, StrictLogging:
     }
   }
 
-  val assembleFile: MenuItem = new MenuItem("Assemble from file"){
-    onAction = _ => {
-      selectSourceFileToLoad match
-        case Some(file) =>
-          logger.info(s"Assembling file $file")
-          val sfa: Assembler = Assembler.apply(file)
-          sfa.startAssembly()
-        case _ =>
-    }
-  }
-
-  val codeActionButton: MenuButton = new MenuButton("Code Action", null){
-    items = List( openEditor, assembleFile, disassemble )
-  }
-
-  codeActionButton.setTooltip(new Tooltip(s"Open code editor, assemble from file or disassemble code."))
-  GridPane.setConstraints(codeActionButton, 40, 0, 2, 1)
-
-  val disassembleLable: Label = new Label("Disassemble from:") {
-    alignmentInParent = Pos.BaselineLeft
-    padding = Insets(10, 0, 0, 0)
-  }
-  disassembleLable.setPrefWidth(110)
-
-  GridPane.setConstraints(disassembleLable, 50, 0, 2, 1)
+  GridPane.setConstraints(disassembleButton, 50, 0, 3, 1)
 
   val disassembleLocation: TextField = new TextField {
     prefColumnCount = 6
@@ -141,14 +138,15 @@ class FooterBox() extends GridPane, StrictLogging:
         case None => logger.info("Dialog was canceled.")
     }
   }
-  GridPane.setConstraints(setDisassembleLocationButton, 56, 0, 2, 1)
+  GridPane.setConstraints(setDisassembleLocationButton, 57, 0, 2, 1)
 
+  setDisassembleLocationButton.setTooltip(new Tooltip(s"Set the location to start disassembly, continues till first ZERO byte or end of memory."))
 
   hgap = 4
   vgap = 16
   margin = Insets(8)
 
-  children ++= Seq(menuButton, codeActionButton, disassembleLable, disassembleLocation, setDisassembleLocationButton)
+  children ++= Seq(menuButton, codeActionButton, disassembleButton, disassembleLocation, setDisassembleLocationButton)
 
   private var scrolToViewHanlers = Set[ScrollToView]()
 
