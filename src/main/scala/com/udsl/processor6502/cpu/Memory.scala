@@ -1,11 +1,17 @@
 package com.udsl.processor6502.cpu
 
 import com.typesafe.scalalogging.StrictLogging
+import com.udsl.processor6502.Dialogues.theStage
 import com.udsl.processor6502.FileIOUtilities.{selectMemoryImageFileToLoad, selectMemoryImageFileToSave}
+import com.udsl.processor6502.Main.stage
 import com.udsl.processor6502.Utilities.isNumeric
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import scalafx.collections.ObservableBuffer
+import scalafx.geometry.Insets
+import scalafx.scene.control.ButtonBar.ButtonData
+import scalafx.scene.control.{ButtonType, Dialog, Label, TextField}
+import scalafx.scene.layout.GridPane
 
 import java.io.{BufferedReader, BufferedWriter, File, FileReader, FileWriter}
 import scala.collection.mutable.ListBuffer
@@ -134,18 +140,61 @@ object Memory extends StrictLogging:
     br.close()
 
   private def doSaveImage( file: File, start: Int = 0, end: Int = 65535): Unit =
+    logger.info(s"Saving Memory image from: $start to $end")
     val bw = new BufferedWriter(new FileWriter(file))
 
-    for cell <- memory do
+    for (i <- start to end) do
+      val cell = memory(i)
       bw.write(s"${cell.asSerialisedString()}\n")
     bw.close()
     logger.info(s"Memory image size written: ${end - start}, from: $start to $end")
 
+  case class SaveResult(start: Int, end: Int)
   def saveMemoryImage(): Unit =
     logger.info("Saving memory image!")
-    selectMemoryImageFileToSave match
-      case Some(file) => doSaveImage( file )
-      case _ =>
+
+    val dialog = new Dialog[SaveResult]() {
+      initOwner(theStage)
+      title = "Set Memory Save Range"
+      headerText = "Set the start and end address for the save."
+    }
+
+    val setRangeButtonType = new ButtonType("Set Range", ButtonData.OKDone)
+    dialog.dialogPane().getButtonTypes.setAll(setRangeButtonType, ButtonType.Cancel)
+
+    val start = new TextField() {
+      promptText = "start location"
+    }
+    val end = new TextField() {
+      promptText = "end location"
+    }
+
+    val grid = new GridPane() {
+      hgap = 10
+      vgap = 10
+      padding = Insets(20, 100, 10, 10)
+
+      add(new Label("Start:"), 0, 0)
+      add(start, 1, 0)
+      add(new Label("End:"), 0, 1)
+      add(end, 1, 1)
+    }
+
+    dialog.dialogPane().setContent(grid)
+
+    dialog.resultConverter = dialogButton =>
+      if (dialogButton == setRangeButtonType)
+        SaveResult(start.text().toInt, end.text().toInt)
+      else
+        null
+
+    dialog.showAndWait() match {
+      case Some(SaveResult(s, e)) =>
+        selectMemoryImageFileToSave match
+          case Some(file) => doSaveImage(file, s, e)
+          case _ =>
+      case None => logger.info("memory dialogue cancelled")
+    }
 
 class MemoryCell(private val location: Address, private var value: ByteValue = ByteValue.apply):
 
