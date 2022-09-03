@@ -29,7 +29,7 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
   viewLocationUpdateDisplay()
 
   NumericFormatSelector.numericFormatProperty.onChange {
-    (_, oldValue, newValue) =>
+    (_, _, newValue) =>
       changeDisplayMode(newValue)
       memoryView.refresh()
       viewLocationUpdateDisplay()

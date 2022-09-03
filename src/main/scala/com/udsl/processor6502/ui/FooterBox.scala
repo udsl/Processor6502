@@ -26,7 +26,7 @@ class FooterBox() extends GridPane, StrictLogging:
 
 
   NumericFormatSelector.numericFormatProperty.onChange {
-    (_, oldValue, newValue) =>
+    (_, _, _) =>
       disassemblyLocationUpdateDisplay()
   }
 

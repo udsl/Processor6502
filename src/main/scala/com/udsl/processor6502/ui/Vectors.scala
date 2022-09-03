@@ -18,7 +18,6 @@ package com.udsl.processor6502.ui:
   import scalafx.geometry.Insets
 
   class Vectors extends VBox, VectorChangeListener, StrictLogging {
-    val memoryAccess = Memory.apply
 
     Memory.addVectorChangeListener(this)
 
@@ -26,7 +25,7 @@ package com.udsl.processor6502.ui:
     val reset = new Vector("RESET", RESET_VECTOR)
     val irq = new Vector("IRQ/BRK", INTERRUPT_VECTOR)
 
-    def vectorChange(change: (String, Int)) =
+    def vectorChange(change: (String, Int)): Unit =
       change match
         case ("NMI", v) => nmi.updateDisplay(v)
         case ("RST", v) => reset.updateDisplay(v)
@@ -34,8 +33,8 @@ package com.udsl.processor6502.ui:
         case _ => throw new Exception(s"Unexpected vector change event - $change")
 
 
-    val display = new StackPane {
-      val titleBox = new HBox {
+    val display: StackPane = new StackPane {
+      val titleBox: HBox = new HBox {
         val title: Label = new Label {
 
           text = "  Vectors  "
@@ -45,11 +44,11 @@ package com.udsl.processor6502.ui:
         children = List(title)
       }
 
-      val theVectors = new VBox {
+      val theVectors: VBox = new VBox {
         style = "-fx-content-display: top; -fx-border-insets: -2 -2 -2 -2; -fx-background-color: white; -fx-border-color: grey; -fx-border-width: 2;"
       }
 
-      val v = new VBox {
+      val v: VBox = new VBox {
         padding = Insets(4, 4, 4, 4)
         children = List(nmi, reset, irq)
       }
@@ -61,7 +60,7 @@ package com.udsl.processor6502.ui:
     children = List(display)
   }
 
-  class Vector(val vectorName: String, val vectorAddress: Int, initalValue: Int = 0) extends HBox, DataProvider, DataConsumer, StrictLogging {
+  class Vector(val vectorName: String, val vectorAddress: Int, initialValue: Int = 0) extends HBox, DataProvider, DataConsumer, StrictLogging {
 
     registerDataSource(this)
 
@@ -72,8 +71,8 @@ package com.udsl.processor6502.ui:
       prefWidth = 70
     }
 
-    val value = new TextField {
-      text = initalValue.toString
+    val value: TextField = new TextField {
+      text = initialValue.toString
       disable = true
       prefWidth = 120
     }
@@ -84,7 +83,7 @@ package com.udsl.processor6502.ui:
       text = "set"
       onAction = _ => {
         logger.info("Setting PC!")
-        val dialog = getNumberSettingDialogue(s"New ${vectorName} Vector", currentValue)
+        val dialog = getNumberSettingDialogue(s"New $vectorName Vector", currentValue)
 
         val result = dialog.showAndWait()
         result match
@@ -95,19 +94,19 @@ package com.udsl.processor6502.ui:
       }
     }
 
-    val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
-      (_, oldValue, newValue) =>
+    NumericFormatSelector.numericFormatProperty.onChange {
+      (_, _, newValue) =>
         logger.info(s"Num format subscription fired: $newValue")
         value.text = numToString(currentValue)
     }
 
-    var currentValue: Int = initalValue
+    var currentValue: Int = initialValue
 
     setButton.setTooltip(tooltip)
 
     children = List(label, value, setButton)
 
-    def updateDisplay(change: Int) =
+    def updateDisplay(change: Int): Unit =
       currentValue = change
       value.text = numToString(currentValue)
 

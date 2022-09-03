@@ -28,7 +28,7 @@ class Executor extends Stage, Observer[ExecutionUnit], StrictLogging:
     Executor.close()
   }
 
-  def getCurrentInsDecoded(): String =
+  def getCurrentInsDecoded: String =
     Executor.executionUnit.get.opcode match {
       case NULL_Instruction =>
         // not set so get from PC
@@ -37,7 +37,7 @@ class Executor extends Stage, Observer[ExecutionUnit], StrictLogging:
     }
     Executor.executionUnit.get.decodeInstruction()
 
-  val currentInsLabel: Label = new Label(getCurrentInsDecoded())
+  val currentInsLabel: Label = new Label(getCurrentInsDecoded)
 
   val currentInsBox: HBox = new HBox{
     spacing = 20
@@ -114,13 +114,13 @@ object Executor:
 
   def showExecutor(): Unit =
     executor match
-      case Some(_) => {
+      case Some(_) =>
         executor.get.toFront()
-      }
-      case _ => {
+
+      case _ =>
         // Need to get an ExecutionUnit before we create the screen that uses it.
         if executionUnit.isEmpty then
           executionUnit = Some(ExecutionUnit.apply)
         executor = Some(Executor())
         executor.get.show()
-      }
+

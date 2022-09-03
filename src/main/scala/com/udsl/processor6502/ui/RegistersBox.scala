@@ -26,9 +26,9 @@ package com.udsl.processor6502.ui:
       disable = true
     }
 
-    val pcSubscription: Subscription = Processor.pc._addr.onChange {
+    Processor.pc._addr.onChange {
       (_, oldValue, newValue) => {
-        logger.debug(s"PC subscription fired - ${oldValue}, ${newValue}")
+        logger.debug(s"PC subscription fired - $oldValue, $newValue")
         updateDisplayedValues()
       }
     }
@@ -44,8 +44,8 @@ package com.udsl.processor6502.ui:
       })
     }
 
-    val subscription: Subscription = NumericFormatSelector.numericFormatProperty.onChange {
-      (_, oldValue, newValue) => {
+    NumericFormatSelector.numericFormatProperty.onChange {
+      (_, _, newValue) => {
         logger.info("Num format subscription fired")
         currentFormat = newValue
         updateDisplayedValues()
@@ -98,30 +98,30 @@ package com.udsl.processor6502.ui:
       children = List(label, sp)
     }
 
-    val spSubscription: Subscription = Processor.sp._ebr.onChange {
+    Processor.sp._ebr.onChange {
       (_, oldValue, newValue) => {
-        logger.info(s"SP subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"SP subscription fired - $oldValue, $newValue")
         updateDisplayedValues()
       }
     }
 
-    val accSubscription: Subscription = Processor.ac._ebr.onChange {
+    Processor.ac._ebr.onChange {
       (_, oldValue, newValue) => {
-        logger.info(s"Acc subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"Acc subscription fired - $oldValue, $newValue")
         updateDisplayedValues()
       }
     }
 
-    val inxSubscription: Subscription = Processor.ix._ebr.onChange {
+    Processor.ix._ebr.onChange {
       (_, oldValue, newValue) => {
-        logger.info(s"Index X subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"Index X subscription fired - $oldValue, $newValue")
         updateDisplayedValues()
       }
     }
 
-    val inySubscription: Subscription = Processor.iy._ebr.onChange {
+    Processor.iy._ebr.onChange {
       (_, oldValue, newValue) => {
-        logger.info(s"Index Y subscription fired - ${oldValue}, ${newValue}")
+        logger.info(s"Index Y subscription fired - $oldValue, $newValue")
         updateDisplayedValues()
       }
     }
