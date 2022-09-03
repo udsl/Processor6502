@@ -17,7 +17,7 @@ class ByteValue {
     }
 
     def setDisassembly(theDisassembly: String): Unit =
-        disassembly = theDisassembly
+        disassembly = theDisassembly.trim
 
     def getDisassembly: String =
         disassembly
@@ -32,6 +32,10 @@ class ByteValue {
 
     def toDisplayString(format: NumericFormatType): String =
       numToByteString(byte, format)
+
+    def asSerilisedString: String =
+       s"${_byte.value}:$disassembly"
+
 }
 
 object ByteValue {
@@ -59,7 +63,7 @@ object ByteValue {
     }
 
     def validate( b: Int): Unit = {
-        if (b < MIN_BYTE_VALUE || b > MAX_BYTE_VALUE) throw new Exception(s"Value out of range for BYTE: ${b}.")
+        if (b < MIN_BYTE_VALUE || b > MAX_BYTE_VALUE) throw new Exception(s"Value out of range for BYTE: $b.")
     }
 
     def asSignedValue(value: Int):Int =

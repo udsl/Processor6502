@@ -2,6 +2,7 @@ package com.udsl.processor6502.cpu
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.FileIOUtilities.{selectMemoryImageFileToLoad, selectMemoryImageFileToSave}
+import com.udsl.processor6502.Utilities.isNumeric
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import scalafx.collections.ObservableBuffer
@@ -97,7 +98,7 @@ object Memory extends StrictLogging:
    */
   private def setMemoryToAddress(location: Int, address: Int): Unit =
     logger.info(s"Updating contents of $location to address value $address")
-    setMemoryByte(location, address & 0xFF )
+    setMemoryByte(location, address & 0xFF, s"ADDR $address" )
     setMemoryByte(location + 1, (address >> 8) & 0xFF)
     location match
       case NMI_VECTOR => notifyVectorChangeListeners("NMI", address)
@@ -128,34 +129,17 @@ object Memory extends StrictLogging:
     val br = new BufferedReader(new FileReader(file))
 
     for l <- Iterator.continually(br.readLine()).takeWhile(_ != null) do
-      val values = l.split(",").map(_.trim)
-      val cells = values.map( c => MemoryCell(c)) // break the line to individual records
-      // get the records as (Int, Int)
-      cells.foreach(m => memory.update(m.getLocation, m))
+      val m = MemoryCell(MemoryCellRecord(l) )
+      memory.update(m.getLocation, m)
     br.close()
 
-  private def doSaveImage( file: File): Unit =
+  private def doSaveImage( file: File, start: Int = 0, end: Int = 65535): Unit =
     val bw = new BufferedWriter(new FileWriter(file))
 
-    val strList = memory.toList.map( c => c.asString )
-    val memoryImage = new ListBuffer[String]()
-    val image = new StringBuilder()
-    var count = 0
-    var lines = 0
-    for( x <- strList)
-      image.append(x)
-      if count == 9 then
-        count = 0
-        image.append("\n")
-        bw.write(image.toString())
-        image.clear()
-        lines += 1
-      else
-        image.append(",")
-        count += 1
-    bw.write(image.toString().dropRight(2)) // write the last line - the comma and space
+    for cell <- memory do
+      bw.write(s"${cell.asSerialisedString()}\n")
     bw.close()
-    logger.info(s"Memory size: ${memory.size}, Lines: $lines")
+    logger.info(s"Memory image size written: ${end - start}, from: $start to $end")
 
   def saveMemoryImage(): Unit =
     logger.info("Saving memory image!")
@@ -166,7 +150,11 @@ object Memory extends StrictLogging:
 class MemoryCell(private val location: Address, private var value: ByteValue = ByteValue.apply):
 
   override def toString: String =
-    s"[${location.toAddressString(MemoryCell.currentMemoryFormat)}] ${value.toDisplayString(MemoryCell.currentMemoryFormat)} ${value.getDisassembly}"
+    val disasemblyDisplay = if value.getDisassembly.nonEmpty then s" - ${value.getDisassembly}" else ""
+    s"[${location.toAddressString(MemoryCell.currentMemoryFormat)}] ${value.toDisplayString(MemoryCell.currentMemoryFormat)}$disasemblyDisplay"
+
+  def asSerialisedString(): String =
+    s"$location:${value.asSerilisedString}"
 
   def asString: String =
     s"$location:$value"
@@ -202,12 +190,27 @@ object MemoryCell:
     val m = new MemoryCell(Address(index), b)
     m
 
-  def apply(str: String): MemoryCell =
-    val strs = str.split(":")
-    if strs.length != 2 then throw new Exception(s"String format error expected 2 strings seperated by ':' got '$str'")
-    val m = new MemoryCell(Address(strs(0).toInt), ByteValue(strs(1).toInt))
-    m
+  def apply(mcr: MemoryCellRecord): MemoryCell =
+    apply(mcr.index, mcr.byt, mcr.dis)
 
   def changeDisplayMode( displayMode: NumericFormatType): Unit =
     currentMemoryFormat = displayMode
+
+case class MemoryCellRecord(index:Int, byt:Int, dis:String)
+
+object MemoryCellRecord:
+
+  def validate(str:String): (Int, Int, String) =
+    val v = str.split(":")
+    if v.length > 3 then throw new Exception(s"Invalid MemoryCellRecord: required 2 Int plus optional string. got - $str")
+    if v.length >= 2 then
+      if !isNumeric(v(0)) then throw new Exception(s"Invalid MemoryCellRecord: field 1 is not numeric - ${v(0)}")
+      if !isNumeric(v(1)) then throw new Exception(s"Invalid MemoryCellRecord: field 2 is not numeric - ${v(1)}")
+    val v2 = if v.length == 2 then "" else v(2)
+    (v(0).toInt, v(1).toInt, v2)
+  def apply(str:String): MemoryCellRecord =
+    val v = validate(str)
+    MemoryCellRecord(v._1, v._2, v._3)
+
+
 

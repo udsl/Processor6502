@@ -160,7 +160,7 @@ object Utilities:
       case AbsoluteY => s"${numToWordString(value, NumericFormatType.HEX)}, Y"
       case Invalid | Unknown | NotApplicable => ""
     if adr.nonEmpty then
-      s" - $mnemonic $adr"
+      s"$mnemonic $adr"
     else
       adr
 

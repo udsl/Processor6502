@@ -147,7 +147,7 @@ object AssembleLocation extends StrictLogging :
       val errorMessage = s"Bad word value $v"
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
-    setMemoryByte(v / 256)
+    setMemoryByte(v / 256, s"WRD $v")
     setMemoryByte(v % 256)
 
 
