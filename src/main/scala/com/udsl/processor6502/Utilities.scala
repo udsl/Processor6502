@@ -23,7 +23,7 @@ object Utilities:
 
   def verifyNumberEntry(text: String): (Boolean, String) =
     val pattern: Regex = currentFormat match {
-      case NumericFormatType.HEX => "^[0-9a-fA-F]+$".r
+      case NumericFormatType.HEX => "^\\$?[0-9a-fA-F]+$".r
       case NumericFormatType.OCT => "^[0-7]+$".r
       case NumericFormatType.BIN => "^[0-1]+$".r
       case NumericFormatType.DEC => "^[0-9]+$".r
@@ -36,13 +36,16 @@ object Utilities:
     }
 
   def stringToNum(text: String): Int =
-    currentFormat match {
-      case NumericFormatType.HEX => Integer.parseInt(text, 16)
-      case NumericFormatType.OCT => Integer.parseInt(text, 8)
-      case NumericFormatType.BIN => Integer.parseInt(text, 2)
-      case NumericFormatType.DEC => Integer.parseInt(text, 10)
-      //        case _ => -1
-    }
+    if verifyNumberEntry(text)._1 then
+      currentFormat match {
+        case NumericFormatType.HEX =>
+          if text.startsWith("$") then Integer.parseInt(text.substring(1), 16) else Integer.parseInt(text, 16)
+        case NumericFormatType.OCT => Integer.parseInt(text, 8)
+        case NumericFormatType.BIN => Integer.parseInt(text, 2)
+        case NumericFormatType.DEC => Integer.parseInt(text, 10)
+      }
+    else
+      -1
 
   def numToString(value: Int): String =
     numToString(value, numericFormatProperty.value)

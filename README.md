@@ -76,9 +76,13 @@ The **Reset**, **NMI** and **IRQ** buttons perform the associated interrupt acti
 
 ### Memory View <img width="16" alt="palegreen" src="images/palegreendot.jpg">
 
-Displays the contents of all 65536 memory locations with disasembly of contents if valid.
+Displays the contents of all 65536 memory locations with disassembly of contents if valid.
 
 **Memory Image** Menu button with options to save and load the current contents of memory to an image file.
+
+On save the **Set Range Dialogue** pops up, the start and end address of the dump can be entered in the current selected Number Format (DEC, HEX, OCT or BIN).
+
+On **Set Range** the file to save to can be selected / entered and a image of the memory range is written.
 
 The **View PC** button scrolls the view to the current PC location.
 

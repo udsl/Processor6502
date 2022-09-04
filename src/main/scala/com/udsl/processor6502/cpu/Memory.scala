@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Dialogues.theStage
 import com.udsl.processor6502.FileIOUtilities.{selectMemoryImageFileToLoad, selectMemoryImageFileToSave}
 import com.udsl.processor6502.Main.stage
-import com.udsl.processor6502.Utilities.isNumeric
+import com.udsl.processor6502.Utilities.{currentFormat, isNumeric, stringToNum}
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import scalafx.collections.ObservableBuffer
@@ -156,7 +156,7 @@ object Memory extends StrictLogging:
     val dialog = new Dialog[SaveResult]() {
       initOwner(theStage)
       title = "Set Memory Save Range"
-      headerText = "Set the start and end address for the save."
+      headerText = s"Set the start and end address for the save.\nCurrent active number format ${currentFormat.toString}"
     }
 
     val setRangeButtonType = new ButtonType("Set Range", ButtonData.OKDone)
@@ -184,7 +184,7 @@ object Memory extends StrictLogging:
 
     dialog.resultConverter = dialogButton =>
       if (dialogButton == setRangeButtonType)
-        SaveResult(start.text().toInt, end.text().toInt)
+        SaveResult(stringToNum(start.text()), stringToNum(end.text()))
       else
         null
 
@@ -193,7 +193,7 @@ object Memory extends StrictLogging:
         selectMemoryImageFileToSave match
           case Some(file) => doSaveImage(file, s, e)
           case _ =>
-      case None => logger.info("memory dialogue cancelled")
+      case _ => logger.info("memory dialogue cancelled")
     }
 
 class MemoryCell(private val location: Address, private var value: ByteValue = ByteValue.apply):
@@ -203,7 +203,7 @@ class MemoryCell(private val location: Address, private var value: ByteValue = B
     s"[${location.toAddressString(MemoryCell.currentMemoryFormat)}] ${value.toDisplayString(MemoryCell.currentMemoryFormat)}$disasemblyDisplay"
 
   def asSerialisedString(): String =
-    s"$location:${value.asSerilisedString}"
+    s"${location.addr}:${value.asSerilisedString}"
 
   def asString: String =
     s"$location:$value"
