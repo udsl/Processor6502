@@ -72,15 +72,11 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
 
   def secondPass(): Unit =
     for (tokenisedLine <- tokenisedLines)
-//      try
-        val resultToken = Assemble6502SecondPass.assemble(tokenisedLine)
-        resultToken match
-          case NoTokenToken( _, _ ) =>
-          case _ =>
-            tokenisedLine.tokens.addOne(resultToken)
-//      catch
-//        case e: Exception => throw new Exception(s"${e.getMessage}\nOn line ${tokenisedLine.sourceLine.lineNumber}" )
-//        case a => logger.error(s"Unknown exception! $a\nOn line ${tokenisedLine.sourceLine.lineNumber}")
+      val resultToken = Assemble6502SecondPass.assemble(tokenisedLine)
+      resultToken match
+        case NoTokenToken( _, _ ) =>
+        case _ =>
+          tokenisedLine.tokens.addOne(resultToken)
 
   def listExceptions(): Unit =
     logger.info(

@@ -10,6 +10,8 @@ import com.udsl.processor6502.cpu.execution.{Absolute, AddressingMode, ZeroPage}
 import com.udsl.processor6502.assembler.{AssemblerToken, BlankLineToken, ClearToken, CommandToken, InstructionToken, LabelToken, OriginToken}
 
 import scala.collection.mutable.ListBuffer
+import scala.language.postfixOps
+import scala.util.{Success, Failure, Try}
 
 object Tokeniser extends StrictLogging :
   val exceptionList: List[AssembleExceptionRecord] = List[AssembleExceptionRecord]()
@@ -26,10 +28,10 @@ object Tokeniser extends StrictLogging :
         |""".stripMargin)
     val tokenisedLines = new ListBuffer[TokenisedLine]()
     for lineToTokenise <- allLines do
-      try
-        tokenisedLines.addOne(tokeniseLine(lineToTokenise))
-      catch
-        case e: Exception =>  exceptionList.appended(AssembleExceptionRecord(e.getMessage, lineToTokenise))
+      val tokenisedLine = Try(tokeniseLine(lineToTokenise))
+      tokenisedLine match
+        case Success(line) => tokenisedLines.addOne(line)
+        case Failure(ex) => exceptionList.appended(AssembleExceptionRecord(ex.getMessage, lineToTokenise))
     tokenisedLines.toList
 
   def tokeniseLine(line: UntokenisedLine): TokenisedLine =
