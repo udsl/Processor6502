@@ -5,19 +5,14 @@ version := "0.1.3"
 scalaVersion := "3.1.3"
 
 
-// https://mvnrepository.com/artifact/org.scalafx/scalafx
-libraryDependencies += "org.scalafx" %% "scalafx" % "18.0.1-R27"
-
-// https://mvnrepository.com/artifact/org.scalacheck/scalacheck
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.16.0" % Test
-
-// https://mvnrepository.com/artifact/org.scalactic/scalactic
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.12"
-// https://mvnrepository.com/artifact/org.scalatest/scalatest
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % Test
-
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
-libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
+libraryDependencies ++= Seq(
+  "org.scalafx" %% "scalafx" % "18.0.1-R27",
+  "org.scalacheck" %% "scalacheck" % "1.16.0" % Test,
+  "org.scalactic" %% "scalactic" % "3.2.12",
+  "org.scalatest" %% "scalatest" % "3.2.12" % Test,
+  "ch.qos.logback" % "logback-classic" % "1.2.3",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
+)
 
 libraryDependencies ++= {
   // Determine OS version of JavaFX binaries

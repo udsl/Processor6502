@@ -1,0 +1,45 @@
+package com.udsl.processor6502.assemblier2
+
+import com.typesafe.scalalogging.StrictLogging
+import com.udsl.processor6502.assemblier2.{Token, Tokeniser, Assemblier2}
+
+import java.io.FileInputStream
+import java.nio.file.{Files, Paths}
+import scala.io.{BufferedSource, Source}
+import scala.util.{Failure, Success, Try, Using}
+
+class Assemblier2(val sourceLines: LazyList[String]) extends StrictLogging :
+  import Assemblier2.*
+
+
+  def souceLineCount : Int =
+    sourceLines.length
+
+  def assemble(): List[String] =
+    println("starting")
+    sourceLines.map(tokonise)
+    println("complete")
+    List.empty[String]
+
+  def tokonise(line: String) : List[Token] =
+    Tokeniser.tockenise(line)
+
+
+object Assemblier2 :
+
+  def apply(sourceLines: List[String]) : Assemblier2 =
+    val asm = new Assemblier2(LazyList.from(sourceLines))
+    asm
+
+  def apply(sourceFilename: String) : Assemblier2 =
+
+    //val string = new String(Files.readAllBytes(Paths.get(sourceFilename)))
+    val x = Using(Source.fromFile(sourceFilename)) { s =>
+      s.getLines().toList
+    }
+
+    val asm = new Assemblier2(LazyList.from(x.get))
+    asm
+
+
+
