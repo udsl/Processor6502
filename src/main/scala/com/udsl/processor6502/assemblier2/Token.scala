@@ -11,7 +11,7 @@ trait Token (val fields: Array[String] ):
   val predictedAddressingModes: ListBuffer[AddressingMode] = ListBuffer[AddressingMode]()
   val name: String
 
-  def display : String = s"${name} -> '${fields.mkString(", ")}'"
+  def display : String = s"$name -> '${fields.mkString(", ")}'"
   def tokenText: String = ""
 
   private def canEqual(other: Any) = other.isInstanceOf[Token]
@@ -40,21 +40,21 @@ case class CommentLineToken(override val fields: Array[String] ) extends Token(f
 
 case class LineCommentToken (comment: String, override val fields: Array[String]) extends Token(fields: Array[String] ):
   override val name: String = "LineCommentToken"
-  override def toString: String =  s"${name} -> '$comment'"
+  override def toString: String =  s"$name -> '$comment'"
 
 case class LabelToken (label: String, override val fields: Array[String]) extends Token(fields: Array[String] ):
   override val name: String = "LabelToken"
-  override def toString: String = s"${name} -> '$label'"
+  override def toString: String = s"$name -> '$label'"
   override def tokenText: String = label
 
 case class CommandToken (command: String, override val fields: Array[String]) extends Token(fields: Array[String] ):
   override val name: String = "CommandToken"
-  override def toString: String = s"${name} -> '$command'"
+  override def toString: String = s"$name -> '$command'"
   override def tokenText: String = command
 
 case class InstructionToken (mnemonic: String, override val fields: Array[String]) extends Token(fields: Array[String] ) with StrictLogging:
   override val name: String = "InstructionToken"
-  override def toString: String =  s"${name} -> '$mnemonic'"
+  override def toString: String =  s"$name -> '$mnemonic'"
   override def tokenText: String = mnemonic
 
 case class SytaxErrorToken (errortext: String, override val fields: Array[String]) extends Token(fields: Array[String] ):
@@ -73,14 +73,14 @@ class TokenisedLine(val sourceLine: String, val lineNumber: Int):
   def add(token: Token): Unit =
     tokens = tokens :+ token
 object TokenisedLine:
-  def apply(sourceLine: String): TokenisedLine =
-    new TokenisedLine(sourceLine, 0)
+  def apply(sourceLine: String, lineNum: Int): TokenisedLine =
+    new TokenisedLine(sourceLine, lineNum)
     
 object Tokeniser :
-  def tockenise(line: String) : TokenisedLine =
-    var tokenisedLine = TokenisedLine.apply(line)
-    
-    val toTokenise = line.trim
+  def tockenise(text: String, lineNum: Int) : TokenisedLine =
+    var tokenisedLine = TokenisedLine.apply(text, lineNum)
+
+    val toTokenise = text.trim
     // Blank line
     if toTokenise == "" then
       tokenisedLine.add(BlankLineToken.apply(Array("")))
@@ -106,7 +106,7 @@ object Tokeniser :
         case _ => false
       }) then
         // Dose this line have a label ie does the beforeCommentSplit.head end with ':'
-        val ins: String = if (beforeCommentSplit.head.endsWith(":")) then
+        val ins: String = if beforeCommentSplit.head.endsWith(":") then
           val labelText = beforeCommentSplit.head.dropRight(1)
           if isLabel(labelText) then
             tokenisedLine.add(LabelToken.apply(labelText, Array(beforeCommentSplit.tail.mkString(" "))))

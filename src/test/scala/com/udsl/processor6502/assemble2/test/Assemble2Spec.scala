@@ -25,7 +25,7 @@ class Assemble2Spec extends AnyFlatSpec, should.Matchers :
         "CPX     #$03",
         "BNE decrement",
         "STX $0201",
-        "BRK"))
+        "BRK").zipWithIndex)
       assert(asm.souceLineCount == 8)
       val res = asm.assemble()
       assert(res.length == 8)

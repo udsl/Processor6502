@@ -8,7 +8,7 @@ import java.nio.file.{Files, Paths}
 import scala.io.{BufferedSource, Source}
 import scala.util.{Failure, Success, Try, Using}
 
-class Assemblier2(val sourceLines: LazyList[String]) extends StrictLogging :
+class Assemblier2(val sourceLines: LazyList[(String, Int)]) extends StrictLogging :
   import Assemblier2.*
 
 
@@ -21,13 +21,13 @@ class Assemblier2(val sourceLines: LazyList[String]) extends StrictLogging :
     println("complete")
     tokenised
 
-  def tokonise(line: String) : TokenisedLine =
-    Tokeniser.tockenise(line)
+  def tokonise(text: String, line: Int) : TokenisedLine =
+    Tokeniser.tockenise(text, line)
 
 
 object Assemblier2 :
 
-  def apply(sourceLines: List[String]) : Assemblier2 =
+  def apply(sourceLines: List[(String, Int)]) : Assemblier2 =
     val asm = new Assemblier2(LazyList.from(sourceLines))
     asm
 
@@ -35,7 +35,7 @@ object Assemblier2 :
 
     //val string = new String(Files.readAllBytes(Paths.get(sourceFilename)))
     val x = Using(Source.fromFile(sourceFilename)) { s =>
-      s.getLines().toList
+      s.getLines().toList.zipWithIndex
     }
 
     val asm = new Assemblier2(LazyList.from(x.get))

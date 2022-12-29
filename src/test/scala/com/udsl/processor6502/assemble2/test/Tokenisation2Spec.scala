@@ -11,20 +11,21 @@ class Tokenisation2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with 
 
   "Given a source line" should "return a list of valid tokens" in {
     val orders = Table(
-      ("line", "token-count", "tokens", "tokenText")
-      , (";the quick brown fox jumps over the lazy dog", 1, List(CommentLineToken.apply(Array("the quick brown fox jumps over the lazy dog"))), "")
-      , ("", 1, List(BlankLineToken.apply(Array(""))), "")
-      , ("label: LDA #56 ; instruction with label", 3, List(
+      ("lineNum", "line", "token-count", "tokens", "tokenText")
+      , (1, ";the quick brown fox jumps over the lazy dog", 1, List(CommentLineToken.apply(Array("the quick brown fox jumps over the lazy dog"))), "")
+      , (2, "", 1, List(BlankLineToken.apply(Array(""))), "")
+      , (3, "label: LDA #56 ; instruction with label", 3, List(
           LineCommentToken.apply("instruction with label", Array()),
           LabelToken.apply("label", Array("LDA #56")),
           InstructionToken.apply("LDA", Array("#56"))), "LDA")
-      , ("orig $200", 1, List(CommandToken.apply("ORIG", Array("$200"))), "ORIG")
+      , (4, "orig $200", 1, List(CommandToken.apply("ORIG", Array("$200"))), "ORIG")
     )
-    forAll(orders) { (line, tokenCount, tokens, tokenText) =>
-      val res = Tokeniser.tockenise(line)
+    forAll(orders) { (lineNum, line, tokenCount, tokens, tokenText) =>
+      val res = Tokeniser.tockenise(line, lineNum)
       assert(res.tokens.size == tokenCount)
       assert(tokens == res.tokens)
       assert(res.sourceLine == line)
+      assert(res.lineNumber == lineNum)
     }
   }
 
