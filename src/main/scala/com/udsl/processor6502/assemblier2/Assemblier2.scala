@@ -15,13 +15,13 @@ class Assemblier2(val sourceLines: LazyList[String]) extends StrictLogging :
   def souceLineCount : Int =
     sourceLines.length
 
-  def assemble(): List[String] =
+  def assemble(): List[TokenisedLine] =
     println("starting")
-    sourceLines.map(tokonise)
+    val tokenised = sourceLines.map(tokonise).toList
     println("complete")
-    List.empty[String]
+    tokenised
 
-  def tokonise(line: String) : List[Token] =
+  def tokonise(line: String) : TokenisedLine =
     Tokeniser.tockenise(line)
 
 

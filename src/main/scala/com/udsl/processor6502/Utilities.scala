@@ -131,7 +131,7 @@ object Utilities:
     -1
 
   def isLabel( str: String): Boolean =
-    val alphaPattern: Regex = "^[A-Za-z][A-Za-z0-9]+$".r
+    val alphaPattern: Regex = "^[A-Za-z][A-Za-z0-9]+:?$".r
     alphaPattern.findFirstMatchIn(str) match {
       case Some(_) => true
       case None => false

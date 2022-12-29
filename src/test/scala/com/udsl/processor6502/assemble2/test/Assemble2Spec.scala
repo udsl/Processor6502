@@ -27,6 +27,8 @@ class Assemble2Spec extends AnyFlatSpec, should.Matchers :
         "STX $0201",
         "BRK"))
       assert(asm.souceLineCount == 8)
+      val res = asm.assemble()
+      assert(res.length == 8)
     }
 
 
