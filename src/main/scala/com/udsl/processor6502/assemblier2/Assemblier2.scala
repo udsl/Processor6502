@@ -17,29 +17,28 @@ class Assemblier2(val sourceLines: LazyList[(String, Int)]) extends StrictLoggin
 
   def assemble(): List[TokenisedLine] =
     println("starting")
-    val tokenised = sourceLines.map(tokonise).toList
+    val tokenised = tokenisation
     println("complete")
     tokenised
 
-  def tokonise(text: String, line: Int) : TokenisedLine =
+  def tokenisation: List[TokenisedLine] =
+    sourceLines.map(tokonise).toList
+
+  private def tokonise(text: String, line: Int) : TokenisedLine =
     Tokeniser.tockenise(text, line)
 
 
 object Assemblier2 :
 
-  def apply(sourceLines: List[(String, Int)]) : Assemblier2 =
-    val asm = new Assemblier2(LazyList.from(sourceLines))
-    asm
+  def apply(sourceLines: List[String]) : Assemblier2 =
+    new Assemblier2(LazyList.from(sourceLines.zip(LazyList.from(1))))
 
   def apply(sourceFilename: String) : Assemblier2 =
-
-    //val string = new String(Files.readAllBytes(Paths.get(sourceFilename)))
-    val x = Using(Source.fromFile(sourceFilename)) { s =>
-      s.getLines().toList.zipWithIndex
-    }
-
-    val asm = new Assemblier2(LazyList.from(x.get))
-    asm
+    new Assemblier2(
+      Using(Source.fromFile(sourceFilename)) { s =>
+        LazyList.from(s.getLines().toList.zip(LazyList.from(1)))
+      }.get
+    )
 
 
 

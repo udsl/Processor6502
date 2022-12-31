@@ -7,8 +7,9 @@ import com.udsl.processor6502.cpu.execution.AddressingMode
 
 import scala.collection.mutable.ListBuffer
 
-trait Token (val fields: Array[String] ):
-  val predictedAddressingModes: ListBuffer[AddressingMode] = ListBuffer[AddressingMode]()
+
+
+trait Token (val fields: Array[String] ) :
   val name: String
 
   def display : String = s"$name -> '${fields.mkString(", ")}'"
@@ -17,9 +18,14 @@ trait Token (val fields: Array[String] ):
   private def canEqual(other: Any) = other.isInstanceOf[Token]
 
   def fieldsAreEqual(thatFields:Array[String]): Boolean =
-    fields.length == thatFields.length && fields.forall(p => {
-      thatFields.contains(p)
-    })
+    if fields.length != thatFields.length then // not the same length must be false
+      false
+    else if fields.length == 0 then // no lenth so no fields to check
+      true
+    else // Check the fields
+      fields.forall(p => {
+        thatFields.contains(p)
+      })
 
   override def equals(other: Any): Boolean = other match {
     case that: Token =>
@@ -28,7 +34,6 @@ trait Token (val fields: Array[String] ):
         fieldsAreEqual(that.fields)
     case _ => false
   }
-
 
 case class BlankLineToken(override val fields: Array[String] ) extends Token(fields: Array[String] ):
   override val name: String = "BlankLineToken"
@@ -101,7 +106,8 @@ object Tokeniser :
       val beforeCommentSplit = beforeComment.split("\\s+")
       if !(beforeCommentSplit.head.toUpperCase() match {
         case "ADDR" | "BYT" | "WRD" | "ORIG" | "CLR" | "DEF" =>
-          tokenisedLine.add(CommandToken.apply(beforeCommentSplit.head.toUpperCase(), Array(beforeCommentSplit.tail.mkString(" "))))
+          tokenisedLine.add(CommandToken.apply(beforeCommentSplit.head.toUpperCase(),
+            if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
           true
         case _ => false
       }) then
@@ -109,7 +115,8 @@ object Tokeniser :
         val ins: String = if beforeCommentSplit.head.endsWith(":") then
           val labelText = beforeCommentSplit.head.dropRight(1)
           if isLabel(labelText) then
-            tokenisedLine.add(LabelToken.apply(labelText, Array(beforeCommentSplit.tail.mkString(" "))))
+            tokenisedLine.add(LabelToken.apply(labelText,
+              if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
           else
             tokenisedLine.add(SytaxErrorToken.apply(s"Bad label test ${beforeCommentSplit.head}", beforeCommentSplit))
           beforeCommentSplit.tail.mkString(" ")
