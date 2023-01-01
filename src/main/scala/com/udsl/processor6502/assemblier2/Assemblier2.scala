@@ -1,7 +1,8 @@
 package com.udsl.processor6502.assemblier2
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.assemblier2.{Token, Tokeniser, Assemblier2}
+import com.udsl.processor6502.assemblier2.Assemble6502FirstPassV2.assemble
+import com.udsl.processor6502.assemblier2.{Assemblier2, Token, Tokeniser}
 
 import java.io.FileInputStream
 import java.nio.file.{Files, Paths}
@@ -15,14 +16,17 @@ class Assemblier2(val sourceLines: LazyList[(String, Int)]) extends StrictLoggin
   def souceLineCount : Int =
     sourceLines.length
 
-  def assemble(): List[TokenisedLine] =
+  def assemble(): Unit =
     println("starting")
-    val tokenised = tokenisation
+    tokenisation.foreach(Assemble6502FirstPassV2.assemble)
     println("complete")
-    tokenised
 
-  def tokenisation: List[TokenisedLine] =
-    sourceLines.map(tokonise).toList
+
+  def tokenisation: LazyList[TokenisedLine] =
+    sourceLines.map(tokonise)
+
+  def firstPass(tokenisedLine: TokenisedLine): Unit =
+    logger.info(s"Parsing line ${tokenisedLine.lineNumber} ")
 
   private def tokonise(text: String, line: Int) : TokenisedLine =
     Tokeniser.tockenise(text, line)

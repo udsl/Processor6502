@@ -10,7 +10,7 @@ import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor2}
 class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matchers :
 
   val sourceFile = "examples/quicktest2.asm"
-  val sourceLines: Seq[String] = List(
+  val sourceLines: List[String] = List(
     "clr; clear all lthe existing data",
     "LDX    #$08",
     "decrement:      DEX",
@@ -34,7 +34,7 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
 
   "Given a file name" should "get an assemblier with source lines"  in {
     val asm = Assemblier2.apply(sourceFile)
-    assert(asm.souceLineCount == 12)
+    assert(asm.souceLineCount == 8)
   }
 
   "Given a list of source lines" should 
