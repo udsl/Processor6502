@@ -2,11 +2,10 @@ package com.udsl.processor6502.assemblier2
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.{isLabel, numericValue}
-import com.udsl.processor6502.cpu.CpuInstructions
+import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 import com.udsl.processor6502.cpu.execution.AddressingMode
-
+import com.udsl.processor6502.assembler.AssemblyData
 import scala.collection.mutable.ListBuffer
-
 
 
 trait Token (val fields: Array[String] ) :
@@ -46,6 +45,7 @@ case class CommentLineToken(override val fields: Array[String] ) extends Token(f
 case class LineCommentToken (comment: String, override val fields: Array[String]) extends Token(fields: Array[String] ):
   override val name: String = "LineCommentToken"
   override def toString: String =  s"$name -> '$comment'"
+  override def tokenText: String = comment
 
 case class LabelToken (label: String, override val fields: Array[String]) extends Token(fields: Array[String] ):
   override val name: String = "LabelToken"
@@ -57,20 +57,16 @@ case class CommandToken (command: String, override val fields: Array[String]) ex
   override def toString: String = s"$name -> '$command'"
   override def tokenText: String = command
 
-case class InstructionToken (mnemonic: String, override val fields: Array[String]) extends Token(fields: Array[String] ) with StrictLogging:
+case class InstructionToken (instruction: CpuInstruction, override val fields: Array[String]) extends Token(fields: Array[String] ) with StrictLogging:
   override val name: String = "InstructionToken"
-  override def toString: String =  s"$name -> '$mnemonic'"
-  override def tokenText: String = mnemonic
+  override def toString: String =  s"$name -> '$instruction'"
+  override def tokenText: String = instruction.name()
 
 case class SytaxErrorToken (errortext: String, override val fields: Array[String]) extends Token(fields: Array[String] ):
   override val name: String = "SytaxError"
   override def toString =
     s"$name: $errortext"
 
-
-
-case class NoTokenToken (override val fields: Array[String]) extends Token(fields: Array[String] ):
-  override val name: String = "BlankLineToken"
 
 class TokenisedLine(val sourceLine: String, val lineNumber: Int):
   var tokens: Seq[Token] = List[Token]()
@@ -83,7 +79,7 @@ object TokenisedLine:
     
 object Tokeniser :
   def tockenise(text: String, lineNum: Int) : TokenisedLine =
-    var tokenisedLine = TokenisedLine.apply(text, lineNum)
+    val tokenisedLine = TokenisedLine.apply(text, lineNum)
 
     val toTokenise = text.trim
     // Blank line
@@ -93,12 +89,14 @@ object Tokeniser :
     else if toTokenise.head == ';' then
       tokenisedLine.add(CommentLineToken.apply(Array(toTokenise.tail)))
     else
-      // Does this line have a comment
-      val commentSplit = toTokenise.split(";")
-      val beforeComment = if commentSplit.length > 1 then
-        // The comment is the tail otherwise it would have been a comment line above.
-        tokenisedLine.add(LineCommentToken.apply(commentSplit.tail.mkString.trim, Array()))
-        commentSplit.head.trim
+      // Does this line have a comment, comment could have a ; in it so cant split
+      val semicolonAt = toTokenise.indexOf(';')
+
+      val beforeComment = if semicolonAt > 0 then
+        // The comment is the sub string from semicolonAt otherwise it would have been a comment line above.
+        // We acnt use split because the comment itself may contain a ';'
+        tokenisedLine.add(LineCommentToken.apply(toTokenise.substring(semicolonAt).trim, Array()))
+        toTokenise.substring(0, semicolonAt).trim
       else
         toTokenise
 
@@ -117,6 +115,7 @@ object Tokeniser :
           if isLabel(labelText) then
             tokenisedLine.add(LabelToken.apply(labelText,
               if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
+            AssemblyData.addLabel(labelText)
           else
             tokenisedLine.add(SytaxErrorToken.apply(s"Bad label test ${beforeCommentSplit.head}", beforeCommentSplit))
           beforeCommentSplit.tail.mkString(" ")
@@ -125,8 +124,9 @@ object Tokeniser :
 
         // is this line an instruction
         val fields = ins.trim.split("\\s+")
-        if CpuInstructions.isValidInstruction(fields.head) then
-          tokenisedLine.add(InstructionToken.apply(fields.head, fields.tail))
+        val instruction: Option[CpuInstruction] = CpuInstructions.getInstruction(fields.head)
+        if instruction.isDefined then
+          tokenisedLine.add(InstructionToken.apply(instruction.get, fields.tail))
         else
           tokenisedLine.add(SytaxErrorToken.apply("instruction not found.", fields.tail))
     tokenisedLine

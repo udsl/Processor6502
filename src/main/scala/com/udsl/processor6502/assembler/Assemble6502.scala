@@ -128,7 +128,8 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
  */
 object AssembleLocation extends StrictLogging :
   // The point in memery we are assembling to.
-  var currentLocation: Int = 0
+  val defaultLocation = 0x200 // Defaults to immediately after the stack
+  var currentLocation: Int = defaultLocation
   val memoryAccess: Memory = Memory.apply
 
   def setAssembleLoc(l: Int):Unit =
@@ -175,6 +176,8 @@ object AssembleLocation extends StrictLogging :
   def addInstructionSize(insSize: InstructionSize) : Unit =
     currentLocation += insSize.bytes
 
+  def addInstructionSize(bytes: Int): Unit =
+    currentLocation += bytes
 
 object Assemble6502 extends StrictLogging :
 
@@ -242,12 +245,19 @@ object AssemblyData extends StrictLogging:
       case None =>
         false
 
-  def labelValue(name: String): Int =
+  def labelIsDefinedV2(name: String): Boolean =
     labels.get(name) match
       case Some((v, bool)) =>
-        v
+        true
       case None =>
-        -1
+        false
+
+  def labelValue(name: String): Option[Int] =
+    labels.get(name) match
+      case Some((v, valid)) =>
+        if valid then Some(v) else None
+      case None =>
+        None
 
   def addLabel(name: String, value: Int): Unit =
     labels.get(name) match

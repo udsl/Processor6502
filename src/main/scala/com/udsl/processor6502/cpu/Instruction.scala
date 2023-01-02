@@ -13,18 +13,21 @@ object insData:
 trait CpuInstruction(val code: Map[AddressingMode, insData] ):
   def name(): String = ""
 
-  def opcode(addrMode: AddressingMode): Int =
+  def getInsDataForAddressingMode(addrMode: AddressingMode): Option[insData] =
+    code.get(addrMode)
+    
+  def isValidAddressingMode(addrMode: AddressingMode): Boolean =
+    code.contains(addrMode)
+  def opcode(addrMode: AddressingMode): Option[Int] =
     code.get(addrMode) match {
-      case Some(v) =>
-        v.opcode
-      case _ => -1
+      case Some(v) => Some(v.opcode)
+      case _ => None
     }
 
-  def bytes(addrMode: AddressingMode): Int =
+  def bytes(addrMode: AddressingMode): Option[Int] =
     code.get(addrMode) match {
-      case Some(v) =>
-        v.bytes
-      case _ => -1
+      case Some(v) => Some(v.bytes)
+      case _ => None
     }
 
 case class ADC() extends CpuInstruction(Map(Immediate -> insData( 0x69, 2),
@@ -349,7 +352,7 @@ case object INVALID extends CpuInstruction(Map()):
   override def name() = "INVALID"
 
 object CpuInstructions :
-  val validInstructions = LazyList(ADC(),AND(),ASL(),BCC(),BCS(),BEQ(),BIT(),BMI(),BNE(),BPL(),BRK(),BVC(),BVS(),CLC(),
+  val validInstructions: Seq[CpuInstruction] = LazyList(ADC(),AND(),ASL(),BCC(),BCS(),BEQ(),BIT(),BMI(),BNE(),BPL(),BRK(),BVC(),BVS(),CLC(),
     CLD(), CLI(),CLV(),CMP(),CPX(),CPY(),DEC(),DEX(),DEY(),EOR(),INC(),INX(),INY(),JMP(),JSR(),LDA(),LDX(),LDY(),LSR(),
     NOP(),ORA(),PHA(),PHP(),PLA(),PLP(),ROL(),ROR(),RTI(),RTS(),SBC(),SEC(),SED(),SEI(),STA(),STX(),STY(),TAX(),TAY(),
     TSX(),TXA(),TXS(),TYA())
@@ -365,7 +368,7 @@ object CpuInstructions :
     val instruction = validInstructions.find(a => a.name().equals(ins.toUpperCase())).getOrElse(INVALID)
     if instruction == INVALID then
       return (-1, 0)
-    (instruction.opcode(adrMode), instruction.bytes(adrMode))
+    (instruction.opcode(adrMode).get, instruction.bytes(adrMode).get)
 
   def isAddressingModeValid(ins: String, adrMode: AddressingMode): Boolean =
     val instruction = validInstructions.find(a => a.name().equals(ins.toUpperCase())).getOrElse(INVALID)

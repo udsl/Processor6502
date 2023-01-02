@@ -246,6 +246,6 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
         setMemoryAddress(numericValue(value))
       else if isLabel(value) then
         AssemblyData.labelIsDefined(value)
-        setMemoryAddress(AssemblyData.labelValue(value))
+        setMemoryAddress(AssemblyData.labelValue(value).get)
       else
         throw new Exception(s"Invalid value address '$value'")

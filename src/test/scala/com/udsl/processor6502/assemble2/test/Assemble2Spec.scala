@@ -1,6 +1,7 @@
 package com.udsl.processor6502.assemble2.test
 
 import com.udsl.processor6502.assemblier2.{InstructionToken, *}
+import com.udsl.processor6502.cpu._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 import org.scalatest.matchers.should.Matchers
@@ -23,24 +24,24 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
   val expectedResults: TableFor2[Int, List[Token]] = Table(
     ("lineNum", "tokens")
     , (1, List(CommandToken.apply("CLR", Array()), LineCommentToken.apply("clear all lthe existing data", Array())))
-    , (2, List(InstructionToken.apply("LDX", Array("#$08"))))
-    , (3, List(LabelToken.apply("decrement", Array("DEX")), InstructionToken.apply("DEX", Array())))
-    , (4, List(InstructionToken.apply("STX", Array("$0200"))))
-    , (5, List(InstructionToken.apply("CPX", Array("#$03"))))
-    , (6, List(InstructionToken.apply("BNE", Array("decrement"))))
-    , (7, List(InstructionToken.apply("STX", Array("$0201"))))
-    , (8, List(InstructionToken.apply("BRK", Array())))
+    , (2, List(InstructionToken.apply(LDX(), Array("#$08"))))
+    , (3, List(LabelToken.apply("decrement", Array("DEX")), InstructionToken.apply(DEX(), Array())))
+    , (4, List(InstructionToken.apply(STX(), Array("$0200"))))
+    , (5, List(InstructionToken.apply(CPX(), Array("#$03"))))
+    , (6, List(InstructionToken.apply(BNE(), Array("decrement"))))
+    , (7, List(InstructionToken.apply(STX(), Array("$0201"))))
+    , (8, List(InstructionToken.apply(BRK(), Array())))
   )
 
   "Given a file name" should "get an assemblier with source lines"  in {
     val asm = Assemblier2.apply(sourceFile)
-    assert(asm.souceLineCount == 8)
+    assert(asm.sourceLines.toList.length == 8)
   }
 
   "Given a list of source lines" should 
     "get an assemblier with same source lines"  in {
       val asm = Assemblier2.apply(sourceLines)
-      assert(asm.souceLineCount == 8)
+      assert(asm.sourceLines.toList.length == 8)
     }
 
   "With those lines tokenisation" should

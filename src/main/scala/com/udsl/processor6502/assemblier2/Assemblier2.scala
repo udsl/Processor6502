@@ -1,6 +1,7 @@
 package com.udsl.processor6502.assemblier2
 
 import com.typesafe.scalalogging.StrictLogging
+import com.udsl.processor6502.assembler.AssemblyData
 import com.udsl.processor6502.assemblier2.Assemble6502FirstPassV2.assemble
 import com.udsl.processor6502.assemblier2.{Assemblier2, Token, Tokeniser}
 
@@ -12,12 +13,9 @@ import scala.util.{Failure, Success, Try, Using}
 class Assemblier2(val sourceLines: LazyList[(String, Int)]) extends StrictLogging :
   import Assemblier2.*
 
-
-  def souceLineCount : Int =
-    sourceLines.length
-
   def assemble(): Unit =
     println("starting")
+    AssemblyData.clear()
     tokenisation.foreach(Assemble6502FirstPassV2.assemble)
     println("complete")
 
@@ -38,11 +36,8 @@ object Assemblier2 :
     new Assemblier2(LazyList.from(sourceLines.zip(LazyList.from(1))))
 
   def apply(sourceFilename: String) : Assemblier2 =
-    new Assemblier2(
-      Using(Source.fromFile(sourceFilename)) { s =>
-        LazyList.from(s.getLines().toList.zip(LazyList.from(1)))
-      }.get
-    )
+    val s = Source.fromFile(sourceFilename)
+    new Assemblier2(LazyList.from(s.getLines().zip(LazyList.from(1))))
 
 
 

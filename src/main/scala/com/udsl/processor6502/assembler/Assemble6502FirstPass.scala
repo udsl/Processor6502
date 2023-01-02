@@ -53,7 +53,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
       else
         if isLabel(t.mnemonic) && AssemblyData.labelIsDefined(t.mnemonic) then
           val labelValue = AssemblyData.labelValue(t.mnemonic)
-          AssembleLocation.setAssembleLoc(labelValue)
+          AssembleLocation.setAssembleLoc(labelValue.get)
         else
           throw new Exception("Label or ORIG not defined.")
     }
@@ -104,7 +104,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
   def processDefinition(t: AssemblerToken) : Unit =
     logger.info(s"\tDefinition of label ${t.fields.head} with value ${t.value}")
     if AssemblyData.labelIsDefined(t.mnemonic) then
-      val v = AssemblyData.labelValue(t.mnemonic)
+      val v = AssemblyData.labelValue(t.mnemonic).get
       if v != t.intValue then
         throw new Exception(s"Definition value changed om 2nd pass was ${t.intValue} now $v")
 
