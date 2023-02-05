@@ -43,11 +43,6 @@ case class LineComment (override val mnemonic: String, override val fields: Arra
     "LineComment"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class NoneCommentLine (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
-  override def toString: String =
-    "NoneCommentLine"
-  override def addPrediction(prediction: AddressingMode): Unit = {}
-
 case class LabelToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
   override def toString: String =
     "LabelToken"

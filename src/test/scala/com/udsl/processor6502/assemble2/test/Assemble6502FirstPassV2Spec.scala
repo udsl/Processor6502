@@ -24,7 +24,7 @@ class Assemble6502FirstPassV2Spec extends AnyFlatSpec with TableDrivenPropertyCh
     forAll(testData) {(tokenisedLine, addressingMode) =>
       val cl: Int = AssembleLocation.currentLocation
       AssemblyData.clear()
-      Assemble6502FirstPassV2.assemble(tokenisedLine)
+      val res = Assemble6502FirstPassV2.apply.assemble(tokenisedLine)
       val instructionToken = tokenisedLine.tokens.head.asInstanceOf[InstructionToken]
       val instruction = instructionToken.instruction
       assert(AssembleLocation.getMemoryByte(cl) == instruction.opcode(addressingMode).get)

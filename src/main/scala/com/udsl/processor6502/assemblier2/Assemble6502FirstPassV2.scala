@@ -5,13 +5,16 @@ import com.udsl.processor6502.assembler.{AssembleLocation, AssemblyData}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import com.udsl.processor6502.cpu.CpuInstruction
 import com.udsl.processor6502.cpu.execution.{Accumulator, Absolute, AbsoluteX, AbsoluteY, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, InstructionSize, Invalid, Relative, Unknown, ZeroPage, ZeroPageX, ZeroPageY}
-
+import com.udsl.processor6502.assemblier2.{Token, TokenisedLine}
 /**
- * Fisrt pass object - as one would expect does the first pass which resolves any forward references.
+ * First pass class - as one would expect does the first pass which resolves any forward references.
  */
-object Assemble6502FirstPassV2 extends StrictLogging, Assemble6502PassBaseV2 :
+trait FirstPassV2:
+  def assemble(tokenisedLine: TokenisedLine): FirstPassResult = ???
 
-  def assemble(tokenisedLine: TokenisedLine): Unit =
+class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemble6502PassBaseV2 :
+
+  override def assemble(tokenisedLine: TokenisedLine): FirstPassResult =
     logger.info(s"Parsing line ${tokenisedLine.lineNumber} ")
     for (token <- tokenisedLine.tokens)
       token match {
@@ -30,6 +33,8 @@ object Assemble6502FirstPassV2 extends StrictLogging, Assemble6502PassBaseV2 :
         case _ => logger.error(s"unsupported case $token")
       }
     logger.debug(tokenisedLine.sourceLine)
+
+    FirstPassResult(tokenisedLine)
 
 //  def processOrigin(t: Token) : Unit =
 //    logger.info(s"\tOrigin Token '${t.mnemonic}'")
@@ -190,4 +195,8 @@ object Assemble6502FirstPassV2 extends StrictLogging, Assemble6502PassBaseV2 :
     logger.debug("advance current assembly location by 2 for each address")
     for (v <- fields)
       AssembleLocation.addInstructionSize(InstructionSize(2))
+
+object Assemble6502FirstPassV2:
+  def apply: Assemble6502FirstPassV2 =
+    new Assemble6502FirstPassV2()
 

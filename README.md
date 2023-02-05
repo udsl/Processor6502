@@ -1,6 +1,6 @@
 # Processor6502
 
-Scala 3 using JDK 11 and ScalaFX.
+Scala 3 using JDK 17 and ScalaFX.
 
 Not sure how to characterise this. Its not an emulator or a simulator as it only performs the functions of a 6502 opcode within the environment of the GUI.
 

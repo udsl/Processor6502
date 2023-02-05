@@ -14,19 +14,19 @@ object Parser extends StrictLogging :
     logger.debug(s"\nparsing line: $line")
     // determine basic line type
     val parsedLine = ParsedLine(line, lineNumber)
-    val token: AssemblerToken = line.trim match {
-      case "" => BlankLineToken( "", Array[String]())
-      case a if a.charAt(0) == ';' => CommentLineToken(line.trim, Array[String]())
-      case _ => NoneCommentLine(line.trim, Array[String]())
+    val token: Option[AssemblerToken] = line.trim match {
+      case "" => Some(BlankLineToken( "", Array[String]()))
+      case a if a.charAt(0) == ';' => Some(CommentLineToken(line.trim, Array[String]()))
+      case _ => None
     }
 
     token match
       case BlankLineToken( _, _ ) |  CommentLineToken( _, _ ) =>
-        parsedLine + token
-      case _ =>
-        // if we have a NoneCommentLine then must be either
+        parsedLine + token.get
+      case None =>
+        // if we have a None then no comments so must be either
         //       nememic operand + optional comment
-        //       or a command
+        //       or a command or a lebel
         // lets deal with the potential comment first
         val commentSplit = line.trim.split(";")
 

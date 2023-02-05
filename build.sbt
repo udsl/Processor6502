@@ -6,7 +6,7 @@ scalaVersion := "3.1.3"
 
 
 libraryDependencies ++= Seq(
-  "org.scalafx" %% "scalafx" % "18.0.1-R27",
+  "org.scalafx" %% "scalafx" % "18.0.1-R28",
   "org.scalacheck" %% "scalacheck" % "1.16.0" % Test,
   "org.scalactic" %% "scalactic" % "3.2.12",
   "org.scalatest" %% "scalatest" % "3.2.12" % Test,

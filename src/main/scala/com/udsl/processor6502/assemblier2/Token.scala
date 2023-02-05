@@ -5,6 +5,7 @@ import com.udsl.processor6502.Utilities.{isLabel, numericValue}
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 import com.udsl.processor6502.cpu.execution.AddressingMode
 import com.udsl.processor6502.assembler.AssemblyData
+
 import scala.collection.mutable.ListBuffer
 
 

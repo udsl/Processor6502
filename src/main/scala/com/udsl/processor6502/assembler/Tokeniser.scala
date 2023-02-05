@@ -38,15 +38,15 @@ object Tokeniser extends StrictLogging :
     logger.debug(s"\ntokeniseLine: $line")
     // determine basic line type
     val tokenisedLine = TokenisedLine(line)
-    val token: AssemblerToken = line.sourceText.trim match {
-      case "" => BlankLineToken( "", Array[String]())
-      case a if a.charAt(0) == ';' => CommentLineToken(line.sourceText.trim, Array[String]())
-      case _ => NoneCommentLine(line.sourceText.trim, Array[String]())
+    val token: Option[AssemblerToken] = line.sourceText.trim match {
+      case "" => Some(BlankLineToken( "", Array[String]()))
+      case a if a.charAt(0) == ';' => Some(CommentLineToken(line.sourceText.trim, Array[String]()))
+      case _ => None
     }
 
     token match
       case BlankLineToken( _, _ ) |  CommentLineToken( _, _ ) =>
-        tokenisedLine + token
+        tokenisedLine + token.get
       case _ =>
         // if we have a NoneCommentLine then must be either
         //       nememic operand + optional comment

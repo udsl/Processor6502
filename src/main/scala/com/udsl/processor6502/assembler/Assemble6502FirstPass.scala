@@ -24,8 +24,6 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
           assembleCommentLineToken(token)
         case LineComment( _, _ ) => // extends AssemblerTokenType("LineComment")
           logger.info("\tLineComment ")
-        case NoneCommentLine( _, _ ) => // extends AssemblerTokenType("NoneCommentLine")
-          logger.info("\tNoneCommentLine ")
         case LabelToken( _, _ ) => // extends AssemblerTokenType("LabelToken")
           procesLabel(token)
         case CommandToken( _, _ ) => // extends AssemblerTokenType("CommandToken")
@@ -60,9 +58,6 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 
   def processValues(t: AssemblerToken) : Unit =
     logger.info(s"\tValue Token '${t.mnemonic}'")
-
-  def NoneCommentLine(t: AssemblerToken) : Unit =
-    logger.info(s"\tNoneCommentLine '${t.mnemonic}' - ")
 
   def assembleCommentLineToken(t: AssemblerToken) : Unit =
     logger.info(s"\tCommentLineToken '${t.mnemonic}' - ")
