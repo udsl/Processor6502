@@ -1,12 +1,14 @@
-package com.udsl.processor6502.assemblier2
+package com.udsl.processor6502.assembler.version2
 
-class FirstPassResult(val tokenisedLine : TokenisedLine) :
+import com.udsl.processor6502.assembler.version2.{TokenV2, TokenisedLineV2}
+
+class FirstPassResult(val tokenisedLine : TokenisedLineV2) :
   def lineNumber: Int = tokenisedLine.lineNumber
-  def tokens: Seq[Token] = tokenisedLine.tokens
+  def tokens: Seq[TokenV2] = tokenisedLine.tokens
 
 
 object FirstPassResult :
-  def apply(source: TokenisedLine): FirstPassResult =
+  def apply(source: TokenisedLineV2): FirstPassResult =
     new FirstPassResult(source)
 
 

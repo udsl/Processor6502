@@ -4,14 +4,13 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.*
 import com.udsl.processor6502.assembler.Parser.addSyntaxError
-import com.udsl.processor6502.cpu.execution.*
+import com.udsl.processor6502.assembler.*
 import com.udsl.processor6502.cpu.CpuInstructions
-import com.udsl.processor6502.cpu.execution.{Absolute, AddressingMode, ZeroPage}
-import com.udsl.processor6502.assembler.{AssemblerToken, BlankLineToken, ClearToken, CommandToken, InstructionToken, LabelToken, OriginToken}
+import com.udsl.processor6502.cpu.execution.*
 
 import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
-import scala.util.{Success, Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 object Tokeniser extends StrictLogging :
   val exceptionList: List[AssembleExceptionRecord] = List[AssembleExceptionRecord]()
@@ -45,7 +44,7 @@ object Tokeniser extends StrictLogging :
     }
 
     token match
-      case BlankLineToken( _, _ ) |  CommentLineToken( _, _ ) =>
+      case Some(_) =>
         tokenisedLine + token.get
       case _ =>
         // if we have a NoneCommentLine then must be either

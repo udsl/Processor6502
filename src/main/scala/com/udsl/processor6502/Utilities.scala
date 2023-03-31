@@ -161,7 +161,7 @@ object Utilities:
       case Indirect => s"(${numToWordString(value, NumericFormatType.HEX)})"
       case AbsoluteX => s"${numToWordString(value, NumericFormatType.HEX)}, X"
       case AbsoluteY => s"${numToWordString(value, NumericFormatType.HEX)}, Y"
-      case Invalid | Unknown | NotApplicable => ""
+      case _ => ""
     if adr.nonEmpty then
       s"$mnemonic $adr"
     else

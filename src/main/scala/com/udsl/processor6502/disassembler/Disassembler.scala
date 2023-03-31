@@ -36,7 +36,9 @@ object Disassembler extends StrictLogging:
         case Indirect => s"(${numToWordString(memoryAccess.getMemoryAsAddress(disassemblyLocation), NumericFormatType.HEX)})"
         case AbsoluteX => s"${numToWordString(memoryAccess.getMemoryAsAddress(disassemblyLocation), NumericFormatType.HEX)}, X"
         case AbsoluteY => s"${numToWordString(memoryAccess.getMemoryAsAddress(disassemblyLocation), NumericFormatType.HEX)}, Y"
-        case Invalid | Unknown | NotApplicable => s"INVALID"
+        case Invalid | Unknown =>  "INVALID"
+        case NotApplicable( errorText ) => errorText
+        case AddressingModeSyntaxError( errorText )=> errorText
 
       memCell.getByte.setDisassembly(s"${opcode.mnemonic} $operand")
       disassemblyLocation += opcode.addressingMode.size.bytes -1

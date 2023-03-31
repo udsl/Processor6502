@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assemble2.test
 
 import com.udsl.processor6502.assembler.AssemblyData
-import com.udsl.processor6502.assemblier2.{BlankLineToken, CommandToken, CommentLineToken, InstructionToken, LabelToken, LineCommentToken, Token}
+import com.udsl.processor6502.assembler2.{BlankLineToken, CommandToken, CommentLineToken, InstructionToken, LabelToken, LineCommentToken, Token2}
 import org.scalatest.Assertions.fail
 
 object TestUtils :
@@ -11,13 +11,13 @@ object TestUtils :
    * irrespective of order.
    */
 
-  def verifyTokens(expected: List[Token], result: List[Token]): Boolean =
-    val exp: List[Token] = expected.sortBy(f => f.name)
-    val res: List[Token] = result.sortBy(f => f.name)
+  def verifyTokens(expected: List[Token2], result: List[Token2]): Boolean =
+    val exp: List[Token2] = expected.sortBy(f => f.name)
+    val res: List[Token2] = result.sortBy(f => f.name)
     expected.length == result.length && exp.equals(res)  //expected.sortBy(f => f.name) == result.sortBy(f => f.name)
 
 
-  def validateTokens(res: Seq[Token], line: String): Unit =
+  def validateTokens(res: Seq[Token2], line: String): Unit =
     res.foreach(t => {
       t.name match {
         case "BlankLineToken" => validateBlankLine(t.asInstanceOf[BlankLineToken])

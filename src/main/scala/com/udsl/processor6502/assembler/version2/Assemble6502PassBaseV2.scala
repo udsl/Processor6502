@@ -1,4 +1,4 @@
-package com.udsl.processor6502.assemblier2
+package com.udsl.processor6502.assembler.version2
 
 import com.udsl.processor6502.Utilities.numericValue
 import com.udsl.processor6502.assembler.AssembleLocation

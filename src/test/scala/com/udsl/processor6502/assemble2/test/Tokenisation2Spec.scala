@@ -2,7 +2,7 @@ package com.udsl.processor6502.assemble2.test
 
 import com.udsl.processor6502.assemble2.test.TestUtils.validateTokens
 import com.udsl.processor6502.assembler.AssemblyData
-import com.udsl.processor6502.assemblier2.{BlankLineToken, CommandToken, CommentLineToken, InstructionToken, LabelToken, LineCommentToken, Token, TokenisedLine, Tokeniser}
+import com.udsl.processor6502.assembler2.{BlankLineToken, CommandToken, CommentLineToken, InstructionToken, LabelToken, LineCommentToken, Token2, TokenisedLine, Tokeniser}
 import com.udsl.processor6502.cpu.*
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.*

@@ -1,7 +1,8 @@
 package com.udsl.processor6502.assemble2.test
 
+import com.udsl.processor6502.assembler.version2.Assemble6502FirstPassV2
 import com.udsl.processor6502.assembler.{AssembleLocation, AssemblyData}
-import com.udsl.processor6502.assemblier2.{Assemble6502FirstPassV2, InstructionToken, TokenisedLine, Tokeniser}
+import com.udsl.processor6502.assembler2.{InstructionToken, TokenisedLine, Tokeniser}
 import com.udsl.processor6502.cpu.execution.{Absolute, AddressingMode, Immediate, ZeroPage}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should

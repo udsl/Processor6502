@@ -21,8 +21,8 @@ object Parser extends StrictLogging :
     }
 
     token match
-      case BlankLineToken( _, _ ) |  CommentLineToken( _, _ ) =>
-        parsedLine + token.get
+      case Some(_) =>
+          parsedLine + token.get
       case None =>
         // if we have a None then no comments so must be either
         //       nememic operand + optional comment
@@ -88,12 +88,12 @@ object Parser extends StrictLogging :
           if value.length == 1 then
             val str = value(0).trim
             if Utilities.isNumeric(str) then
-              val token = OriginToken(str, value)
+              val token = CommandToken(str, value)
               parsedLine + token
               logger.info(s"Origin added from numeric literal $str")
             else if Utilities.isLabel(str) && AssemblyData.labelIsDefined(str) then
               val labelValue = AssemblyData.labelValue(str).toString
-              val token = OriginToken(labelValue, value)
+              val token = CommandToken(labelValue, value)
               parsedLine + token
               logger.info(s"Origin added from defined label '$str")
             else
@@ -104,7 +104,7 @@ object Parser extends StrictLogging :
 
         // clr only valid on the first line
         case "CLR" =>
-          val token = ClearToken(head, text.tail)
+          val token = CommandToken(head, text.tail)
           parsedLine + token
           if parsedLine.lineNumber > 1 then
             addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", parsedLine))

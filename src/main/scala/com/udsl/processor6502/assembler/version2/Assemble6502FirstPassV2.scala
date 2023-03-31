@@ -1,43 +1,43 @@
-package com.udsl.processor6502.assemblier2
+package com.udsl.processor6502.assembler.version2
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.assembler.{AssembleLocation, AssemblyData}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
+import com.udsl.processor6502.assembler.{AssembleLocation, AssemblyData}
 import com.udsl.processor6502.cpu.CpuInstruction
-import com.udsl.processor6502.cpu.execution.{Accumulator, Absolute, AbsoluteX, AbsoluteY, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, InstructionSize, Invalid, Relative, Unknown, ZeroPage, ZeroPageX, ZeroPageY}
-import com.udsl.processor6502.assemblier2.{Token, TokenisedLine}
+import com.udsl.processor6502.cpu.execution.*
+import com.udsl.processor6502.cpu.CpuInstructions
 /**
  * First pass class - as one would expect does the first pass which resolves any forward references.
  */
 trait FirstPassV2:
-  def assemble(tokenisedLine: TokenisedLine): FirstPassResult = ???
+  def assemble(TokenisedLineV2: TokenisedLineV2): FirstPassResult
 
 class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemble6502PassBaseV2 :
 
-  override def assemble(tokenisedLine: TokenisedLine): FirstPassResult =
+  override def assemble(tokenisedLine: TokenisedLineV2): FirstPassResult =
     logger.info(s"Parsing line ${tokenisedLine.lineNumber} ")
     for (token <- tokenisedLine.tokens)
       token match {
-        case BlankLineToken( _ ) => // extends AssemblerTokenType("BlankLineToken")
+        case BlankLineTokenV2( _ ) => // extends AssemblerTokenType("BlankLineToken")
           logger.info("\tBlankLineToken ")
-        case CommentLineToken( _ ) => // extends AssemblerTokenType("CommentLineToken")
+        case CommentLineTokenV2( _ ) => // extends AssemblerTokenType("CommentLineToken")
           assembleCommentLineToken(token)
-        case LineCommentToken( _, _ ) => // extends AssemblerTokenType("LineComment")
+        case LineCommentTokenV2( _, _ ) => // extends AssemblerTokenType("LineComment")
           logger.info("\tLineComment ")
-        case LabelToken( _, _ ) => // extends AssemblerTokenType("LabelToken")
+        case LabelTokenV2( _, _ ) => // extends AssemblerTokenType("LabelToken")
           procesLabel(token)
-        case CommandToken( _, _ ) => // extends AssemblerTokenType("CommandToken")
+        case CommandTokenV2( _, _ ) => // extends AssemblerTokenType("CommandToken")
           assembleCommandToken(token)
-        case InstructionToken( _, _ ) => // extends AssemblerTokenType("InstructionToken")
-          assembleInstructionToken(token)
+        case InstructionTokenV2( _, _ ) => // extends AssemblerTokenType("InstructionToken")
+          assembleInstruction(token)
         case _ => logger.error(s"unsupported case $token")
       }
     logger.debug(tokenisedLine.sourceLine)
 
     FirstPassResult(tokenisedLine)
 
-//  def processOrigin(t: Token) : Unit =
-//    logger.info(s"\tOrigin Token '${t.mnemonic}'")
+//  def processOrigin(t: TokenV2) : Unit =
+//    logger.info(s"\tOrigin TokenV2 '${t.mnemonic}'")
 //    if (t.fields.length == 1){
 //      if isNumeric(t.mnemonic) then
 //        AssembleLocation.setAssembleLoc(numericValue(t.mnemonic))
@@ -49,13 +49,13 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
 //          throw new Exception("Label or ORIG not defined.")
 //    }
 
-//  def processValues(t: Token) : Unit =
-//    logger.info(s"\tValue Token '${t.mnemonic}'")
+//  def processValues(t: TokenV2) : Unit =
+//    logger.info(s"\tValue TokenV2 '${t.mnemonic}'")
   
-  def assembleCommentLineToken(t: Token) : Unit =
+  def assembleCommentLineToken(t: TokenV2) : Unit =
     logger.info(s"\tCommentLineToken '${t.tokenText}' - ")
 
-  def assembleCommandToken(t: Token) : Unit =
+  def assembleCommandToken(t: TokenV2) : Unit =
     logger.info(s"\tCommandToken '${t.tokenText}' - ")
     t.tokenText.toUpperCase() match
       case "BYT" => advanceAssemLocForBytes(t.fields)
@@ -63,65 +63,72 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
       case "ADDR" => advanceAssemLocForAddresses(t.fields)
       case _ => logger.info(s"\tInvalid command $t ")
 
-//  def processClear(t: Token, tl: TokenisedLine) : Unit =
+//  def processClear(t: TokenV2, tl: TokenisedLineV2) : Unit =
 //    logger.info("Processing CLR command")
 //    if tl.lineNumber > 1 then
 //      val errorText = "CLR command only valid on first line"
 //      logger.error(errorText)
 //      throw new Exception(errorText)
 
-  def assembleInstructionToken(token: Token) : Unit =
+
+  def assembleInstruction(token: TokenV2) : Unit =
     logger.info(s"\tInstructionToken '$token' - location: $currentLocation")
-    val instruction: CpuInstruction = token.asInstanceOf[InstructionToken].instruction
-    // TODO work out addressing mode
-    /* By this time we should have an idea of any foreword reference values as they are 'registered' during tockenisation
-       though the actual value of a label will not be known.
-       Possible values and associated addressing mode:
-          missing - just the instruction them accumilator or implied
-          numeric - starts with a digit or $ for hex - absolute or zero page
-          label - starts with an alph but not ( absolute mode to label
-          imeadiate address mode starts with #
-          indirect addresing mode starts with ( some for of indexed addressing
-          nothing implied addressing
-          relative applies to branches only - except for BIT and BRK all instructions starting with B are a branch! */
+    if CpuInstructions.isValidInstruction(token.asInstanceOf[InstructionTokenV2].mnemonic) then {
+      val instruction: CpuInstruction = CpuInstructions.getInstruction(token.asInstanceOf[InstructionTokenV2].mnemonic).get
+      // TODO work out addressing mode
+      /* By this time we should have an idea of any foreword reference values as they are 'registered' during tockenisation
+         though the actual value of a label will not be known.
+         Possible values and associated addressing mode:
+            missing - just the instruction them accumilator or implied
+            numeric - starts with a digit or $ for hex - absolute or zero page
+            label - starts with an alph but not ( absolute mode to label
+            imeadiate address mode starts with #
+            indirect addresing mode starts with ( some for of indexed addressing
+            nothing implied addressing
+            relative applies to branches only - except for BIT and BRK all instructions starting with B are a branch! */
 
-    val addressingMode: AddressingMode = if token.fields.isEmpty then // Implied addressing mode
-      Implied
-    else if instruction.name().head.equals('B') && !(instruction.name().equals("BIT") || instruction.name().equals("BRK")) then
-      Relative
-    else
-      val operandField = token.fields.head.toUpperCase()
-      operandField.head match {
-        case 'A' => Accumulator
-        case '#' => Immediate
-        case '$' => if Integer.parseInt(operandField.substring(1), 16) > 255 then
-                      Absolute
-                    else
-                      ZeroPage
-        case c if c.isDigit => if Integer.parseInt(operandField, 10) > 255 then
-                  Absolute
-                else
-                  ZeroPage
-        case d if d.isLetter => if AssemblyData.labelIsDefinedV2(operandField) then // label or defined
-                                  AssemblyData.labelValue(operandField) match {
-                                    case Some(v) => if v > 255 then Absolute else ZeroPage
-                                    case _ => Unknown
-                                  }
-                                else Invalid
+      val addressingMode: AddressingMode = if token.fields.isEmpty then // Implied addressing mode
+        Implied
+      else if instruction.name().head.equals('B') && !(instruction.name().equals("BIT") || instruction.name().equals("BRK")) then
+        Relative
+      else
+        val operandField = token.fields.head.toUpperCase()
+        operandField.head match {
+          case 'A' => Accumulator
+          case '#' => Immediate
+          case '$' => if Integer.parseInt(operandField.substring(1), 16) > 255 then
+            Absolute
+          else
+            ZeroPage
+          case c if c.isDigit => if Integer.parseInt(operandField, 10) > 255 then
+            Absolute
+          else
+            ZeroPage
+          case d if d.isLetter => if AssemblyData.labelIsDefinedV2(operandField) then // label or defined
+            AssemblyData.labelValue(operandField) match {
+              case Some(v) => if v > 255 then Absolute else ZeroPage
+              case _ => Unknown
+            }
+          else Invalid
 
-        case '(' => if operandField.endsWith(",X)") then IndirectX
-                    else if operandField.endsWith("),Y") then IndirectY
-                    else if operandField.endsWith(")") then Indirect
-                    else Invalid
-        case _ => Unknown
+          case '(' => if operandField.endsWith(",X)") then IndirectX
+          else if operandField.endsWith("),Y") then IndirectY
+          else if operandField.endsWith(")") then Indirect
+          else Invalid
+          case _ => Unknown
+        }
+      // is the addressingMode valid for this instruction? then can move the program counter along by the instruction size.
+      instruction.getInsDataForAddressingMode(addressingMode) match {
+        case Some(i) =>
+          AssembleLocation.setMemoryByte(i.opcode) // write the opcode
+          AssembleLocation.addInstructionSize(i.bytes - 1) // move on hte current locaion by instruction size -1 as setMemoryByte already moved on by 1.
+        case _ => throw new Exception(s"Addressing mode '$addressingMode' not applicable to instruction '${instruction.name()}''")
       }
-    // is the addressingMode valid for this instruction? then can move the program counter along by the instruction size.
-    instruction.getInsDataForAddressingMode(addressingMode) match {
-      case Some(i) =>
-        AssembleLocation.setMemoryByte(i.opcode) // write the opcode
-        AssembleLocation.addInstructionSize(i.bytes - 1) // move on hte current locaion by instruction size -1 as setMemoryByte already moved on by 1.
-      case _ => throw new Exception(s"Addressing mode '$addressingMode' not applicable to instruction '${instruction.name()}''")
     }
+    else{
+      //TODO report the error!
+    }
+
 
 
 
@@ -167,16 +174,16 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
    * For 2nd pass we just need to verify that the label is defined and that if the value is set verify its the same
    * other wise update it.
    *
-   * @param t the Token to process
+   * @param t the TokenV2 to process
    */
-//  def processDefinition(t: Token) : Unit =
+//  def processDefinition(t: TokenV2) : Unit =
 //    logger.info(s"\tDefinition of label ${t.tokenText} with value ${t.value}")
 //    if AssemblyData.labelIsDefined(t.mnemonic) then
 //      val v = AssemblyData.labelValue(t.mnemonic)
 //      if v != t.intValue then
 //        throw new Exception(s"Definition value changed om 2nd pass was ${t.intValue} now $v")
 
-  def procesLabel(t: Token) : Unit =
+  def procesLabel(t: TokenV2) : Unit =
     logger.info(s"\tDefining label ${t.tokenText} with value $currentLocation")
     AssemblyData.addLabel(t.tokenText)
 

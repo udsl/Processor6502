@@ -1,6 +1,6 @@
 package com.udsl.processor6502.assemble2.test
 
-import com.udsl.processor6502.assemblier2.{InstructionToken, *}
+import com.udsl.processor6502.assembler2.*
 import com.udsl.processor6502.cpu._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -21,7 +21,7 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
     "STX $0201",
     "BRK")
 
-  val expectedResults: TableFor2[Int, List[Token]] = Table(
+  val expectedResults: TableFor2[Int, List[Token2]] = Table(
     ("lineNum", "tokens")
     , (1, List(CommandToken.apply("CLR", Array()), LineCommentToken.apply("clear all lthe existing data", Array())))
     , (2, List(InstructionToken.apply(LDX(), Array("#$08"))))
@@ -50,7 +50,7 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
       val res = asm.tokenisation
       assert(res.length == 8)
       val it = res.iterator
-      forAll(expectedResults) { (lineNum, tokens:List[Token]) =>
+      forAll(expectedResults) { (lineNum, tokens:List[Token2]) =>
         val r: TokenisedLine = it.next()
         assert(r.lineNumber == lineNum)
         assert(TestUtils.verifyTokens(tokens, r.tokens.toList))
@@ -63,7 +63,7 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
     val res = asm.tokenisation
     assert(res.length == 8)
     val it = res.iterator
-    forAll(expectedResults) { (lineNum, tokens: List[Token]) =>
+    forAll(expectedResults) { (lineNum, tokens: List[Token2]) =>
       val r: TokenisedLine = it.next()
       assert(r.lineNumber == lineNum)
       assert(TestUtils.verifyTokens(tokens, r.tokens.toList))
