@@ -357,10 +357,10 @@ object CpuInstructions :
     NOP(),ORA(),PHA(),PHP(),PLA(),PLP(),ROL(),ROR(),RTI(),RTS(),SBC(),SEC(),SED(),SEI(),STA(),STX(),STY(),TAX(),TAY(),
     TSX(),TXA(),TXS(),TYA())
 
-  private def isEmpty(x: String) = x == null || x.trim.isEmpty
-  private def isNotEmpty(x: String) = x == null || x.trim.isEmpty
+  private def isEmpty(str: String) = str == null || str.trim.isEmpty
+  private def isNotEmpty(str: String) = !isEmpty(str)
   def isValidInstruction(ins: String): Boolean =
-    isNotEmpty(ins) && validInstructions.exists(a => a.name().equals(ins.toUpperCase()))
+    isNotEmpty(ins) && validInstructions.exists(a => a.name().equalsIgnoreCase(ins))
 
   def getInstruction(ins: String): Option[CpuInstruction] =
     validInstructions.find(a => a.name().equals(ins.toUpperCase()))

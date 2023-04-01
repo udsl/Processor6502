@@ -58,10 +58,41 @@ case class CommandTokenV2 (command: String, override val fields: Array[String]) 
   override def toString: String = s"$name -> '$command'"
   override def tokenText: String = command
 
-case class InstructionTokenV2 (mnemonic: String, override val fields: Array[String]) extends TokenV2(fields: Array[String] ) with StrictLogging:
+case class InstructionTokenV2 (mnemonic: String, override val fields: Array[String]) extends TokenV2(fields: Array[String] ):
   override val name: String = "InstructionToken"
   override def toString: String =  s"$name -> '$mnemonic'"
   override def tokenText: String = mnemonic
+
+  private var ins: Option[CpuInstruction] = None
+  def instruction: CpuInstruction = ins.get
+  
+  private var addMode: Option[AddressingMode] = None
+  def addressingMode: AddressingMode = addMode.get
+  def setAddressingMode(mode: AddressingMode): Unit =
+    addMode match
+      case Some(m) => throw new Exception(s"Addrfessing mode already set to $m")
+      case None => addMode = Some(mode)
+
+  def opcode: Int =
+    ins match
+      case Some(i) =>
+        addMode match
+          case Some(a) =>
+            i.opcode(a) match
+              case Some(code) => code
+              case None => throw new Exception(s"Invalid addressing mode '$a' for instruction '$i'")
+          case None => throw new Exception("Addressing mode not set")
+      case None => throw new Exception("Instruction not set")      
+object InstructionTokenV2:
+  def apply( mnemonic: String, fields: Array[String]) : InstructionTokenV2 =
+    val it = new InstructionTokenV2(mnemonic, fields)
+    CpuInstructions.getInstruction(mnemonic)  match
+      case Some(code) =>
+        it.ins = Some(code)
+      case None =>
+        throw new Exception(s"Invalid mnemonic '$mnemonic'")
+    it    
+
 
 case class SytaxErrorTokenV2 (errortext: String, override val fields: Array[String]) extends TokenV2(fields: Array[String] ):
   override val name: String = "SytaxError"

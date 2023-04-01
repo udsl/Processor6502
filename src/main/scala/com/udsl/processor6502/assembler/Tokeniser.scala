@@ -2,16 +2,14 @@ package com.udsl.processor6502.assembler
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
-import com.udsl.processor6502.Utilities.*
-import com.udsl.processor6502.assembler.Parser.addSyntaxError
+import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.*
+import com.udsl.processor6502.assembler.Parser.addSyntaxError
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.execution.*
 
 import scala.collection.mutable.ListBuffer
-import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
-
 object Tokeniser extends StrictLogging :
   val exceptionList: List[AssembleExceptionRecord] = List[AssembleExceptionRecord]()
 

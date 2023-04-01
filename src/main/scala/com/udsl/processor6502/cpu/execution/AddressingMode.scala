@@ -8,7 +8,7 @@ case class InstructionSize( bytes: Int )
 object InstructionSize:
   def apply( bytes: Int ): InstructionSize =
     if bytes > 0 && bytes < 4 then new InstructionSize(bytes)
-    else throw new Exception(s"Invalid value for InstructionSize, permitted range 1 - 3")
+    else throw new Exception(s"Invalid value $bytes for InstructionSize (permitted range 1 - 3)")
 
   def apply(): InstructionSize =
     new InstructionSize(0)
@@ -45,7 +45,7 @@ case object ZeroPageX extends AddressingMode("ZeroPage,X", InstructionSize(2))
 
 case object ZeroPageY extends AddressingMode("ZeroPage,Y", InstructionSize(2))
 
-case object Invalid extends AddressingMode("Invalid", InstructionSize(0))
+case object Invalid extends AddressingMode("Invalid", InstructionSize())
 
 case object Unknown extends AddressingMode("Unknown", InstructionSize(1))
 

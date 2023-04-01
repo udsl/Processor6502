@@ -501,7 +501,7 @@ val dataValidInstructionTest: List[TestData] = List(
 )
 
 class InstructionSpec extends AnyFlatSpec, should.Matchers {
-  "An instruction" should "should have the correct opcode and addressing mode" in {
+  "An instruction" should " have the correct opcode and addressing mode" in {
     for (data <- dataValidInstructionTest) {
       assert(CpuInstructions.isValidInstruction(data.code), s"Instruction not found ${data.code}")
       val (opcode: Int, bytes:Int)  = CpuInstructions.getInstructionOpcodeBytes(data.code, data.addMode)

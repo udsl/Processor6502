@@ -29,7 +29,7 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
         case CommandTokenV2( _, _ ) => // extends AssemblerTokenType("CommandToken")
           assembleCommandToken(token)
         case InstructionTokenV2( _, _ ) => // extends AssemblerTokenType("InstructionToken")
-          assembleInstruction(token)
+          assembleInstruction(token.asInstanceOf[InstructionTokenV2])
         case _ => logger.error(s"unsupported case $token")
       }
     logger.debug(tokenisedLine.sourceLine)
@@ -71,10 +71,8 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
 //      throw new Exception(errorText)
 
 
-  def assembleInstruction(token: TokenV2) : Unit =
-    logger.info(s"\tInstructionToken '$token' - location: $currentLocation")
-    if CpuInstructions.isValidInstruction(token.asInstanceOf[InstructionTokenV2].mnemonic) then {
-      val instruction: CpuInstruction = CpuInstructions.getInstruction(token.asInstanceOf[InstructionTokenV2].mnemonic).get
+  def assembleInstruction(token: InstructionTokenV2) : Unit =
+      val instruction: CpuInstruction = token.instruction
       // TODO work out addressing mode
       /* By this time we should have an idea of any foreword reference values as they are 'registered' during tockenisation
          though the actual value of a label will not be known.
@@ -118,19 +116,13 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
           case _ => Unknown
         }
       // is the addressingMode valid for this instruction? then can move the program counter along by the instruction size.
-      instruction.getInsDataForAddressingMode(addressingMode) match {
+      // and update the token with the validated addressing mode.
+      instruction.getInsDataForAddressingMode(addressingMode) match
         case Some(i) =>
+          token.setAddressingMode(addressingMode)
           AssembleLocation.setMemoryByte(i.opcode) // write the opcode
           AssembleLocation.addInstructionSize(i.bytes - 1) // move on hte current locaion by instruction size -1 as setMemoryByte already moved on by 1.
         case _ => throw new Exception(s"Addressing mode '$addressingMode' not applicable to instruction '${instruction.name()}''")
-      }
-    }
-    else{
-      //TODO report the error!
-    }
-
-
-
 
 
   /**
