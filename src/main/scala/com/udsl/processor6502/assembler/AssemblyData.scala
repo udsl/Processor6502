@@ -46,8 +46,8 @@ object AssemblyData extends StrictLogging:
 
   def labelIsDefined(name: String): Boolean =
     labels.get(name) match
-      case Some((v, bool)) =>
-        bool
+      case Some((_, _)) =>
+        true
       case None =>
         false
 
