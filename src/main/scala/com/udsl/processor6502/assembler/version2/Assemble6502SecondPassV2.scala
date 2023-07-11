@@ -44,9 +44,8 @@ class Assemble6502SecondPassV2 extends StrictLogging, Assemble6502PassBaseV2 :
       case c if t.isInstanceOf[CommandTokenV2] =>
         c.asInstanceOf[CommandTokenV2].command.toUpperCase
 
-      case _ => {
+      case _ =>
         "invalid"
-      }
     }
     logger.info(s"\tassembleCommandToken '$t' - ")
     command match
@@ -68,8 +67,7 @@ class Assemble6502SecondPassV2 extends StrictLogging, Assemble6502PassBaseV2 :
   def assembleInstruction(t: InstructionTokenV2, tl: TokenisedLineV2): TokenV2 =
     def getValue(operand: String): Option[Int] =
       if isNumeric(operand) then
-        val n = numericValue(operand)
-        if n  >= 0 then Some(n) else None
+        numericValue(operand)
       else // only other possibility is a label
         AssemblyData.labels.get(operand) match
           case Some((v, _)) =>
@@ -108,7 +106,7 @@ class Assemble6502SecondPassV2 extends StrictLogging, Assemble6502PassBaseV2 :
      * @return a tuble of the effective addressing mode and the optional operand.
      */
     def CheckAddressingMode(mode: AddressingMode): (AddressingMode, Option[Int]) =
-      mode. match {
+      mode match {
         case Immediate =>
           if t.fields.head.charAt(0) != '#' then
             return (AddressingModeSyntaxError("missing #"), None)
@@ -116,7 +114,7 @@ class Assemble6502SecondPassV2 extends StrictLogging, Assemble6502PassBaseV2 :
             val operandValue = getOperandValue
             if operandValue.isEmpty then
               return (AddressingModeSyntaxError("Operand is niether a number or a valid label."), None)
-            if (0 to 255 contains operandValue) then
+            if 0 to 255 contains operandValue then
               return (Immediate, Some(operandValue.get))
             else
               return (AddressingModeSyntaxError("Operand not in range 0 to 255"), None)

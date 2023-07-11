@@ -1,6 +1,7 @@
 package com.udsl.processor6502.assembler.version2
 
 import com.typesafe.scalalogging.StrictLogging
+import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import com.udsl.processor6502.assembler.{AssembleLocation, AssemblyData}
 import com.udsl.processor6502.cpu.CpuInstruction
@@ -36,18 +37,22 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
 
     FirstPassResult(tokenisedLine)
 
-//  def processOrigin(t: TokenV2) : Unit =
-//    logger.info(s"\tOrigin TokenV2 '${t.mnemonic}'")
-//    if (t.fields.length == 1){
-//      if isNumeric(t.mnemonic) then
-//        AssembleLocation.setAssembleLoc(numericValue(t.mnemonic))
-//      else
-//        if isLabel(t.mnemonic) && AssemblyData.labelIsDefined(t.mnemonic) then
-//          val labelValue = AssemblyData.labelValue(t.mnemonic)
-//          AssembleLocation.setAssembleLoc(labelValue)
-//        else
-//          throw new Exception("Label or ORIG not defined.")
-//    }
+  def processOrigin(t: CommandTokenV2) : Unit =
+    if !t.command.equalsIgnoreCase("ORIG") then throw new Exception("Not an origin command token.")
+    if (t.fields.length == 1){
+      val valueStr = t.fields.head
+      numericValue(valueStr) match
+        case Some(n) =>
+          AssembleLocation.setAssembleLoc(n)
+          t.commandValue = new CommandValueNumeric(n)
+        case None =>
+          if isLabel(valueStr) then
+            t.commandValue = new CommandValueLabel(valueStr)
+            if t.commandValue.isValid then
+              AssembleLocation.setAssembleLoc(t.commandValue.value.get)
+          else
+            throw new Exception("Label or ORIG not defined.")
+    }
 
 //  def processValues(t: TokenV2) : Unit =
 //    logger.info(s"\tValue TokenV2 '${t.mnemonic}'")
@@ -61,6 +66,9 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
       case "BYT" => advanceAssemLocForBytes(t.fields)
       case "WRD" => advanceAssemLocForWords(t.fields)
       case "ADDR" => advanceAssemLocForAddresses(t.fields)
+      case "ORIG" => processOrigin(t.asInstanceOf[CommandTokenV2])
+      case "CLR" =>
+      case "DEF" =>
       case _ => logger.info(s"\tInvalid command $t ")
 
 //  def processClear(t: TokenV2, tl: TokenisedLineV2) : Unit =
@@ -102,7 +110,7 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
             Absolute
           else
             ZeroPage
-          case d if d.isLetter => if AssemblyData.labelIsDefinedV2(operandField) then // label or defined
+          case d if d.isLetter => if AssemblyData.labelIsDefined(operandField) then // label or defined
             AssemblyData.labelValue(operandField) match {
               case Some(v) => if v > 255 then Absolute else ZeroPage
               case _ => Unknown

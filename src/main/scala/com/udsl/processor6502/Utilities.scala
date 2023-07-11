@@ -14,6 +14,7 @@ import scalafx.scene.input.{KeyEvent, MouseEvent}
 import scalafx.stage.FileChooser
 
 import java.io.*
+import scala.annotation.tailrec
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import scala.util.matching.Regex
@@ -47,10 +48,7 @@ object Utilities:
     else
       -1
 
-  def numToString(value: Int): String =
-    numToString(value, numericFormatProperty.value)
-
-  def numToString(value: Int, format: NumericFormatType): String =
+  def numToString(value: Int, format: NumericFormatType = numericFormatProperty.value): String =
     format match {
       case NumericFormatType.HEX => s"$$${value.toHexString.toUpperCase}"
       case NumericFormatType.OCT => s"o${value.toOctalString}"
@@ -122,13 +120,13 @@ object Utilities:
       case None => false
     }
 
-  def numericValue(str: String): Int =
+  def numericValue(str: String): Option[Int] =
     if isNumeric(str) then
       if str.charAt(0) == '$' then
-        return Integer.parseInt(str.substring(1), 16)
+        return Some(Integer.parseInt(str.substring(1), 16))
       else
-        return Integer.parseInt(str)
-    -1
+        return Some(Integer.parseInt(str))
+    None
 
   def isLabel( str: String): Boolean =
     val alphaPattern: Regex = "^[A-Za-z][A-Za-z0-9]+:?$".r

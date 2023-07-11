@@ -21,7 +21,7 @@ object TokeniserV2 :
 
       val beforeComment = if semicolonAt > 0 then
         // The comment is the sub string from semicolonAt otherwise it would have been a comment line above.
-        // We acnt use split because the comment itself may contain a ';'
+        // We cant use split because the comment itself may contain a ';'
         tokenisedLine.add(LineCommentTokenV2.apply(toTokenise.substring(semicolonAt).trim, Array()))
         toTokenise.substring(0, semicolonAt).trim
       else
@@ -51,10 +51,11 @@ object TokeniserV2 :
 
         // is this line an instruction
         val fields = ins.trim.split("\\s+")
-        val instruction: Option[CpuInstruction] = CpuInstructions.getInstruction(fields.head)
-        if instruction.isDefined then
-          tokenisedLine.add(InstructionTokenV2.apply(instruction.get.name(), fields.tail))
-        else
-          tokenisedLine.add(SytaxErrorTokenV2.apply("instruction not found.", fields.tail))
+        try
+          tokenisedLine.add(InstructionTokenV2.apply(fields.head, fields.tail))
+        catch
+          case e: Exception =>
+            tokenisedLine.add(SytaxErrorTokenV2.apply(e.getMessage, fields.tail))
+    
     tokenisedLine
 

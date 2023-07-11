@@ -48,7 +48,7 @@ object TestUtilsV2 :
     if colonAt < 0 then fail("LabelToken text does not have a colon.")
     val lableText = line.substring(0, colonAt)
     if !token.tokenText.equals(lableText) then fail("LabelToken label text is incorrect.")
-    if !AssemblyData.labelIsDefinedV2(lableText) then fail("LabelToken label is not defined.")
+    if !AssemblyData.labelIsDefined(lableText) then fail("LabelToken label is not defined.")
   
   def validateCommandToken(token: CommandTokenV2, line: String): Unit =
     if !line.toUpperCase().startsWith(token.command) then fail("CommandToken source does not start with this token's command.")

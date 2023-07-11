@@ -16,13 +16,16 @@ object AssembleLocation extends StrictLogging :
   var currentLocation: Int = defaultLocation
   val memoryAccess: Memory = Memory.apply
 
-  def setAssembleLoc(l: Int):Unit =
+  def setAssembleLoc(l: Int): Unit =
     if l > 65535 || l < 0 then
       throw new Exception(s"Bad assembler Location $l ")
     else
       currentLocation = l
       logger.debug(s" assembler Location = $l ")
 
+  def setAssembleLoc(l: Option[Int]): Unit =
+    setAssembleLoc(l.getOrElse(throw new Exception(s"setAssembleLoc to option of nothing ")))
+    
   def setMemoryWord(v: Int): Unit =
     if v > 65535 || v < 0 then
       val errorMessage = s"Bad word value $v"

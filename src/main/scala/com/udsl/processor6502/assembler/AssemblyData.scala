@@ -51,13 +51,13 @@ object AssemblyData extends StrictLogging:
       case None =>
         false
 
-  def labelIsDefinedV2(name: String): Boolean =
+  def labelIsValid(name: String): Boolean =
     labels.get(name) match
-      case Some((v, bool)) =>
-        true
+      case Some((_, valid)) =>
+        valid
       case None =>
         false
-
+        
   def labelValue(name: String): Option[Int] =
     labels.get(name) match
       case Some((v, valid)) =>

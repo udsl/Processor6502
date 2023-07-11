@@ -8,6 +8,30 @@ import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 
 import scala.collection.mutable.ListBuffer
 
+trait CommandValueType:
+  def isValid: Boolean = false
+  def isDefined: Boolean = false
+  def value: Option[Int] = None
+
+class CommandValueLabel(val label: String) extends CommandValueType:
+  override def isDefined: Boolean =
+    AssemblyData.labelIsDefined(label)
+
+  override def isValid: Boolean =
+    AssemblyData.labelIsValid(label)
+
+  override def value: Option[Int] =
+    if isValid then
+      AssemblyData.labelValue(label)
+    else
+      None
+
+class CommandValueNumeric(val num: Int) extends CommandValueType:
+  override def isDefined: Boolean = true
+  override def isValid: Boolean = true
+  override def value: Option[Int] =
+      Some(num)
+
 
 trait TokenV2 (val fields: Array[String] ) :
   val name: String
@@ -58,6 +82,13 @@ case class CommandTokenV2 (command: String, override val fields: Array[String]) 
   override def toString: String = s"$name -> '$command'"
   override def tokenText: String = command
 
+  private var _commandValue: Option[CommandValueType] = None
+  def hasValue: Boolean = _commandValue.isDefined
+  def value: Int = _commandValue.get.value.get
+  def commandValue: CommandValueType = _commandValue.get
+  def commandValue_=(newValue: CommandValueType): Unit =
+    _commandValue = Some(newValue)
+
 case class InstructionTokenV2 (mnemonic: String, override val fields: Array[String]) extends TokenV2(fields: Array[String] ):
   override val name: String = "InstructionToken"
   override def toString: String =  s"$name -> '$mnemonic'"
@@ -65,7 +96,7 @@ case class InstructionTokenV2 (mnemonic: String, override val fields: Array[Stri
 
   private var ins: Option[CpuInstruction] = None
   def instruction: CpuInstruction = ins.get
-  
+
   private var addMode: Option[AddressingMode] = None
   def addressingMode: AddressingMode = addMode.get
   def setAddressingMode(mode: AddressingMode): Unit =
@@ -82,7 +113,8 @@ case class InstructionTokenV2 (mnemonic: String, override val fields: Array[Stri
               case Some(code) => code
               case None => throw new Exception(s"Invalid addressing mode '$a' for instruction '$i'")
           case None => throw new Exception("Addressing mode not set")
-      case None => throw new Exception("Instruction not set")      
+      case None => throw new Exception("Instruction not set")
+
 object InstructionTokenV2:
   def apply( mnemonic: String, fields: Array[String]) : InstructionTokenV2 =
     val it = new InstructionTokenV2(mnemonic, fields)
@@ -91,7 +123,7 @@ object InstructionTokenV2:
         it.ins = Some(code)
       case None =>
         throw new Exception(s"Invalid mnemonic '$mnemonic'")
-    it    
+    it
 
 
 case class SytaxErrorTokenV2 (errortext: String, override val fields: Array[String]) extends TokenV2(fields: Array[String] ):
