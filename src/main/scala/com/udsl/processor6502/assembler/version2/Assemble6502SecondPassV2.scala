@@ -312,13 +312,9 @@ class Assemble6502SecondPassV2 extends StrictLogging, Assemble6502PassBaseV2 :
     logger.debug("setAddresses")
     for (v <- fields)
       val value = v.trim
-      if isNumeric(value) then
-        setMemoryAddress(numericValue(value))
-      else if isLabel(value) then
-        AssemblyData.labelIsDefined(value)
-        setMemoryAddress(AssemblyData.labelValue(value).get)
-      else
-        throw new Exception(s"Invalid value address '$value'")
+      setMemoryAddress( numericValue(value).getOrElse({
+        AssemblyData.labelValue(value).getOrElse(throw new Exception(s"Invalid value address '$value'"))
+      }) )
 
 object Assemble6502SecondPassV2:
   def apply: Assemble6502SecondPassV2 =

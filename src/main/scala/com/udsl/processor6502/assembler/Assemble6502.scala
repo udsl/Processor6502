@@ -150,7 +150,7 @@ object Assemble6502 extends StrictLogging :
 trait Assemble6502PassBase:
 
   def setMemoryAddress(v: String): Unit =
-    AssembleLocation.setMemoryAddress( numericValue(v))
+    AssembleLocation.setMemoryAddress( numericValue(v).get)
 
   def setMemoryAddress(v: Int): Unit =
     AssembleLocation.setMemoryAddress(v)

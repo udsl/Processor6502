@@ -11,7 +11,7 @@ trait AssemblerToken(val mnemonic: String, val fields: Array[String] ):
   var value: String = ""
   var source: String = ""
   
-  def intValue: Int = numericValue(value)
+  def intValue: Int = numericValue(value).getOrElse(-99)
 
   /**
    * Abstrct method must be implemented in classes

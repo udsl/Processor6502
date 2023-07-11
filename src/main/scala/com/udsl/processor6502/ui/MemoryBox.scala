@@ -122,7 +122,7 @@ class MemoryBox extends VBox, ScrollToView, StrictLogging:
       onAction = _ => {
         logger.info(s"Viewing location ${viewLocation.text.value}!")
         val loc: Int =
-          numericValue(viewLocation.text.value)
+          numericValue(viewLocation.text.value).get
         memoryView.scrollTo(loc)
       }
     }

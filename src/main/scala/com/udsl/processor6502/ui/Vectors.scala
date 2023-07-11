@@ -88,8 +88,8 @@ package com.udsl.processor6502.ui:
         val result = dialog.showAndWait()
         result match
           case Some(value) =>
-            updateDisplay(numericValue(value))
-            memoryAccess.setMemoryToAddress(vectorAddress, numericValue(value))
+            updateDisplay(numericValue(value).get)
+            memoryAccess.setMemoryToAddress(vectorAddress, numericValue(value).get)
           case None => logger.info("Dialog was canceled.")
       }
     }
@@ -117,7 +117,7 @@ package com.udsl.processor6502.ui:
     override def setData(provider: List[ConfigDatum]): Unit =
       logger.info(s"Providing to Vector: $vectorName")
       getConfigValue(provider, vectorName) match
-        case Some(value) => currentValue = numericValue(value)
+        case Some(value) => currentValue = numericValue(value).get
         case _ =>
 
   } 

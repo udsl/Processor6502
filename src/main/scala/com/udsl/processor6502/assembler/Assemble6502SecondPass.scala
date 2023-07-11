@@ -18,6 +18,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
   def assemble(tokenisedLine: TokenisedLine) : AssemblerToken =
     logger.info(s"\n\n2nd Pass ${tokenisedLine.lineNumber} ")
+    var res: Option[AssemblerToken] = None
     for (token <- tokenisedLine.tokens)
       token match {
         case BlankLineToken( _, _ ) => // extends AssemblerTokenType("BlankLineToken")
@@ -31,7 +32,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
         case CommandToken( _, _ ) => // extends AssemblerTokenType("CommandToken")
           assembleCommandToken(token)
         case InstructionToken( _, _ ) => // extends AssemblerTokenType("InstructionToken")
-          return assembleInstructionToken(token, tokenisedLine)
+          res = Some(assembleInstructionToken(token, tokenisedLine))
         case ClearToken( _, _ ) =>
           logger.info("\tClear Token - but we dont clear on 2nd pass!")
         case OriginToken( _, _ ) =>
@@ -39,7 +40,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
         case _ => logger.error(s"unsupported case $token")
       }
-    NoTokenToken("", Array[String]())
+    res.getOrElse(NoTokenToken("", Array[String]()))
 
   
   def procesLabel(token: AssemblerToken): Unit =
@@ -62,15 +63,14 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
   def assembleInstructionToken(t: AssemblerToken, tl: TokenisedLine): AssemblerToken =
     def getValue(operand: String): Int =
-      if isNumeric(operand) then
-        numericValue(operand)
-      else // only other possibility is a label
+      numericValue(operand).getOrElse({
         AssemblyData.labels.get(operand) match
           case Some((v, bool)) =>
             v
           case None =>
             addSyntaxError(SyntaxErrorRecord(s"Undefined label '$operand'", tl))
             -1
+      })
 
     def getOperandValue: Int =
       val operand = if t.fields.head.charAt(0) == '#' then
@@ -97,74 +97,77 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
     def validateAddressingMode: (AddressingMode, Int) =
       val sortedModes = t.predictedAddressingModes.sortBy(addrMode => addrMode.size.bytes)
+
+      var res: Option[(AddressingMode, Int)] = None
+
       for mode: AddressingMode <- sortedModes do
         mode match {
           case Immediate =>
             if CpuInstructions.isAddressingModeValid(t.mnemonic, Immediate) then
               val operandValue = getOperandValue
               if t.fields.head.charAt(0) == '#' && (0 to 255 contains operandValue) then
-                return (Immediate, operandValue)
+                res = Some( (Immediate, operandValue) )
 
           case Absolute | ZeroPage =>
             val operandValue = getOperandValue
             if operandValue > 255 && CpuInstructions.isAddressingModeValid(t.mnemonic, Absolute) then
-              return (Absolute, operandValue)
+              res = Some(  (Absolute, operandValue) )
             else
-              return (ZeroPage, operandValue)
+              res = Some(  (ZeroPage, operandValue) )
 
           case ZeroPageX =>
             if t.fields.head.toUpperCase.contains(",X") && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageX) then
               val operandValue = getIndexedOperandValue
               if 0 to 255 contains operandValue then
-                return (ZeroPageX, operandValue)
+                res = Some( (ZeroPageX, operandValue) )
 
           case ZeroPageY =>
             if t.fields.head.toUpperCase.contains(",Y") && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageY) then
               val operandValue = getIndexedOperandValue
               if 0 to 255 contains operandValue then
-                return (ZeroPageY, operandValue)
+                res = Some( (ZeroPageY, operandValue) )
 
           case AbsoluteX =>
             if t.fields.head.toUpperCase.contains(",X") && CpuInstructions.isAddressingModeValid(t.mnemonic, AbsoluteX) then
               val operandValue = getIndexedOperandValue
               if (0 to 255 contains operandValue) && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageX) then
-                return (ZeroPageX, operandValue) // prediction was AbsoluteX but actually ZeroPageX, why labels need updating.
+                res = Some( (ZeroPageX, operandValue) )// prediction was AbsoluteX but actually ZeroPageX, why labels need updating.
               else
-                return (AbsoluteX, operandValue)
+                res = Some( (AbsoluteX, operandValue))
 
           case AbsoluteY =>
             if t.fields.head.toUpperCase.contains(",Y") && CpuInstructions.isAddressingModeValid(t.mnemonic, AbsoluteY) then
               val operandValue = getIndexedOperandValue
               if (0 to 255 contains operandValue) && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageY) then
-                return (ZeroPageY, operandValue) // prediction was AbsoluteX but actually ZeroPageX, why labels need updating.
+                res = Some( (ZeroPageY, operandValue) )// prediction was AbsoluteX but actually ZeroPageX, why labels need updating.
               else
-                return (AbsoluteY, operandValue)
+                res = Some( (AbsoluteY, operandValue) )
 
 
           case IndirectX =>
             if t.fields.head.toUpperCase.contains(",X)") && CpuInstructions.isAddressingModeValid(t.mnemonic, IndirectX) then
               val operandValue = getIndirectOperandValue
               if 0 to 255 contains operandValue then
-                return (IndirectX, operandValue)
+                res = Some( (IndirectX, operandValue) )
 
           case IndirectY =>
             if t.fields.head.toUpperCase.contains("),Y") && CpuInstructions.isAddressingModeValid(t.mnemonic, IndirectY) then
               val operandValue = getIndirectOperandValue
               if 0 to 255 contains operandValue then
-                return (IndirectY, operandValue)
+                res = Some( (IndirectY, operandValue))
 
           case Indirect =>
             if !t.fields.head.contains(",") && CpuInstructions.isAddressingModeValid(t.mnemonic, Indirect) then // if it has a comma then its not Indirect
               val operandValue = getIndirectOperandValue
-              return (Indirect, operandValue)
+              res = Some( (Indirect, operandValue))
 
           case Implied =>
             if t.fields.length == 0 && CpuInstructions.isAddressingModeValid(t.mnemonic, Implied) then
-              return (Implied, -1) // there is no operand
+              res = Some( (Implied, -1) )// there is no operand
 
           case Accumulator =>
             if !t.fields.isEmpty && "A".equals(t.fields.head.toUpperCase)  && CpuInstructions.isAddressingModeValid(t.mnemonic, Accumulator) then
-              return (Accumulator, -1) // there is no operand
+              res = Some( (Accumulator, -1) )// there is no operand
 
           case Relative =>
             // check that mode is appropriate
@@ -177,19 +180,22 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
                 // pc is already incremented by 2 so need an offset that is 2 less.
                 val offset = operandValue - AssembleLocation.currentLocation
                 if offset < 0 && (offset - 2 > -128) then
-                  return (Relative, offset - 2)
+                  res = Some( (Relative, offset - 2))
                 if offset > 0 && offset > 130 then
-                  return (Relative, offset + 2)
+                  res = Some( (Relative, offset + 2))
                 logger.info(s"Relative address out of range ${t.mnemonic}")
               else
                 if operandValue > 0 && operandValue < 256 then
-                  return (Relative, operandValue)
+                  res = Some( (Relative, operandValue))
 
           case _ =>
         }
-      (Invalid, -1)
+      res match
+        case Some( (a, b) )  => (a, b)
+        case None => (Invalid, -1)
 
     logger.info(s"assembleInstructionToken - ${t.mnemonic}")
+    
     if isValidInstruction(t.mnemonic) then
       val (addrMode: AddressingMode, value: Int) = validateAddressingMode
       logger.info(s"validateAddressingMode - $addrMode")
@@ -240,10 +246,6 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
     logger.debug("setAddresses")
     for (v <- fields)
       val value = v.trim
-      if isNumeric(value) then
-        setMemoryAddress(numericValue(value))
-      else if isLabel(value) then
-        AssemblyData.labelIsDefined(value)
-        setMemoryAddress(AssemblyData.labelValue(value).get)
-      else
-        throw new Exception(s"Invalid value address '$value'")
+      setMemoryAddress(numericValue(value).getOrElse({
+        AssemblyData.labelValue(value).getOrElse( throw new Exception(s"Invalid value address '$value'"))
+      }))

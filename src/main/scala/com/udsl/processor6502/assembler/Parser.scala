@@ -123,7 +123,7 @@ object Parser extends StrictLogging :
           else
             val value = numericValue(parts(1))
             if 0 to 65535 contains value then
-              AssemblyData.addLabel(parts(0), value)
+              AssemblyData.addLabel(parts(0), value.get)
               val token = DefToken(parts(0), Array[String](parts(1)))
               token.value = parts(1)
               parsedLine + token
