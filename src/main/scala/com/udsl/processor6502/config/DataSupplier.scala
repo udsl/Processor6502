@@ -7,7 +7,7 @@ import scala.collection.mutable.ArrayBuffer
 object DataSupplier {
   def provideData(data: List[ConfigDatum] ): Unit = {
     for( source <- registeredConsumers){
-      source.setData(data)
+      source.receiveData(data)
     }
   }
 }

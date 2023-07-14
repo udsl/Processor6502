@@ -1,10 +1,11 @@
-package com.udsl.processor6502.assembler
+package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
-import com.udsl.processor6502.assembler.Assemble6502FirstPass.logger
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
+import com.udsl.processor6502.assembler.version1.Assemble6502FirstPass.logger
+import com.udsl.processor6502.assembler.*
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.execution.*
 

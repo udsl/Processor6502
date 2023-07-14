@@ -3,6 +3,7 @@ package com.udsl.processor6502.assembler
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import com.udsl.processor6502.assembler.AssemblyData.logger
+import com.udsl.processor6502.assembler.version1.Reference
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer

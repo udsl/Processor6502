@@ -1,16 +1,16 @@
-package com.udsl.processor6502.assembler
+package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.*
-import com.udsl.processor6502.assembler.Parser.addSyntaxError
+import ParserV1.addSyntaxError
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.execution.*
 
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
-object Tokeniser extends StrictLogging :
+object TokeniserV1 extends StrictLogging :
   val exceptionList: List[AssembleExceptionRecord] = List[AssembleExceptionRecord]()
 
   def Tokenise(allLines: Array[UntokenisedLine]): List[TokenisedLine] =
@@ -133,9 +133,9 @@ object Tokeniser extends StrictLogging :
               tokenisedLine + token
               logger.info(s"Origin added from defined label '$str")
             else
-              Parser.addSyntaxError(SyntaxErrorRecord("Value for ORIG not numeric or defined label", tokenisedLine))
+              ParserV1.addSyntaxError(SyntaxErrorRecord("Value for ORIG not numeric or defined label", tokenisedLine))
           else
-            Parser.addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", tokenisedLine))
+            ParserV1.addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", tokenisedLine))
           return true
 
         // clr only valid on the first line
@@ -143,7 +143,7 @@ object Tokeniser extends StrictLogging :
           val token = ClearToken(head, text.tail)
           tokenisedLine + token
           if tokenisedLine.lineNumber > 1 then
-            Parser.addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", tokenisedLine))
+            ParserV1.addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", tokenisedLine))
           AssemblyData.clear()
           logger.debug(s"token added: $token")
           return true
@@ -153,9 +153,9 @@ object Tokeniser extends StrictLogging :
           // fist part must be the label being defined
           // 2nd is the value which must not be a label
           if parts.length != 2  then
-            Parser.addSyntaxError(SyntaxErrorRecord("Bad DEF", tokenisedLine))
+            ParserV1.addSyntaxError(SyntaxErrorRecord("Bad DEF", tokenisedLine))
           else if !isLabel(parts(0)) || !isNumeric(parts(1)) then
-            Parser.addSyntaxError(SyntaxErrorRecord("DEF should be label number", tokenisedLine))
+            ParserV1.addSyntaxError(SyntaxErrorRecord("DEF should be label number", tokenisedLine))
           else
             val value = numericValue(parts(1))
             if 0 to 65535 contains value then
@@ -165,7 +165,7 @@ object Tokeniser extends StrictLogging :
               tokenisedLine + token
               logger.debug(s"token added: $token")
             else
-              Parser.addSyntaxError( SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", tokenisedLine))
+              ParserV1.addSyntaxError( SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", tokenisedLine))
           return true
 
         case _ =>

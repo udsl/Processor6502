@@ -1,13 +1,14 @@
-package com.udsl.processor6502.assembler
+package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
-import com.udsl.processor6502.assembler.Tokeniser.{getIndirectPredictions, getLabelPredictions, getPredictions, logger, processCommand, processInstruction, processLabel, processValue}
+import com.udsl.processor6502.assembler.version1.TokeniserV1.*
+import com.udsl.processor6502.assembler.*
 import com.udsl.processor6502.cpu.CpuInstructions
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Relative, Unknown, ZeroPage, ZeroPageX, ZeroPageY}
+import com.udsl.processor6502.cpu.execution.*
 
-object Parser extends StrictLogging :
+object ParserV1 extends StrictLogging :
   val sytaxErrorList: List[SyntaxErrorRecord] = List[SyntaxErrorRecord]()
 
   def parse(line: String, lineNumber: Int) : ParsedLine =

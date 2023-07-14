@@ -1,18 +1,18 @@
-package com.udsl.processor6502.assembler
+package com.udsl.processor6502.assembler.version1
 
+import com.typesafe.scalalogging.StrictLogging
+import com.udsl.processor6502.Dialogues.errorAlert
+import com.udsl.processor6502.Utilities.numericValue
+import com.udsl.processor6502.assembler.*
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
-import com.udsl.processor6502.assembler.{BlankLineToken, CommentLineToken, LabelToken, ReferenceToken}
+import com.udsl.processor6502.assembler.version1.Assemble6502.logger
+import com.udsl.processor6502.assembler.version1.Assemble6502FirstPass.*
+import com.udsl.processor6502.assembler.version1.Assemble6502SecondPass.assemble
+import com.udsl.processor6502.cpu.execution.InstructionSize
 import com.udsl.processor6502.cpu.{CpuInstructions, Memory, Processor}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.Dialogues.errorAlert
-import com.udsl.processor6502.Utilities.numericValue
-import com.udsl.processor6502.assembler.Assemble6502.logger
-import com.udsl.processor6502.assembler.Assemble6502FirstPass.{advanceAssemLocForAddresses, advanceAssemLocForBytes, advanceAssemLocForWords, assembleCommandToken, assembleCommentLineToken, assembleInstructionToken, logger, procesLabel, processClear}
-import com.udsl.processor6502.assembler.Assemble6502SecondPass.assemble
-import com.udsl.processor6502.cpu.execution.InstructionSize
 
 
 /**
@@ -59,13 +59,13 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
    * Verify that the first pass is without error
    */
   def verification(): Boolean =
-    if Parser.sytaxErrorList.nonEmpty then
+    if ParserV1.sytaxErrorList.nonEmpty then
       errorAlert("Errors", "Syntax errors")
     // Check that all references have associated labels defined
     val (result, errors) = AssemblyData.isValid
     if !result then
       errorAlert( "Validation failure", errors.mkString("\n"))
-    Parser.sytaxErrorList.isEmpty & result
+    ParserV1.sytaxErrorList.isEmpty & result
 
   def firstPass(): Unit =
     for (tokenisedLine <- tokenisedLines)
@@ -90,8 +90,8 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
         |*****************
         |
         |""".stripMargin )
-    logger.info(s"  exceptions found: ${if Tokeniser.exceptionList.isEmpty then "ZERO" else Tokeniser.exceptionList.length}!")
-    for exp <- Tokeniser.exceptionList do
+    logger.info(s"  exceptions found: ${if TokeniserV1.exceptionList.isEmpty then "ZERO" else TokeniserV1.exceptionList.length}!")
+    for exp <- TokeniserV1.exceptionList do
       logger.info(s"Exception \"${exp.exceptionMessage}\" at: ${exp.lineNumber} - '${exp.sourceText}'\n")
 
 
@@ -105,15 +105,15 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
         |*****************
         |
         |""".stripMargin )
-    logger.info(s"  syntax errors found ${if Parser.sytaxErrorList.isEmpty then "ZERO" else s"in ${Parser.sytaxErrorList.length} lines"}!")
-    for syn <- Parser.sytaxErrorList do
+    logger.info(s"  syntax errors found ${if ParserV1.sytaxErrorList.isEmpty then "ZERO" else s"in ${ParserV1.sytaxErrorList.length} lines"}!")
+    for syn <- ParserV1.sytaxErrorList do
       logger.info(s"Syntax error \"${syn.errorMessage}\" at: ${syn.lineNumber} - '${syn.sourceText}'\n")
 
   def hasException: Boolean =
-    Tokeniser.exceptionList.nonEmpty
+    TokeniserV1.exceptionList.nonEmpty
 
   def hasSyntaxError: Boolean =
-    Parser.sytaxErrorList.nonEmpty
+    ParserV1.sytaxErrorList.nonEmpty
 
   def printTokenisedLines(): Unit =
     logger.debug("\n\nTokenisedLines\n")
@@ -135,14 +135,14 @@ object Assemble6502 extends StrictLogging :
     logger.info("\n\n***** Starting Assembly *****\n\n")
     val allLines = for ((str, index) <- source.split("\n").zipWithIndex)
       yield new UntokenisedLine(index + 1, str.trim)
-    val asm = new Assemble6502(Tokeniser.Tokenise(allLines) )
+    val asm = new Assemble6502(TokeniserV1.Tokenise(allLines) )
     asm
 
   def apply(source: String, location: Int): Assemble6502 =
     logger.info(s"\n\n***** Starting Assembly for $location *****\n\n")
     val allLines = for ((str, index) <- s"ORIG $location\n$source".split("\n").zipWithIndex)
       yield new UntokenisedLine(index + 1, str.trim)
-    val asm = new Assemble6502(Tokeniser.Tokenise(allLines) )
+    val asm = new Assemble6502(TokeniserV1.Tokenise(allLines) )
     asm
 
 

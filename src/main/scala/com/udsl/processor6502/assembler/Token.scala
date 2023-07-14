@@ -2,6 +2,7 @@ package com.udsl.processor6502.assembler
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.numericValue
+import com.udsl.processor6502.assembler.AssemblerToken
 import com.udsl.processor6502.cpu.execution.AddressingMode
 
 import scala.collection.mutable.ListBuffer

@@ -1,14 +1,15 @@
-package com.udsl.processor6502.assembler
+package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.{NumericFormatType, Utilities}
-import com.udsl.processor6502.Utilities.{constructSourceLine, isLabel, isNumeric, numToByteString, numToWordString, numericValue}
-import com.udsl.processor6502.assembler.Assemble6502FirstPass.{advanceAssemLocForAddresses, advanceAssemLocForBytes, advanceAssemLocForWords, logger, processClear}
-import com.udsl.processor6502.assembler.Assemble6502SecondPass.logger
-import com.udsl.processor6502.assembler.Parser.addSyntaxError
+import com.udsl.processor6502.Utilities.*
+import ParserV1.addSyntaxError
+import com.udsl.processor6502.assembler.version1.Assemble6502FirstPass.*
+import com.udsl.processor6502.assembler.version1.Assemble6502SecondPass.logger
+import com.udsl.processor6502.assembler.*
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.CpuInstructions.{getInstruction, isValidInstruction}
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Invalid, NotApplicable, Relative, Unknown, ZeroPage, ZeroPageX, ZeroPageY}
+import com.udsl.processor6502.cpu.execution.*
+import com.udsl.processor6502.{NumericFormatType, Utilities}
 
 
 /**

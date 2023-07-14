@@ -1,7 +1,7 @@
 package com.udsl.processor6502.ui.popups
 
 import com.udsl.processor6502.Utilities.numToString
-import com.udsl.processor6502.assembler.Assemble6502
+import com.udsl.processor6502.assembler.version1.Assemble6502
 import scalafx.application.JFXApp
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
@@ -22,7 +22,7 @@ class LineAssemblerPopup(val location: Int) extends Stage {
 
   scene = new Scene {
     root = {
-      val titleBox = new HBox {
+      val titleBox: HBox = new HBox {
         val label: Label = new Label(s"Assembling for location: ${numToString(location)}")
 
         children = List(label)
@@ -32,15 +32,15 @@ class LineAssemblerPopup(val location: Int) extends Stage {
         children = List(textArea)
       }
 
-      val buttons = new HBox {
-        val closeButton = new Button {
+      val buttons: HBox = new HBox {
+        val closeButton: Button = new Button {
           text = "Close"
           onAction = _ => {
             close()
           }
         }
 
-        val assembleButton = new Button {
+        val assembleButton: Button = new Button {
           text = "Assemble"
           onAction = _ => {
               val assember = Assemble6502.apply(textArea.text.value, location)
