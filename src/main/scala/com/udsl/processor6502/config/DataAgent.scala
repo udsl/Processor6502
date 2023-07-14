@@ -1,14 +1,15 @@
 package com.udsl.processor6502.config
 
-import scala.collection.mutable.{ListBuffer}
+import scala.collection.mutable.ListBuffer
 
-trait DataAgent
+trait DataAgent:
+  def agentFor: String = "Unknown"
 
 trait DataProvider extends DataAgent {
-  def getData(collector: ListBuffer[ConfigDatum]): Unit
+  def supplyData(collector: ListBuffer[ConfigDatum]): Unit
 
 }
 
 trait DataConsumer extends DataAgent{
-  def setData( provider: List[ConfigDatum]):Unit
+  def receiveData(provider: List[ConfigDatum]):Unit
 }

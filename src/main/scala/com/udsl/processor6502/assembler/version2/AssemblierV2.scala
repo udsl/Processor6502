@@ -11,10 +11,10 @@ class AssemblierV2(val sourceLines: LazyList[(String, Int)], val firstPass: Asse
   import AssemblierV2.*
   
   def assemble(): Unit =
-    println("starting")
+    logger.info("starting V2")
     AssemblyData.clear()
     val x = tokenisation.map(firstPass.assemble)
-    println(s"complete $x")
+    logger.info(s"complete $x")
 
 
   def tokenisation: LazyList[TokenisedLineV2] =

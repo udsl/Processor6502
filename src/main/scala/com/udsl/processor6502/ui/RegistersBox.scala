@@ -19,6 +19,7 @@ package com.udsl.processor6502.ui:
 
   class RegistersBox extends VBox , DataProvider , DataConsumer , StrictLogging{
 
+    override def agentFor: String = "Registers"
     registerDataSource(this)
 
     val pc: TextField = new TextField {
@@ -249,7 +250,7 @@ package com.udsl.processor6502.ui:
     spacing = 8
     children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status, vectors, buttonBox)
 
-    override def getData(collector: ListBuffer[ConfigDatum]): Unit = {
+    override def supplyData(collector: ListBuffer[ConfigDatum]): Unit = {
       logger.info("Collecting from RegisterBox")
       collector += ConfigDatum.apply("pc", Processor.pc.addr.toString)
       collector += ConfigDatum.apply("sp", Processor.sp.toValueString)
@@ -258,7 +259,7 @@ package com.udsl.processor6502.ui:
       collector += ConfigDatum.apply("iy", Processor.iy.toValueString)
     }
 
-    override def setData(provider: List[ConfigDatum]): Unit = {
+    override def receiveData(provider: List[ConfigDatum]): Unit = {
       logger.info("Providing to RegisterBox")
       getConfigValue(provider, "pc") match {
         case Some(v) =>

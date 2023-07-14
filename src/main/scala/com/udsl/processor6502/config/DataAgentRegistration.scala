@@ -8,16 +8,20 @@ object DataAgentRegistration extends StrictLogging{
   val registeredProviders: ArrayBuffer[DataProvider] = ArrayBuffer[DataProvider]()
   val registeredConsumers: ArrayBuffer[DataConsumer] = ArrayBuffer[DataConsumer]()
 
-  def registerDataSource( registrant: DataAgent): Unit = {
-    registrant match {
-      case b: DataAgent with DataProvider with DataConsumer => {
-        registeredProviders += b
-        registeredConsumers += b
+  def agentIsRegistered( registrant: DataAgent): Boolean =
+    registeredProviders.contains(registrant) || registeredConsumers.contains(registrant)
+
+  def registerDataSource( registrant: DataAgent): Unit =
+    if !agentIsRegistered(registrant) then
+      logger.info(s"Registering agent: ${registrant.agentFor}")
+      registrant match {
+        case b: DataAgent with DataProvider with DataConsumer =>
+          registeredProviders += b
+          registeredConsumers += b
+        case c: DataAgent with DataProvider => registeredProviders += c
+        case d: DataAgent with DataConsumer => registeredConsumers += d
+        case _ => logger.info("Not a DataProvider")
       }
-      case c: DataAgent with DataProvider => registeredProviders += c
-      case d: DataAgent with DataConsumer => registeredConsumers += d
-      case _ => logger.info("Not a DataProvider")
-    }
 
 
 //    registrant match {
@@ -28,7 +32,6 @@ object DataAgentRegistration extends StrictLogging{
 //      case d: DataAgent with DataConsumer => registeredConsumers += d
 //      case _ => logger.info("Not a DataConsumer")
 //    }
-  }
 
   def getRegisteredConsumers : Seq[DataConsumer] = {
     registeredConsumers.toSeq

@@ -86,6 +86,7 @@ class StatusRegisterView extends VBox, StrictLogging:
 
 class StatusFlagControl(val statusName: String, initalValue: Boolean = false, val isReadOnly: Boolean = false) extends HBox, DataProvider, DataConsumer, StrictLogging:
 
+  override def agentFor: String = "StatusFlags"
   registerDataSource( this)
 
   logger.info(s"Creating StatusFlag '$statusName'")
@@ -118,12 +119,12 @@ class StatusFlagControl(val statusName: String, initalValue: Boolean = false, va
       }
     }
 
-  override def getData(collector: ListBuffer[ConfigDatum]): Unit =
+  override def supplyData(collector: ListBuffer[ConfigDatum]): Unit =
     logger.info("Collecting from RegisterBox")
     collector += ConfigDatum.apply(statusName, currentValue.toString)
 
 
-  override def setData( provider: List[ConfigDatum]): Unit =
+  override def receiveData(provider: List[ConfigDatum]): Unit =
     logger.info("Providing to StatusFlag")
     update(
       getConfigValue(provider, statusName) match {

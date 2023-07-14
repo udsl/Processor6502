@@ -25,6 +25,7 @@ import com.udsl.processor6502.cpu.execution.InstructionSize
 class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLogging {
 
   def assemble(): Unit =
+    logger.info("starting V1")
     if hasSyntaxError || hasException then
       errorAlert("Assembly Error", "Syntax or exceptions encontered")
       listExceptions()
@@ -49,7 +50,8 @@ class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLoggi
       AssemblyData.printRefs()
       listExceptions()
       listSyntaxErrors()
-
+    logger.info(s"complete")
+    
   def addReference(value: String): Unit =
     AssemblyData.addReference(value)
 

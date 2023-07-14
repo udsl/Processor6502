@@ -58,8 +58,14 @@ class FooterBox() extends GridPane, StrictLogging:
     }
   }
 
+  val optionItem: MenuItem = new MenuItem("Edit Options") {
+    onAction = _ => {
+      logger.info(s"Options Button pressed")
+    }
+  }
+
   val menuButton: MenuButton = new MenuButton("Config Action", null){
-    items = List( saveItem, loadItem )
+    items = List( optionItem, saveItem, loadItem )
   }
 
   menuButton.setTooltip(new Tooltip(s"Save or load a configuration."))

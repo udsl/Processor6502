@@ -61,7 +61,7 @@ package com.udsl.processor6502.ui:
   }
 
   class Vector(val vectorName: String, val vectorAddress: Int, initialValue: Int = 0) extends HBox, DataProvider, DataConsumer, StrictLogging {
-
+    override def agentFor: String = "Vectors"
     registerDataSource(this)
 
     logger.info(s"Creating vector '$vectorName' location '$vectorAddress")
@@ -110,11 +110,11 @@ package com.udsl.processor6502.ui:
       currentValue = change
       value.text = numToString(currentValue)
 
-    override def getData(collector: ListBuffer[ConfigDatum]): Unit =
+    override def supplyData(collector: ListBuffer[ConfigDatum]): Unit =
       logger.info(s"Collecting for vector $vectorName $currentValue")
       collector += ConfigDatum.apply(vectorName, currentValue.toString)
 
-    override def setData(provider: List[ConfigDatum]): Unit =
+    override def receiveData(provider: List[ConfigDatum]): Unit =
       logger.info(s"Providing to Vector: $vectorName")
       getConfigValue(provider, vectorName) match
         case Some(value) => currentValue = numericValue(value).get

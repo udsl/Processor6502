@@ -2,6 +2,7 @@ package com.udsl.processor6502
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Dialogues.theStage
+import com.udsl.processor6502.config.AppOptions
 import com.udsl.processor6502.ui.popups.Executor
 import com.udsl.processor6502.ui.{CodeEditor, FooterBox, MemoryBox, NumericFormatSelector, RegistersBox}
 import javafx.beans.value.ChangeListener
@@ -15,6 +16,7 @@ import scalafx.stage.FileChooser
 import scalafx.event.EventIncludes.eventClosureWrapperWithZeroParam
 import scalafx.beans.binding.BindingIncludes.closure2ChangedListener
 import javafx.beans.value.ChangeListener
+
 import java.io.File
 
 
@@ -22,6 +24,8 @@ object Main extends JFXApp3 with StrictLogging {
   var memoryBox: Option[MemoryBox] = None
   
   def start(): Unit = {
+    AppOptions.assmVersion = 1 // Default to old version
+
     val registersBox = new RegistersBox()
     memoryBox = Some(new MemoryBox())
     val footer = new FooterBox()
@@ -34,9 +38,6 @@ object Main extends JFXApp3 with StrictLogging {
 
       scene = new Scene {
         root =
-//          val memoryBox = new MemoryBox()
-//          val footer = new FooterBox()
-
           footer.registerScrolToViewEventHandler(memoryBox.get)
 
           new BorderPane {
@@ -54,7 +55,7 @@ object Main extends JFXApp3 with StrictLogging {
     theStage = stage
 
     val mainFocus = (o: javafx.beans.Observable, oldVal: java.lang.Boolean, newVal: java.lang.Boolean) => {
-      def foo(o: javafx.beans.Observable, oldVal: java.lang.Boolean, newVal: java.lang.Boolean) =
+      def foo(o: javafx.beans.Observable, oldVal: java.lang.Boolean, newVal: java.lang.Boolean): Unit =
         logger.info(newVal.toString)
 
       foo(o, oldVal, newVal)
