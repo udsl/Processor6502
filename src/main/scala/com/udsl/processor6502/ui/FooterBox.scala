@@ -6,9 +6,10 @@ import com.udsl.processor6502.FileIOUtilities.{readConfigFile, selectSourceFileT
 import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, numToString, numericValue, stringToNum, verifyNumberEntry}
 import com.udsl.processor6502.assembler.Assembler
 import com.udsl.processor6502.config.DataSupplier.provideData
-import com.udsl.processor6502.config.{ConfigDatum, DataCollector}
+import com.udsl.processor6502.config.{ConfigDatum, DataCollector, DataSupplier}
 import com.udsl.processor6502.disassembler.Disassembler
 import com.udsl.processor6502.ui.NumericFormatSelector.updateDisplay
+import com.udsl.processor6502.ui.popups.OptionEditor
 import scalafx.application.Platform
 import scalafx.geometry.{Insets, Pos}
 import scalafx.print.PaperSource.Main
@@ -33,34 +34,21 @@ class FooterBox() extends GridPane, StrictLogging:
   val saveItem: MenuItem = new MenuItem("Save Config"){
     onAction = _ => {
       logger.info(s"Save Button pressed")
-
-      val out: ListBuffer[ConfigDatum] = ListBuffer[ConfigDatum]()
-      out ++= DataCollector.collectData()
-
-      val formatStr = currentFormat.toString
-      out += ConfigDatum.apply("format", formatStr)
-
-      writeConfigFile(out.toList)
+      DataCollector.writeConfigData()
     }
   }
 
   val loadItem: MenuItem = new MenuItem("Load Config"){
     onAction = _ => {
       logger.info(s"Load Button pressed")
-      val lines = readConfigFile
-      if lines.nonEmpty then
-        updateDisplay(
-          getConfigValue(lines, "format") match
-            case Some(value) => value
-            case _ => "DEC"
-        )
-        provideData(lines)
+      DataSupplier.provideData()
     }
   }
 
   val optionItem: MenuItem = new MenuItem("Edit Options") {
     onAction = _ => {
       logger.info(s"Options Button pressed")
+      OptionEditor.showOptionEditor()
     }
   }
 

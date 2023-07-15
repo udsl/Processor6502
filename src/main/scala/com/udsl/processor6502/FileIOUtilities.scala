@@ -74,7 +74,7 @@ object FileIOUtilities:
   /**
    * write a `Seq[String]` to the `filename` with a terminating CR
    */
-  def writeConfigFile(data: List[ConfigDatum]): Unit =
+  def writeConfigFile(data: List[ConfigDatum]): Boolean =
     val saveFile = selectConfigFileToSave
     if saveFile != null then
       val lines = data.map(f => f.toString())
@@ -83,6 +83,9 @@ object FileIOUtilities:
         bw.write(line)
         bw.write("\n")
       bw.close()
+      true
+    else
+      false
 
 
   /**

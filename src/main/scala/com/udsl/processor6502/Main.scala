@@ -16,13 +16,14 @@ import scalafx.stage.FileChooser
 import scalafx.event.EventIncludes.eventClosureWrapperWithZeroParam
 import scalafx.beans.binding.BindingIncludes.closure2ChangedListener
 import javafx.beans.value.ChangeListener
+import javafx.scene.image.Image
 
 import java.io.File
 
 
 object Main extends JFXApp3 with StrictLogging {
   var memoryBox: Option[MemoryBox] = None
-  
+
   def start(): Unit = {
     AppOptions.assmVersion = 1 // Default to old version
 
@@ -51,6 +52,9 @@ object Main extends JFXApp3 with StrictLogging {
           }
       }
     }
+
+    val icon: Image = new Image("chip-40.png")
+    stage.getIcons.add(icon)
 
     theStage = stage
 
