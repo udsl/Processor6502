@@ -3,6 +3,7 @@ package com.udsl.processor6502.assembler
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.numericValue
 import com.udsl.processor6502.assembler.AssemblerToken
+import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.execution.AddressingMode
 
 import scala.collection.mutable.ListBuffer
@@ -59,7 +60,9 @@ case class InstructionToken (override val mnemonic: String, override val fields:
     "InstructionToken"
   override def addPrediction(prediction: AddressingMode): Unit = {
     logger.debug(s"Adding AddressingMode prediction $prediction")
-    predictedAddressingModes.addOne(prediction)
+    // Is prediction valid for the instruction?
+    if CpuInstructions.isAddressingModeValid(mnemonic, prediction) then
+      predictedAddressingModes.addOne(prediction)
   }
 
 case class ClearToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
