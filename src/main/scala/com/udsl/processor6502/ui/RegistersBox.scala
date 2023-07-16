@@ -53,13 +53,13 @@ package com.udsl.processor6502.ui:
       }
     }
 
-    val registersCaption: Label = new Label {
+    private val registersCaption: Label = new Label {
       text = "Processor Registers"
       style = "-fx-font-weight:bold"
       padding = Insets(0, 0, 0, 80)
     }
 
-    val programCounter: HBox = new HBox {
+    private val programCounter: HBox = new HBox {
       val label: Label = new Label("PC:") {
         style = "-fx-font-weight:bold"
         alignmentInParent = Pos.BaselineLeft
@@ -89,7 +89,7 @@ package com.udsl.processor6502.ui:
       disable = true
     }
 
-    val stackPointer: HBox = new HBox {
+    private val stackPointer: HBox = new HBox {
       val label: Label = new Label("Stack:") {
         style = "-fx-font-weight:bold"
         alignmentInParent = Pos.BottomLeft
@@ -133,7 +133,7 @@ package com.udsl.processor6502.ui:
       disable = true
     }
 
-    val accumulator: HBox = new HBox {
+    private val accumulator: HBox = new HBox {
       val label: Label = new Label("Accumulator:") {
         style = "-fx-font-weight:bold"
         alignmentInParent = Pos.BottomLeft
@@ -143,13 +143,13 @@ package com.udsl.processor6502.ui:
       children = List(label, acc)
     }
 
-    val inx: TextField = new TextField {
+    private val inx: TextField = new TextField {
       text = Processor.ix.toString()
       prefColumnCount = 8
       disable = true
     }
 
-    val indexX: HBox = new HBox {
+    private val indexX: HBox = new HBox {
       val label: Label = new Label("Index X:") {
         style = "-fx-font-weight:bold"
         alignmentInParent = Pos.BottomLeft
@@ -159,13 +159,13 @@ package com.udsl.processor6502.ui:
       children = List(label, inx)
     }
 
-    val iny: TextField = new TextField {
+    private val iny: TextField = new TextField {
       text = Processor.iy.toString()
       prefColumnCount = 8
       disable = true
     }
 
-    val indexY: HBox = new HBox {
+    private val indexY: HBox = new HBox {
       val label: Label = new Label("Index Y:") {
         style = "-fx-font-weight:bold"
         alignmentInParent = Pos.BottomLeft
@@ -200,9 +200,9 @@ package com.udsl.processor6502.ui:
     The negative flag is set if the result of the last operation had bit 7 set to a one.
     */
 
-    val status = new StatusRegisterView
+    private val status = new StatusRegisterView
 
-    val vectors = new Vectors
+    private val vectors = new Vectors
 
     val buttonBox: HBox = new HBox {
       spacing = 20
@@ -250,16 +250,15 @@ package com.udsl.processor6502.ui:
     spacing = 8
     children = List(registersCaption, programCounter, stackPointer, accumulator, indexX, indexY, status, vectors, buttonBox)
 
-    override def supplyData(collector: ListBuffer[ConfigDatum]): Unit = {
+    override def supplyData(collector: ListBuffer[ConfigDatum]): Unit = 
       logger.info("Collecting from RegisterBox")
       collector += ConfigDatum.apply("pc", Processor.pc.addr.toString)
       collector += ConfigDatum.apply("sp", Processor.sp.toValueString)
       collector += ConfigDatum.apply("ac", Processor.ac.toValueString)
       collector += ConfigDatum.apply("ix", Processor.ix.toValueString)
       collector += ConfigDatum.apply("iy", Processor.iy.toValueString)
-    }
 
-    override def receiveData(provider: List[ConfigDatum]): Unit = {
+    override def receiveData(provider: List[ConfigDatum]): Unit = 
       logger.info("Providing to RegisterBox")
       getConfigValue(provider, "pc") match {
         case Some(v) =>
@@ -290,5 +289,4 @@ package com.udsl.processor6502.ui:
           Processor.iy.ebr = Integer.parseInt(v)
         case _ =>
       }
-    }
   }
