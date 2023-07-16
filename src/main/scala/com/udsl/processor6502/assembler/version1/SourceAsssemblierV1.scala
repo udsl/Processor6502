@@ -9,7 +9,7 @@ import scala.util.Using
 class SourceAsssemblierV1(val source: Iterator[String], val assemblerData: AssemblerDataStructure) extends Assembler, StrictLogging:
 
   def startAssembly(): Unit =
-    logger.info(s"Starting file assembly")
+    logger.info(s"SourceAsssemblierV1 starting assembly")
     for (line <- source)
       val lineToTokenise = UntokenisedLine(assemblerData.currentLine, line)
       val tokisedLine = TokeniserV1.tokeniseLine(lineToTokenise)

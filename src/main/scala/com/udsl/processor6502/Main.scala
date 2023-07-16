@@ -25,8 +25,6 @@ object Main extends JFXApp3 with StrictLogging {
   var memoryBox: Option[MemoryBox] = None
 
   def start(): Unit = {
-    AppOptions.assmVersion = 1 // Default to old version
-
     val registersBox = new RegistersBox()
     memoryBox = Some(new MemoryBox())
     val footer = new FooterBox()
