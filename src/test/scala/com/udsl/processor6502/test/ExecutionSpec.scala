@@ -2,7 +2,8 @@ package com.udsl.processor6502.test
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.assembler.AssembleLocation.logger
-import com.udsl.processor6502.assembler.{AssembleLocation, InstructionToken}
+import com.udsl.processor6502.assembler.AssembleLocation
+import com.udsl.processor6502.assembler.version1.InstructionToken
 import com.udsl.processor6502.cpu.Memory.NMI_VECTOR
 import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegister.*

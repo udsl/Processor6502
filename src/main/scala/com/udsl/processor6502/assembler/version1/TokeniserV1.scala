@@ -10,10 +10,11 @@ import com.udsl.processor6502.cpu.execution.*
 
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
+
 object TokeniserV1 extends StrictLogging :
   val exceptionList: List[AssembleExceptionRecord] = List[AssembleExceptionRecord]()
 
-  def Tokenise(allLines: Array[UntokenisedLine]): List[TokenisedLine] =
+  def Tokenise(allLines: Array[UntokenisedLine]): List[TokenisedLineV1] =
     logger.info(
       """
         |**************************
@@ -23,7 +24,7 @@ object TokeniserV1 extends StrictLogging :
         |**************************
         |
         |""".stripMargin)
-    val tokenisedLines = new ListBuffer[TokenisedLine]()
+    val tokenisedLines = new ListBuffer[TokenisedLineV1]()
     for lineToTokenise <- allLines do
       val tokenisedLine = Try(tokeniseLine(lineToTokenise))
       tokenisedLine match
@@ -31,10 +32,10 @@ object TokeniserV1 extends StrictLogging :
         case Failure(ex) => exceptionList.appended(AssembleExceptionRecord(ex.getMessage, lineToTokenise))
     tokenisedLines.toList
 
-  def tokeniseLine(line: UntokenisedLine): TokenisedLine =
+  def tokeniseLine(line: UntokenisedLine): TokenisedLineV1 =
     logger.debug(s"\ntokeniseLine: $line")
     // determine basic line type
-    val tokenisedLine = TokenisedLine(line)
+    val tokenisedLine = TokenisedLineV1(line)
     val token: Option[AssemblerToken] = line.sourceText.trim match {
       case "" => Some(BlankLineToken( "", Array[String]()))
       case a if a.charAt(0) == ';' => Some(CommentLineToken(line.sourceText.trim, Array[String]()))
@@ -71,7 +72,7 @@ object TokeniserV1 extends StrictLogging :
     tokenisedLine
 
 
-  private def processLabel(text: Array[String], tokenisedLine: TokenisedLine ) : Array[String] =
+  private def processLabel(text: Array[String], tokenisedLine: TokenisedLineV1 ) : Array[String] =
     logger.debug(s"processLabel: ${text.mkString(" ")}")
     val head = text.head
     if head != "" && head.substring(head.length - 1) == ":" then
@@ -85,7 +86,7 @@ object TokeniserV1 extends StrictLogging :
       text
 
 
-  private def processCommand(text: Array[String], tokenisedLine: TokenisedLine ) : Boolean =
+  private def processCommand(text: Array[String], tokenisedLine: TokenisedLineV1 ) : Boolean =
 
 //    def getReferenceToken( value: String ): AssemblerToken =
 //      logger.debug(s"value - $value")
@@ -174,7 +175,7 @@ object TokeniserV1 extends StrictLogging :
 
 
 
-  def processInstruction(text: Array[String], tokenisedLine: TokenisedLine ) : AssemblerToken =
+  def processInstruction(text: Array[String], tokenisedLine: TokenisedLineV1 ) : AssemblerToken =
     logger.debug(s"processInstruction: ${text.mkString(" ")}")
     val instruction = text.head.toUpperCase()
 
@@ -197,7 +198,7 @@ object TokeniserV1 extends StrictLogging :
       tokenisedLine + token
       token
 
-  def processValue(tokenisedLine: TokenisedLine, token: AssemblerToken ): Unit = {
+  def processValue(tokenisedLine: TokenisedLineV1, token: AssemblerToken ): Unit = {
     logger.debug(s"processValue: ${token.fields.mkString("Array(", ", ", ")")}")
 
     /*

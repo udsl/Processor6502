@@ -15,7 +15,7 @@ import com.udsl.processor6502.cpu.execution.*
  */
 object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 
-  def assemble(tokenisedLine: TokenisedLine) : Unit =
+  def assemble(tokenisedLine: TokenisedLineV1) : Unit =
     logger.info(s"Parsing line ${tokenisedLine.lineNumber} ")
     for (token <- tokenisedLine.tokens)
       token match {
@@ -71,7 +71,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
       case "ADDR" => advanceAssemLocForAddresses(t.fields)
       case _ => logger.info(s"\tInvalid command $t ")
 
-  def processClear(t: AssemblerToken, tl: TokenisedLine) : Unit =
+  def processClear(t: AssemblerToken, tl: TokenisedLineV1) : Unit =
     logger.info("Processing CLR command")
     if tl.lineNumber > 1 then
       val errorText = "CLR command only valid on first line"

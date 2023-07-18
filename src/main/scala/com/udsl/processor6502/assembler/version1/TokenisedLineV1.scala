@@ -1,11 +1,11 @@
 package com.udsl.processor6502.assembler.version1
 
+import com.udsl.processor6502.assembler.TokenisedLine
 import com.udsl.processor6502.assembler.version1.ParserV1
-import com.udsl.processor6502.assembler.AssemblerToken
 
 import scala.collection.mutable.ListBuffer
 
-class TokenisedLine(val sourceText: String, val lineNumber: Int):
+class TokenisedLineV1(sourceText: String, lineNumber: Int) extends TokenisedLine(sourceText, lineNumber):
   val tokens = new ListBuffer[AssemblerToken]()
 
   def +(other: AssemblerToken): tokens.type = {
@@ -21,12 +21,13 @@ class TokenisedLine(val sourceText: String, val lineNumber: Int):
       str += s"\t$t - ${t.predictedAddressingModes}\n"
     str
 
-object TokenisedLine:
-  def apply(line: UntokenisedLine) : TokenisedLine =
-    new TokenisedLine(line.sourceText, line.lineNumber)
 
-  def apply(line: String) : TokenisedLine =
-    new TokenisedLine(line, -1)
+object TokenisedLineV1:
+  def apply(line: UntokenisedLine) : TokenisedLineV1 =
+    new TokenisedLineV1(line.sourceText, line.lineNumber)
+
+  def apply(line: String) : TokenisedLineV1 =
+    new TokenisedLineV1(line, -1)
 
 
 class UntokenisedLine( val lineNumber: Int, val sourceText: String):

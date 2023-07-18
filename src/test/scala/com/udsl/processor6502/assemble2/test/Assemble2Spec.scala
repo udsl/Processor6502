@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assemble2.test
 
 import com.udsl.processor6502.assemble2.test.TestUtilsV2.verifyTokens
-import com.udsl.processor6502.assembler.CommandToken
+import com.udsl.processor6502.assembler.version1.CommandToken
 import com.udsl.processor6502.assembler.version2.{AssemblierV2, CommandTokenV2, InstructionTokenV2, LabelTokenV2, LineCommentTokenV2, TokenV2, TokenisedLineV2}
 import com.udsl.processor6502.cpu.*
 import org.scalatest.flatspec.AnyFlatSpec

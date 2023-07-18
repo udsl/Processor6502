@@ -17,7 +17,7 @@ import com.udsl.processor6502.{NumericFormatType, Utilities}
  */
 object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
-  def assemble(tokenisedLine: TokenisedLine) : AssemblerToken =
+  def assemble(tokenisedLine: TokenisedLineV1) : AssemblerToken =
     logger.info(s"\n\n2nd Pass ${tokenisedLine.lineNumber} ")
     var res: Option[AssemblerToken] = None
     for (token <- tokenisedLine.tokens)
@@ -62,7 +62,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       AssembleLocation.setAssembleLoc(value)
 
 
-  def assembleInstructionToken(t: AssemblerToken, tl: TokenisedLine): AssemblerToken =
+  def assembleInstructionToken(t: AssemblerToken, tl: TokenisedLineV1): AssemblerToken =
     def getValue(operand: String): Int =
       numericValue(operand).getOrElse({
         AssemblyData.labels.get(operand) match

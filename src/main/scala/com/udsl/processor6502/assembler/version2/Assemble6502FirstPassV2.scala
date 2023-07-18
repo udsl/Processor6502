@@ -33,7 +33,7 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
           assembleInstruction(token.asInstanceOf[InstructionTokenV2])
         case _ => logger.error(s"unsupported case $token")
       }
-    logger.debug(tokenisedLine.sourceLine)
+    logger.debug(tokenisedLine.sourceText)
 
     FirstPassResult(tokenisedLine)
 

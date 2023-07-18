@@ -1,4 +1,4 @@
-package com.udsl.processor6502.assembler
+package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
 

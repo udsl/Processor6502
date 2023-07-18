@@ -2,7 +2,7 @@ package com.udsl.processor6502
 
 import com.udsl.processor6502.*
 import com.udsl.processor6502.Dialogues.theStage
-import com.udsl.processor6502.assembler.version1.TokenisedLine
+import com.udsl.processor6502.assembler.TokenisedLine
 import com.udsl.processor6502.cpu.*
 import com.udsl.processor6502.ui.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.config.ConfigDatum

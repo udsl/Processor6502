@@ -2,7 +2,7 @@ package com.udsl.processor6502.test
 
 import com.udsl.processor6502.assembler.*
 import com.udsl.processor6502.assembler.version1.Assemble6502SecondPass.{assembleCommandToken, assembleInstructionToken}
-import com.udsl.processor6502.assembler.version1.TokenisedLine
+import com.udsl.processor6502.assembler.version1.{CommandToken, InstructionToken, TokenisedLineV1}
 import com.udsl.processor6502.cpu.execution.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -63,7 +63,7 @@ class AssembleSpec extends AnyFlatSpec, should.Matchers {
       val srtLoc = AssembleLocation.currentLocation
       var written = 0
       // assemble the token into memory
-      assembleInstructionToken(token, TokenisedLine(s"testing $token - $opcode"))
+      assembleInstructionToken(token, TokenisedLineV1(s"testing $token - $opcode"))
       if opcode > -1 then
         // get the values written to memory and verify correct
         val memValue = AssembleLocation.getMemoryByte(srtLoc)

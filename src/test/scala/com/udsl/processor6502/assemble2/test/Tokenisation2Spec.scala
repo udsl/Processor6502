@@ -28,7 +28,7 @@ class Tokenisation2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with 
       assert(res.tokens.size == tokenCount)
       assert(tokens == res.tokens)
       validateTokens(res.tokens, line)
-      assert(res.sourceLine == line)
+      assert(res.sourceText == line)
       assert(res.lineNumber == lineNum)
     }
   }

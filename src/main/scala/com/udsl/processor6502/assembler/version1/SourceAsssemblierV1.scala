@@ -1,12 +1,14 @@
 package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.assembler.{Assembler, AssemblerDataStructure}
+import com.udsl.processor6502.assembler.version1.SourceAsssemblierV1.assemblerData
+import com.udsl.processor6502.assembler.{Assembler, AssemblerDataStructureV1}
 import java.io.File
 import scala.io.Source
 import scala.util.Using
 
-class SourceAsssemblierV1(val source: Iterator[String], val assemblerData: AssemblerDataStructure) extends Assembler, StrictLogging:
+class SourceAsssemblierV1(val source: Iterator[String] ) extends Assembler, StrictLogging:
+  override def version = 1
 
   def startAssembly(): Unit =
     logger.info(s"SourceAsssemblierV1 starting assembly")
@@ -20,7 +22,7 @@ class SourceAsssemblierV1(val source: Iterator[String], val assemblerData: Assem
 
 
 object SourceAsssemblierV1:
-  val assemblerData: AssemblerDataStructure = AssemblerDataStructure.apply()
+  val assemblerData: AssemblerDataStructureV1 = AssemblerDataStructureV1.apply()
 
   private def sourceIter(source: String): Iterator[String] =
     var sourceIter: Iterator[String] = Iterator()
@@ -35,7 +37,7 @@ object SourceAsssemblierV1:
     sourceIter(lines)
 
   def apply(source: String): SourceAsssemblierV1 =
-    new SourceAsssemblierV1(sourceIter(source), assemblerData)
+    new SourceAsssemblierV1(sourceIter(source))
 
   def apply(sourceFile: File): SourceAsssemblierV1 =
-    new SourceAsssemblierV1(sourceIter(sourceFile), assemblerData)
+    new SourceAsssemblierV1(sourceIter(sourceFile))

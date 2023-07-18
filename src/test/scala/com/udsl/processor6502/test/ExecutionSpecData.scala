@@ -2,7 +2,8 @@ package com.udsl.processor6502.test
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.assembler.AssembleLocation.logger
-import com.udsl.processor6502.assembler.{AssembleLocation, InstructionToken}
+import com.udsl.processor6502.assembler.AssembleLocation
+import com.udsl.processor6502.assembler.version1.InstructionToken
 import com.udsl.processor6502.cpu.Memory.NMI_VECTOR
 import com.udsl.processor6502.cpu.Processor.*
 import com.udsl.processor6502.cpu.StatusRegister.*
@@ -176,7 +177,7 @@ case class memVoidResult() extends ResultMemData(0, 0, false)
 object ExecutionSpecData:
 
   // ADC add with carry
-  val dataAdcInstructionTest = List(
+  val dataAdcInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("ADC 1.0 Immediate acc = 0x64 add 0x0A", InsSourceData(0x69, InsData(10, AccValue(100))), AccResData(110), memVoidResult()),
     ("ADC 1.1 Immediate acc = 0x64 add 126", InsSourceData(0x69, InsData(126, AccValue(100))), AccSrResData(226, Overflow.mask | Negative.mask), memVoidResult()),
     ("ADC 1.2 Immediate acc = 0x64 add 0x0A carry set", InsSourceData(0x69, InsData(10, AccValueWithCarry(100))), AccResData(111), memVoidResult()),
@@ -198,7 +199,7 @@ object ExecutionSpecData:
   )
 
   // AND and (with Accumulator)
-  val dataAndInstructionTest = List(
+  val dataAndInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("AND 1.0 acc (0x64) Immediate with 0xF4 result should be 0x64", InsSourceData(0x29, InsData(0xF4, AccValue(100))), AccResData(100), memVoidResult()),
     ("AND 2.0 acc (0x64) ZeroPage 101 value 6 result should be 4", InsSourceData(0x25, InsData(101, AccValue(100))), AccResData(4), memVoidResult()),
     ("AND 3.0 acc (0x64) ZeroPage,X (99 + 2 = 101) value 6 result should be 6", InsSourceData(0x35, InsData(99, AccIxValue(0x66, 2))), AccIxResData(6, 2), memVoidResult()),
@@ -213,7 +214,7 @@ object ExecutionSpecData:
   )
 
   // ASL arithmetic shift left
-  val dataAslInstructionTest = List(
+  val dataAslInstructionTest: Seq[(String, InsSourceData, ResultData, ResultMemData)] = List(
     ("ASL 1.0 Accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x20))), AccResData(0x40), memVoidResult()),
     ("ASL 1.1 Accumulator", InsSourceData(0x0A, InsData(0xF4, AccValue(0x80))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
     ("ASL 1.2 Accumulator", InsSourceData(0x0A, InsData(0x7F, AccValueWithCarry(0x3F))), AccResData(0x7E), memVoidResult()),
@@ -226,21 +227,21 @@ object ExecutionSpecData:
   )
 
   // BCC branch on carry clear
-  val dataBccInstructionTest = List(
+  val dataBccInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("BCC 1.0 relative carry clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0x90, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation + 6), memVoidResult()),
     ("BCC 1.1 relative carry clear -ve offset", InsSourceData(0x90, InsData(0xFC, AccValue(0x20))), AccPcResData(0x20, testLocation -2), memVoidResult()),
     ("BCC 2.0 relative carry set", InsSourceData(0x90, InsData(0x4, AccValueWithCarry(0x20))), AccSrResData(0x20, Carry.mask), memVoidResult())
    )
 
   // BCS branch on carry set
-  val dataBcsInstructionTest = List(
+  val dataBcsInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("BCS 1.0 relative carry set PC + 6 = 4 branch + 2 fetch", InsSourceData(0xB0, InsData(0x4, AccValueWithCarry(0x20))), AccSrPcResData(0x20, Carry.mask, testLocation + 6), memVoidResult()),
     ("BCS 1.1 relative carry set -ve offset", InsSourceData(0xB0, InsData(0xFC, AccValueWithCarry(0x20))), AccSrPcResData(0x20, Carry.mask, testLocation -2), memVoidResult()),
     ("BCS 2.0 relative carry clear", InsSourceData(0xB0, InsData(0x4, AccValue(0x20))), AccResData(0x20), memVoidResult())
   )
 
   // BEQ branch on equal (zero set)
-  val dataBeqInstructionTest = List(
+  val dataBeqInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("BEQ 1.0 relative zero set PC + 6 = 4 branch + 2 fetch", InsSourceData(0xF0, InsData(0x4, AccValueWithZero(0x0))), AccSrPcResData(0x0, testLocation + 6, Zero.mask), memVoidResult()),
     ("BEQ 1.1 relative zero set -ve offset", InsSourceData(0xF0, InsData(0xFC, AccValueWithZero(0x0))), AccSrPcResData(0x0, testLocation -2, Zero.mask), memVoidResult()),
     ("BEQ 2.0 relative zero clear", InsSourceData(0xF0, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation + 2), memVoidResult())
@@ -248,7 +249,7 @@ object ExecutionSpecData:
 
   // BIT bit test
   // bits 7 and 6 of operand are transferred to bit 7 and 6 of SR (N,V) the zero-flag is set to the result of operand AND Accumulator.
-  val dataBitInstructionTest = List(
+  val dataBitInstructionTest: Seq[(String, InsSourceData, AccSrResData, memVoidResult)] = List(
     // The AND gives Zero result
     ("BIT 1.0 ZeroPage 0x67 = 0x80", InsSourceData(0x24, InsData(0x67, ZeroValues())), AccSrResData(0x0, Zero.mask | Negative.mask), memVoidResult()),
     ("BIT 1.1 ZeroPage 0x68 = 0xF0", InsSourceData(0x24, InsData(0x68, ZeroValues())), AccSrResData(0x0, Zero.mask | Negative.mask | Overflow.mask), memVoidResult()),
@@ -269,21 +270,22 @@ object ExecutionSpecData:
   )
 
   // BMI branch on minus (negative set)
-  val dataBmiInstructionTest = List(
+  val dataBmiInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("BMI 1.0 relative negative set PC + 6 = 4 branch + 2 fetch", InsSourceData(0x30, InsData(0x4, AccValueWithNegative(0x0))), AccSrPcResData(0x0, Negative.mask, testLocation + 6), memVoidResult()),
     ("BMI 1.1 relative negative set set -ve offset", InsSourceData(0x30, InsData(0xFC, AccValueWithNegative(0x0))), AccSrPcResData(0x0,  Negative.mask, testLocation -2), memVoidResult()),
     ("BMI 2.0 relative negative clear", InsSourceData(0x30, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation +2), memVoidResult())
   )
 
   // BNE branch on not equal (zero clear)
-  val dataBneInstructionTest = List(
+  val dataBneInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("BNE 1.0 relative zero clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0xD0, InsData(0x4, AccValue(0x0))), AccPcResData(0x0, testLocation + 6), memVoidResult()),
     ("BNE 1.1 relative zero clear set -ve offset", InsSourceData(0xD0, InsData(0xFC, AccValue(0x0))), AccPcResData(0x0, testLocation -2), memVoidResult()),
     ("BNE 2.0 relative zero set", InsSourceData(0xD0, InsData(0x4, AccValueWithZero(0x20))), AccSrPcResData(0x20, Zero.mask, testLocation +2), memVoidResult())
   )
 
+
   // BPL branch on plus (negative clear)
-  val dataBplInstructionTest = List(
+  val dataBplInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("BPL 1.0 relative negative clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0x10, InsData(0x4, AccValue(0x0))), AccPcResData(0x0, testLocation + 6), memVoidResult()),
     ("BPL 1.1 relative negative clear set -ve offset", InsSourceData(0x10, InsData(0xFC, AccValue(0x0))), AccPcResData(0x0, testLocation -2), memVoidResult()),
     ("BPL 2.0 relative negative set", InsSourceData(0x10, InsData(0x4, AccValueWithNegative(0x20))), AccSrPcResData(0x20, Negative.mask, testLocation +2), memVoidResult())
@@ -301,52 +303,52 @@ object ExecutionSpecData:
     assert(pushedStatus == 48, s"Status pushed on stack incorrect is $pushedStatus - ${StatusRegister.asFlagsString(pushedStatus)}" )
 
   // BRK break / interrupt
-  val dataBrkInstructionTest = List(
+  val dataBrkInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     // IRQ vector contents 3000 set in test initialisation
     ("BRK 1.0 all flags clear", InsSourceData(0x00, InsData(0x0, AccValue(0x0))), AccPcSpResData(0x0, 3000, validateStack4BTK), memVoidResult()),
     ("BRK 1.1 with Zero flag set", InsSourceData(0x00, InsData(0x0, AccValueWithZero(0x0))), AccSrPcSpResData(0x0, Zero.mask, 3000, Validation.validateStackWithZero4BTK), memVoidResult())
   )
 
   // BVC branch on overflow clear
-  val dataBvcInstructionTest = List(
+  val dataBvcInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("BVC 1.0 relative overflow clear PC + 6 = 4 branch + 2 fetch", InsSourceData(0x50, InsData(0x4, AccValue(0x0))), AccPcResData(0x0, testLocation + 6), memVoidResult()),
     ("BVC 1.1 relative overflow clear set -ve offset", InsSourceData(0x50, InsData(0xFC, AccValue(0x0))), AccPcResData(0x0, testLocation -2), memVoidResult()),
     ("BVC 2.0 relative overflow set", InsSourceData(0x50, InsData(0x4, AccValueWithOverflow(0x20))), AccSrPcResData(0x20, Overflow.mask, testLocation +2), memVoidResult())
   )
 
   // BVS branch on overflow set
-  val dataBvsInstructionTest = List(
+  val dataBvsInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("BVS 1.0 relative overflow set PC + 6 = 4 branch + 2 fetch", InsSourceData(0x70, InsData(0x4, AccValueWithOverflow(0x0))), AccSrPcResData(0x0, Overflow.mask, testLocation + 6), memVoidResult()),
     ("BVS 1.1 relative overflow set -ve offset", InsSourceData(0x70, InsData(0xFC, AccValueWithOverflow(0x0))), AccSrPcResData(0x0, Overflow.mask, testLocation -2), memVoidResult()),
     ("BVS 2.0 relative overflow clear", InsSourceData(0x70, InsData(0x4, AccValue(0x20))), AccPcResData(0x20, testLocation + 2), memVoidResult())
   )
 
   // CLC clear carry
-  val dataClcInstructionTest = List(
+  val dataClcInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("CLC 1.0 Implied clear carry", InsSourceData(0x18, InsData(0x4, AccValueWithCarry(0x0))), AccResData(0x0), memVoidResult()),
     ("CLC 2.0 NOP carry still set", InsSourceData(0xEA, InsData(0x4, AccValueWithCarry(0x0))), AccSrResData(0x0, Carry.mask), memVoidResult())
   )
 
   // CLD clear decimal
-  val dataCldInstructionTest = List(
+  val dataCldInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("CLD 1.0 Implied clear decimal", InsSourceData(0xD8, InsData(0x4, AccValueWithDecimal(0x0))), AccResData(0x0), memVoidResult()),
     ("CLD 2.0 NOP decimal still set", InsSourceData(0xEA, InsData(0x4, AccValueWithDecimal(0x0))), AccSrResData(0x0, Decimal.mask), memVoidResult())
   )
 
   // CLI clear interrupt disable
-  val dataCliInstructionTest = List(
+  val dataCliInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("CLI 1.0 Implied clear interrupt", InsSourceData(0x58, InsData(0x4, AccValueWithInterrupt(0x0))), AccResData(0x0), memVoidResult()),
     ("CLI 2.0 NOP interrupt still set", InsSourceData(0xEA, InsData(0x4, AccValueWithInterrupt(0x0))), AccSrResData(0x0, Interrupt.mask), memVoidResult())
   )
 
   // CLV clear overflow
-  val dataClvInstructionTest = List(
+  val dataClvInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("CLV 1.0 Implied clear overflow", InsSourceData(0xB8, InsData(0x4, AccValueWithOverflow(0x0))), AccResData(0x0), memVoidResult()),
     ("CLV 2.0 NOP overflow still set", InsSourceData(0xEA, InsData(0x4, AccValueWithOverflow(0x0))), AccSrResData(0x0, Overflow.mask), memVoidResult())
   )
 
   // CMP compare (with Accumulator) only effects Zero, Negative and carry flags
-  val dataCmpInstructionTest = List(
+  val dataCmpInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("CMP 1.0 Acc 0xF0 Immediate with 0xF4 result Negative  set", InsSourceData(0xC9, InsData(0xF4, AccValue(0xF0))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
     ("CMP 1.1 Acc 0x80 Immediate with 0x40 result overflow set", InsSourceData(0xC9, InsData(0x40, AccValue(0x80))), AccSrResData(0x80, Carry.mask), memVoidResult()),
     ("CMP 1.2 Acc 0x80 Immediate with 0x80 result Zero set", InsSourceData(0xC9, InsData(0x80, AccValue(0x80))), AccSrResData(0x80, Zero.mask), memVoidResult()),
@@ -360,7 +362,7 @@ object ExecutionSpecData:
   )
 
   // CPX compare with X
-  val dataCpxInstructionTest = List(
+  val dataCpxInstructionTest: Seq[(String, InsSourceData, AccIxSrResData, memVoidResult)] = List(
     ("CPX 1.0 Acc 0xF0 Immediate with 0xF4 result Negative  set", InsSourceData(0xE0, InsData(0xF4, AccIxValue(0xF0, 0xF0))), AccIxSrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
     ("CPX 1.1 Acc 0x80 Immediate with 0x40 result overflow set", InsSourceData(0xE0, InsData(0x40, AccIxValue(0x80, 0x80))), AccIxSrResData(0x80, 0x80, Carry.mask), memVoidResult()),
     ("CPX 1.2 Acc 0x80 Immediate with 0x80 result Zero set", InsSourceData(0xE0, InsData(0x80, AccIxValue(0x80, 0x80))), AccIxSrResData(0x80, 0x80, Zero.mask), memVoidResult()),
@@ -369,7 +371,7 @@ object ExecutionSpecData:
   )
 
   // CPY compare with Y
-  val dataCpyInstructionTest = List(
+  val dataCpyInstructionTest: Seq[(String, InsSourceData, AccIySrResData, memVoidResult)] = List(
     ("CPY 1.0 Acc 0xF0 Immediate with 0xF4 result Negative  set", InsSourceData(0xC0, InsData(0xF4, AccIyValue(0xF0, 0xF0))), AccIySrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
     ("CPY 1.1 Acc 0x80 Immediate with 0x40 result overflow set", InsSourceData(0xC0, InsData(0x40, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Carry.mask), memVoidResult()),
     ("CPY 1.2 Acc 0x80 Immediate with 0x80 result Zero set", InsSourceData(0xC0, InsData(0x80, AccIyValue(0x80, 0x80))), AccIySrResData(0x80, 0x80, Zero.mask), memVoidResult()),
@@ -379,7 +381,7 @@ object ExecutionSpecData:
 
 
   // DEC decrement
-  val dataDecInstructionTest = List(
+  val dataDecInstructionTest: Seq[(String, InsSourceData, ResultData, memByteResult)] = List(
     ("DEC 1.0 ZeroPage 0x64 = 0x38", InsSourceData(0xC6, InsData(0x64, ZeroValues())), ZeroResData(),  memByteResult(0x64, 0x37)),
     ("DEC 1.1 ZeroPage 0x6D = 0x00", InsSourceData(0xC6, InsData(0x6D, ZeroValues())), SrResData(Negative.mask),  memByteResult(0x6D, 0xFF)),
     ("DEC 1.2 ZeroPage 0x6E = 0x01", InsSourceData(0xC6, InsData(0x6E, ZeroValues())), SrResData(Zero.mask),  memByteResult(0x6E, 0x00)),
@@ -389,21 +391,21 @@ object ExecutionSpecData:
   )
 
   // DEX decrement X
-  val dataDexInstructionTest = List(
+  val dataDexInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("DEX 1.0 Implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x20))), IxResData(0x1F), memVoidResult()),
     ("DEX 1.1 Implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x00))), IxSrResData(0xFF, Negative.mask), memVoidResult()),
     ("DEX 1.2 Implied", InsSourceData(0xCA, InsData(0x64, IxValue(0x01))), IxSrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // DEY decrement Y
-  val dataDeyInstructionTest = List(
+  val dataDeyInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("DEY 1.0 Implied", InsSourceData(0x88, InsData(0x64, IyValue(0x20))), IyResData(0x1F), memVoidResult()),
     ("DEY 1.1 Implied", InsSourceData(0x88, InsData(0x64, IyValue(0x00))), IySrResData(0xFF, Negative.mask), memVoidResult()),
     ("DEY 1.2 Implied", InsSourceData(0x88, InsData(0x64, IyValue(0x01))), IySrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // EOR exclusive or (with Accumulator)
-  val dataEorInstructionTest = List(
+  val dataEorInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("EOR 1.0 Acc 0xF0 Immediate with 0xF4 result Negative  set", InsSourceData(0x49, InsData(0x04, AccValue(0xF0))), AccSrResData(0xF4, Negative.mask), memVoidResult()),
     ("EOR 1.1 Acc 0x80 Immediate with 0x40 result zero set", InsSourceData(0x49, InsData(0x40, AccValue(0x40))), AccSrResData(0x00, Zero.mask), memVoidResult()),
     ("EOR 1.2 Acc 0x0F Immediate with 0x40 flags unchanged", InsSourceData(0x49, InsData(0x40, AccValue(0x0F))), AccResData(0x4F), memVoidResult()),
@@ -417,7 +419,7 @@ object ExecutionSpecData:
   )
 
   // INC increment
-  val dataIncInstructionTest = List(
+  val dataIncInstructionTest: Seq[(String, InsSourceData, ResultData, memByteResult)] = List(
     ("INC 1.0 ZeroPage 0x65 -> 0x06 give 0x62, flags unchanged", InsSourceData(0xE6, InsData(0x65, ZeroValues())), ZeroResData(), memByteResult(0x65, 0x07)),
     ("INC 2.0 ZeroPage,X (100 + 4 = 102) value 0xF0", InsSourceData(0xF6, InsData(100, IxValue(4))), IxSrResData(4, Negative.mask), memByteResult(0x68, 0xF1)),
     ("INC 3.0 Absolute (absTestLocation2 + 4 (0xA2C)) = 0xFF", InsSourceData(0xEE, InsData(0xA2C, ZeroValues())), SrResData(Zero.mask), memByteResult(0xA2C, 0x00)),
@@ -425,21 +427,21 @@ object ExecutionSpecData:
   )
 
   // INX increment X
-  val dataInxInstructionTest = List(
+  val dataInxInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("INX 1.0 Implied, x = 3 flags unchanged", InsSourceData(0xE8, InsData(0x00, IxValue(3))), IxResData(4), memVoidResult()),
     ("INX 1.1 Implied, x = 0xF0 negative flag", InsSourceData(0xE8, InsData(0x00, IxValue(0xF0))), IxSrResData(0xF1, Negative.mask), memVoidResult()),
     ("INX 1.2 Implied, x = 0xFF Zero flag", InsSourceData(0xE8, InsData(0x00, IxValue(0xFF))), IxSrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // INY increment Y
-  val dataInyInstructionTest = List(
+  val dataInyInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("INY 1.0 Implied, x = 3 flags unchanged", InsSourceData(0xC8, InsData(0x00, IyValue(3))), IyResData(4), memVoidResult()),
     ("INY 1.1 Implied, x = 0xF0 negative flag", InsSourceData(0xC8, InsData(0x00, IyValue(0xF0))), IySrResData(0xF1, Negative.mask), memVoidResult()),
     ("INY 1.2 Implied, x = 0xFF Zero flag", InsSourceData(0xC8, InsData(0x00, IyValue(0xFF))), IySrResData(0x00, Zero.mask), memVoidResult()),
   )
 
   // JMP jump test that PC is updated does not execute at the destination
-  val dataJmpInstructionTest = List(
+  val dataJmpInstructionTest: Seq[(String, InsSourceData, PcResData, memVoidResult)] = List(
     ("JMP 1.0 Absolute absTestLocation", InsSourceData(0x4C, InsData(absTestLocation, ZeroValues())), PcResData(absTestLocation), memVoidResult()),
     ("JMP 2.0 Indirect testLocation2Ptr = 0x9CB -> 0x3FF0", InsSourceData(0x6C, InsData(testLocation2Ptr, ZeroValues())), PcResData(0x3FF0), memVoidResult()),
   )
@@ -454,12 +456,12 @@ object ExecutionSpecData:
     assert(returnAdd == 2002, s"Return address on stack incorrect should be 0x7D3 is ${asHexStr(returnAdd)} ($returnAdd)" )
 
   // JSR jump subroutine. Test that PC is updated and return address pushed to stack. Does not execute at the destination
-  val dataJsrInstructionTest = List(
+  val dataJsrInstructionTest: Seq[(String, InsSourceData, PcSpResData, memVoidResult)] = List(
     ("JSR 1.0 Absolute absTestLocation", InsSourceData(0x20, InsData(absTestLocation, ZeroValues())), PcSpResData(absTestLocation, validateJsrStack), memVoidResult()),
   )
 
   // LDA load Accumulator
-  val dataLdaInstructionTest = List(
+  val dataLdaInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("LDA 1.0 Immediate", InsSourceData(0xA9, InsData(10, AccValue(100))), AccResData(10), memVoidResult()),
 
     ("LDA 1.1 Immediate", InsSourceData(0xA9, InsData(0xF0, AccValue(100))), AccSrResData(0xF0, Negative.mask), memVoidResult()),
@@ -474,7 +476,7 @@ object ExecutionSpecData:
   )
 
   // LDX load X
-  val dataLdxInstructionTest = List(
+  val dataLdxInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("LDX 1.0 Immediate", InsSourceData(0xA2, InsData(10, IxValue(100))), IxResData(10), memVoidResult()),
     ("LDX 1.1 Immediate", InsSourceData(0xA2, InsData(0xF0, IxValue(100))), IxSrResData(0xF0, Negative.mask), memVoidResult()),
     ("LDX 1.2 Immediate", InsSourceData(0xA2, InsData(0x00, IxValueWithCarry(100))), IxSrResData(0, Zero.mask | Carry.mask), memVoidResult()),
@@ -485,7 +487,7 @@ object ExecutionSpecData:
   )
 
   // LDY load Y
-  val dataLdyInstructionTest = List(
+  val dataLdyInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("LDY 1.0 Immediate", InsSourceData(0xA0, InsData(10, IyValue(100))), IyResData(10), memVoidResult()),
     ("LDY 1.1 Immediate", InsSourceData(0xA0, InsData(0xF0, IyValue(100))), IySrResData(0xF0, Negative.mask), memVoidResult()),
     ("LDY 1.2 Immediate", InsSourceData(0xA0, InsData(0x00, IyValueWithCarry(100))), IySrResData(0, Zero.mask | Carry.mask), memVoidResult()),
@@ -496,7 +498,7 @@ object ExecutionSpecData:
   )
 
   // LSR logical shift right
-  val dataLsrInstructionTest = List(
+  val dataLsrInstructionTest: Seq[(String, InsSourceData, ResultData, ResultMemData)] = List(
     ("LSR 1.0 Accumulator", InsSourceData(0x4A, InsData(0xF4, AccValue(0x20))), AccResData(0x10), memVoidResult()),
     ("LSR 1.1 Accumulator", InsSourceData(0x4A, InsData(0xF4, AccValue(0x01))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
     ("LSR 1.2 Accumulator", InsSourceData(0x4A, InsData(0x7F, AccValueWithCarry(0x3F))), AccSrResData(0x1F, Carry.mask), memVoidResult()),
@@ -508,11 +510,11 @@ object ExecutionSpecData:
   )
 
   // NOP no operation
-  val dataNopInstructionTest = List(
+  val dataNopInstructionTest: Seq[Nothing] = List(
   )
 
   // ORA or with Accumulator
-  val dataOraInstructionTest = List(
+  val dataOraInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("ORA 1.0 Immediate", InsSourceData(0x09, InsData(0x0A, AccValue(0x64))), AccResData(0x6E), memVoidResult()),
     ("ORA 1.1 Immediate", InsSourceData(0x09, InsData(0xF0, AccValue(0x64))), AccSrResData(0xF4, Negative.mask), memVoidResult()),
     ("ORA 1.2 Immediate", InsSourceData(0x09, InsData(0x00, AccValueWithCarry(0x00))), SrResData(Zero.mask | Carry.mask), memVoidResult()),
@@ -537,7 +539,7 @@ object ExecutionSpecData:
     validateStackValue(0x64, stackValue)
 
   // PHA push Accumulator
-  val dataPhaInstructionTest = List(
+  val dataPhaInstructionTest: Seq[(String, InsSourceData, AccPcSpResData, memVoidResult)] = List(
     ("PHA 1.0 Implied", InsSourceData(0x48, InsData(0x00, AccValue(0x64))), AccPcSpResData(0x64, testLocation + 1, phaValidation), memVoidResult()),
   )
 
@@ -553,7 +555,7 @@ object ExecutionSpecData:
     phpValidation(Overflow.mask | Negative.mask | Unused.mask)
 
 // PHP push processor status (SR)
-  val dataPhpInstructionTest = List(
+  val dataPhpInstructionTest: Seq[(String, InsSourceData, SrPcSpResData, memVoidResult)] = List(
     ("PHP 1.0 Implied", InsSourceData(0x08, InsData(0x00, SrValue(Carry.mask | Zero.mask))), SrPcSpResData(Carry.mask | Zero.mask, testLocation + 1, phpValidation1), memVoidResult()),
     ("PHP 1.0 Implied", InsSourceData(0x08, InsData(0x00, SrValue(Overflow.mask | Negative.mask))), SrPcSpResData(Overflow.mask | Negative.mask, testLocation + 1, phpValidation2), memVoidResult()),
   )
@@ -562,7 +564,7 @@ object ExecutionSpecData:
     assert(Processor.sp.value == 0xFF, s"Unexpected stack value ${Processor.sp.value }")
 
   // PLA pull Accumulator - updates the zero and negative flags
-  val dataPlaInstructionTest = List(
+  val dataPlaInstructionTest: Seq[(String, InsSourceData, AccSrPcSpResData, memVoidResult)] = List(
     ("PLA 1.0 Implied add 0x55 to stack with carry and zero flags set", InsSourceData(0x68, InsData(0x00, SrValue(Carry.mask | Zero.mask), () => {
       Processor.sp.value = 0xFE // move the point one byte
       memoryAccess.setMemoryByte(0x1FF, 0x55) // write value to stack location
@@ -580,7 +582,7 @@ object ExecutionSpecData:
   )
 
   // PLP pull processor status (SR)
-  val dataPlpInstructionTest = List(
+  val dataPlpInstructionTest: Seq[(String, InsSourceData, SrPcSpResData, memVoidResult)] = List(
     ("PLP 1.0 Implied add sr with carry and zero flags set to stack", InsSourceData(0x28, InsData(0x55, ZeroValues(), () => {
       Processor.sp.value = 0xFE // move the point one byte
       memoryAccess.setMemoryByte(0x1FF, Carry.mask | Zero.mask | Unused.mask)
@@ -588,7 +590,7 @@ object ExecutionSpecData:
   )
 
   // ROL rotate left
-  val dataRolInstructionTest = List(
+  val dataRolInstructionTest: Seq[(String, InsSourceData, ResultData, ResultMemData)] = List(
     ("ROL 1.0 Accumulator", InsSourceData(0x2A, InsData(0xF4, AccValue(0x20))), AccResData(0x40), memVoidResult()),
     ("ROL 1.1 Accumulator", InsSourceData(0x2A, InsData(0xF4, AccValue(0x80))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
     ("ROL 1.2 Accumulator", InsSourceData(0x2A, InsData(0x7F, AccValueWithCarry(0x80))), AccSrResData(0x01, Carry.mask), memVoidResult()),
@@ -603,7 +605,7 @@ object ExecutionSpecData:
   )
 
   // ROR rotate right
-  val dataRorInstructionTest = List(
+  val dataRorInstructionTest: Seq[(String, InsSourceData, ResultData, ResultMemData)] = List(
     ("ROR 1.0 Accumulator", InsSourceData(0x6A, InsData(0xF4, AccValue(0x20))), AccResData(0x10), memVoidResult()),
     ("ROR 1.1 Accumulator", InsSourceData(0x6A, InsData(0xF4, AccValue(0x01))), AccSrResData(0x00, Carry.mask | Zero.mask), memVoidResult()),
     ("ROR 1.2 Accumulator", InsSourceData(0x6A, InsData(0x7F, AccValueWithCarry(0x01))), AccSrResData(0x80, Negative.mask | Carry.mask), memVoidResult()),
@@ -619,7 +621,7 @@ object ExecutionSpecData:
 
   // RTI return from interrupt. On interrupt the status is pushed followed by the return address
 
-  val dataRtiInstructionTest = List(
+  val dataRtiInstructionTest: Seq[(String, InsSourceData, AccSrPcSpResData, memVoidResult)] = List(
     ("RTI 1.0 Implied return from interrupt setup stack for return to 2500", InsSourceData(0x40, InsData(0x99, AccValueWithCarry(0x11), () => {
       Processor.sp.value = 0xFC // move the pointer three bytes
       memoryAccess.setMemoryByte(0x1FF, Interrupt.mask | Negative.mask | Unused.mask ) // write stack value none break
@@ -628,7 +630,7 @@ object ExecutionSpecData:
   )
 
   // RTS return from subroutine
-  val dataRtsInstructionTest = List(
+  val dataRtsInstructionTest: Seq[(String, InsSourceData, AccSrPcSpResData, memVoidResult)] = List(
     ("RTs 1.0 Implied return from SUBROUTINE setup stack for return to 3600", InsSourceData(0x60, InsData(0x99, AccValueWithCarry(0x11), () => {
       Processor.sp.value = 0xFD // move the pointer three bytes
       memoryAccess.setMemoryWrd(0x1FE, 3600)
@@ -636,7 +638,7 @@ object ExecutionSpecData:
   )
 
   // SBC subtract with carry
-  val dataSbcInstructionTest = List(
+  val dataSbcInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("SBC 1.0 Immediate acc = 0x64 subtract 0x0A", InsSourceData(0xE9, InsData(10, AccValue(100))), AccResData(89), memVoidResult()),
     ("SBC 1.1 Immediate acc = 0x64 subtract 126", InsSourceData(0xE9, InsData(126, AccValueWithCarry(100))), AccSrResData(-26 & 0xFF, Negative.mask | Carry.mask | Overflow.mask), memVoidResult()),
     ("SBC 1.2 Immediate acc = 0x64 subtract 0x0A carry set", InsSourceData(0xE9, InsData(10, AccValueWithCarry(100))), AccResData(90), memVoidResult()),
@@ -655,25 +657,25 @@ object ExecutionSpecData:
   )
 
   // SEC set carry
-  val dataSecInstructionTest = List(
+  val dataSecInstructionTest: Seq[(String, InsSourceData, SrResData, memVoidResult)] = List(
     ("SEC 1.0 Implied set carry", InsSourceData(0x38, InsData(10, ZeroValues())), SrResData(Carry.mask), memVoidResult()),
     ("SEC 1.1 Implied set carry", InsSourceData(0x38, InsData(10, ZeroValuesWithCarry())), SrResData(Carry.mask), memVoidResult()),
   )
 
   // SED set decimal
-  val dataSedInstructionTest = List(
+  val dataSedInstructionTest: Seq[(String, InsSourceData, SrResData, memVoidResult)] = List(
     ("SED 1.0 Implied set decimal", InsSourceData(0xF8, InsData(10, ZeroValues())), SrResData(Decimal.mask), memVoidResult()),
     ("SED 1.1 Implied set decimal", InsSourceData(0xF8, InsData(10, ZeroValuesWithDecimal())), SrResData(Decimal.mask), memVoidResult()),
   )
 
   // SEI set interrupt disable
-  val dataSeiInstructionTest = List(
+  val dataSeiInstructionTest: Seq[(String, InsSourceData, SrResData, memVoidResult)] = List(
     ("SEI 1.0 Implied set interrupt", InsSourceData(0x78, InsData(10, ZeroValues())), SrResData(Interrupt.mask), memVoidResult()),
     ("SEI 1.1 Implied set interrupt", InsSourceData(0x78, InsData(10, ZeroValuesWithInterrupt())), SrResData(Interrupt.mask), memVoidResult()),
   )
 
   // STA store Accumulator no status registers affected
-  val dataStaInstructionTest = List(
+  val dataStaInstructionTest: Seq[(String, InsSourceData, ResultData, memByteResult)] = List(
     ("STA 1.0 ZeroPage 102 (0x66) -> ", InsSourceData(0x85, InsData(0x66, AccValueWithCarry(0x20))), AccSrResData(0x20, Carry.mask), memByteResult(0x66, 0x20)),
     ("STA 2.0 ZeroPage,x 100, x -> 100 (0x66) -> ", InsSourceData(0x95, InsData(100, AccIxValue(0xF0, 2))), AccIxResData(0xF0, 2), memByteResult(0x66, 0xF0)),
     ("STA 3.0 Absolute absTestLocation -> ", InsSourceData(0x8D, InsData(absTestLocation, AccValue(0x64))), AccResData(0x64), memByteResult(absTestLocation, 0x64)),
@@ -685,35 +687,35 @@ object ExecutionSpecData:
   )
 
   // STX store X
-  val dataStxInstructionTest = List(
+  val dataStxInstructionTest: Seq[(String, InsSourceData, ResultData, memByteResult)] = List(
     ("STX 1.0 ZeroPage 102 (0x66) -> ", InsSourceData(0x86, InsData(0x66, IxValueWithCarry(0x20))), IxSrResData(0x20, Carry.mask), memByteResult(0x66, 0x20)),
     ("STX 2.0 ZeroPage,Y 100, Y -> 100 (0x66) -> ", InsSourceData(0x96, InsData(100, IxIyValue(0xF0, 2))), IxIyResData(0xF0, 2), memByteResult(0x66, 0xF0)),
     ("STX 3.0 Absolute absTestLocation -> ", InsSourceData(0x8E, InsData(absTestLocation, IxValue(0x64))), IxResData(0x64), memByteResult(absTestLocation, 0x64)),
   )
 
   // STY store Y
-  val dataStyInstructionTest = List(
+  val dataStyInstructionTest: Seq[(String, InsSourceData, ResultData, memByteResult)] = List(
     ("STY 1.0 ZeroPage 102 (0x66) -> ", InsSourceData(0x84, InsData(0x66, IyValueWithCarry(0x20))), IySrResData(0x20, Carry.mask), memByteResult(0x66, 0x20)),
     ("STY 2.0 ZeroPage,X 100, X -> 100 (0x66) -> ", InsSourceData(0x94, InsData(100, IxIyValue(2, 0xF0))), IxIyResData(2, 0xF0), memByteResult(0x66, 0xF0)),
     ("STY 3.0 Absolute absTestLocation -> ", InsSourceData(0x8C, InsData(absTestLocation, IyValue(0x55))), IyResData(0x55), memByteResult(absTestLocation, 0x55)),
   )
 
   // TAX transfer Accumulator to X
-  val dataTaxInstructionTest = List(
+  val dataTaxInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("TAX 1.0 copy A to Ix setting Negative and Zero flags", InsSourceData(0xAA, InsData(10, AccValue(0x20))),AccIxResData(0x20, 0x20), memVoidResult()),
     ("TAX 1.1 copy A to Ix setting Negative and Zero flags", InsSourceData(0xAA, InsData(10, AccValue(0xF0))),AccIxSrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
     ("TAX 1.2 copy A to Ix setting Negative and Zero flags", InsSourceData(0xAA, InsData(10, AccValue(0x00))),AccIxSrResData(0x00, 0x00, Zero.mask), memVoidResult()),
   )
 
   // TAY transfer Accumulator to Y
-  val dataTayInstructionTest = List(
+  val dataTayInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("TAY 1.0 copy A to Iy setting Negative and Zero flags", InsSourceData(0xA8, InsData(10, AccValue(0x20))),AccIyResData(0x20, 0x20), memVoidResult()),
     ("TAY 1.1 copy A to Iy setting Negative and Zero flags", InsSourceData(0xA8, InsData(10, AccValue(0xF0))),AccIySrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
     ("TAY 1.2 copy A to Iy setting Negative and Zero flags", InsSourceData(0xA8, InsData(10, AccValue(0x00))),AccIySrResData(0x00, 0x00, Zero.mask), memVoidResult()),
   )
 
   // TSX transfer stack pointer to X - verifies X has been set and SP not changed
-  val dataTsxInstructionTest = List(
+  val dataTsxInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("TSX 1.0 copy Sp to Ix setting Negative and Zero flags", InsSourceData(0xBA, InsData(10, ZeroValues())),IxSrResData(0xFF, Negative.mask), memVoidResult()),
 
     ("TSX 1.1 copy Sp to Ix setting Negative and Zero flags", InsSourceData(0xBA, InsData(10, ZeroValues(), () => {
@@ -730,21 +732,21 @@ object ExecutionSpecData:
   )
 
   // TXA transfer X to Accumulator
-  val dataTxaInstructionTest = List(
+  val dataTxaInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("TXA 1.0 copy Ix to A setting Negative and Zero flags", InsSourceData(0x8A, InsData(10, IxValue(0x20))),AccIxResData(0x20, 0x20), memVoidResult()),
     ("TXA 1.1 copy Ix to A setting Negative and Zero flags", InsSourceData(0x8A, InsData(10, IxValue(0xF0))),AccIxSrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
     ("TXA 1.2 copy Ix to A setting Negative and Zero flags", InsSourceData(0x8A, InsData(10, IxValue(0x00))),AccIxSrResData(0x00, 0x00, Zero.mask), memVoidResult()),
   )
 
   // TXS transfer X to stack pointer no flags updated
-  val dataTxsInstructionTest = List(
+  val dataTxsInstructionTest: Seq[(String, InsSourceData, IxSpResData, memVoidResult)] = List(
     ("TXS 1.0 copy Ix to Sp", InsSourceData(0x9A, InsData(10, IxValue(0x20))),IxSpResData(0x20, () => {
       assert(Processor.sp.value == 0x20, s"Stack pointer not updated should be 0x20! is ${asHexStr(Processor.sp.value)}")
     }), memVoidResult()),
   )
 
   // TYA transfer Y to Accumulator
-  val dataTyaInstructionTest = List(
+  val dataTyaInstructionTest: Seq[(String, InsSourceData, ResultData, memVoidResult)] = List(
     ("TYA 1.0 copy Iy to A setting Negative and Zero flags", InsSourceData(0x98, InsData(10, IyValue(0x20))),AccIyResData(0x20, 0x20), memVoidResult()),
     ("TYA 1.1 copy Iy to A setting Negative and Zero flags", InsSourceData(0x98, InsData(10, IyValue(0xF0))),AccIySrResData(0xF0, 0xF0, Negative.mask), memVoidResult()),
     ("TYA 1.2 copy Iy to A setting Negative and Zero flags", InsSourceData(0x98, InsData(10, IyValue(0x00))),AccIySrResData(0x00, 0x00, Zero.mask), memVoidResult()),

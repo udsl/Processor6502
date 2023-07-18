@@ -2,8 +2,8 @@ package com.udsl.processor6502.assembler
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.assembler.version1.Assemble6502.logger
-import com.udsl.processor6502.assembler.version1.{SourceAsssemblierV1, TokenisedLine}
-import com.udsl.processor6502.assembler.version2.SourceAsssemblierV2
+import com.udsl.processor6502.assembler.version1.{SourceAsssemblierV1, TokenisedLineV1}
+import com.udsl.processor6502.assembler.version2.{SourceAsssemblierV2, TokenisedLineV2}
 import com.udsl.processor6502.config.AppOptions.assmVersion
 import com.udsl.processor6502.config.ConfigDatum
 
@@ -17,16 +17,7 @@ import scala.util.Using
 
 trait Assembler:
   def startAssembly(): Unit
-
-
-class AssemblerDataStructure extends StrictLogging :
-  val tokenisedList: ArrayBuffer[TokenisedLine] = ArrayBuffer.empty[TokenisedLine]
-  var currentLine: Int = 1
-
-object AssemblerDataStructure extends StrictLogging :
-  def apply() : AssemblerDataStructure =
-    new AssemblerDataStructure()
-
+  def version: Int = -1
 
 object Assembler extends StrictLogging :
 

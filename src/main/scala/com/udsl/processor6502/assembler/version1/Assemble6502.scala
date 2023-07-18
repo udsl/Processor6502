@@ -22,7 +22,7 @@ import scala.collection.mutable.ListBuffer
  *
  * @param tokenisedLines the source lines tokenised.
  */
-class Assemble6502( val tokenisedLines: List[TokenisedLine]) extends StrictLogging {
+class Assemble6502( val tokenisedLines: List[TokenisedLineV1]) extends StrictLogging {
 
   def assemble(): Unit =
     logger.info("starting V1")

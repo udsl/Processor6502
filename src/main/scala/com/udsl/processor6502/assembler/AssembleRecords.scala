@@ -1,6 +1,6 @@
 package com.udsl.processor6502.assembler
 
-import com.udsl.processor6502.assembler.version1.{TokenisedLine, UntokenisedLine}
+import com.udsl.processor6502.assembler.version1.{ParsedLine, UntokenisedLine}
 
 class AssembleExceptionRecord(val lineNumber: Int, val sourceText: String, val exceptionMessage: String)
 
