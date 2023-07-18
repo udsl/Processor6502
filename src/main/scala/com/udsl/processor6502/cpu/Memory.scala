@@ -14,6 +14,7 @@ import scalafx.scene.control.{ButtonType, Dialog, Label, TextField}
 import scalafx.scene.layout.GridPane
 
 import java.io.{BufferedReader, BufferedWriter, File, FileReader, FileWriter}
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class Memory extends StrictLogging:
@@ -60,6 +61,10 @@ object Memory extends StrictLogging:
   memory.addAll((0 to 65535).toList.map(m => MemoryCell(m)))
 
   private var vectorChangeListeners = List[VectorChangeListener]()
+
+  def validateAddress(addr: Int): Unit=
+    if addr < 0 || addr > 65535 then
+      throw new RuntimeException(s"Address $addr out of range 0 - 65535")
 
   def addVectorChangeListener(changeListener: VectorChangeListener): Unit =
     vectorChangeListeners = vectorChangeListeners :+ changeListener
@@ -124,6 +129,15 @@ object Memory extends StrictLogging:
     logger.info(s"Retrieving contents of $location")
     (getMemoryByte(location) * 256) + getMemoryByte(location + 1)
 
+  def getCells(start: Int, Length: Int) : List[MemoryCell] =
+    validateAddress(start)
+    validateAddress(start + Length - 1)
+    val res: ListBuffer[MemoryCell] = ListBuffer[MemoryCell]()
+    val memArray = memory.toArray
+    for (i <- start to  start+Length)
+      res += memArray(i)
+    res.toList
+
 
   def getMemory: ObservableBuffer[MemoryCell] =
     memory
@@ -150,6 +164,7 @@ object Memory extends StrictLogging:
     logger.info(s"Memory image size written: ${end - start}, from: $start to $end")
 
   case class SaveResult(start: Int, end: Int)
+
   def saveMemoryImage(): Unit =
     logger.info("Saving memory image!")
 

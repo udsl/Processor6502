@@ -74,7 +74,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
   def processClear(t: AssemblerToken, tl: TokenisedLineV1) : Unit =
     logger.info("Processing CLR command")
     if tl.lineNumber > 1 then
-      val errorText = "CLR command only valid on first line"
+      val errorText = s"CLR command on line ${tl.lineNumber} - only valid on first line"
       logger.error(errorText)
       throw new Exception(errorText)
 

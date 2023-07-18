@@ -2,7 +2,6 @@ package com.udsl.processor6502.ui
 
 import com.udsl.processor6502.Dialogues.confirmation
 import com.udsl.processor6502.FileIOUtilities.{selectSourceFileToLoad, selectSourceFileToSave}
-import com.udsl.processor6502.assembler.version1.Assemble6502
 import com.udsl.processor6502.{Main, Utilities}
 import scalafx.application.JFXApp
 import scalafx.event.EventHandler
@@ -180,9 +179,9 @@ class CodeEditor extends Stage {
   /**
    * Perform assembly of the text in the code editor
    */
-  def assemble(): Unit =
-    val asm = Assemble6502.apply(textArea.text.value)
-    asm.assemble()
+  def assemble(): Unit = ???
+//    val asm = Assemble6502.apply(textArea.text.value)
+//    asm.assemble()
 
   def doClose(confirmed: Boolean = false): Unit =
     if confirmed || !textChanged || confirmation("Abandon text changes") then

@@ -2,7 +2,6 @@ package com.udsl.processor6502.ui.popups
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.{getConfigValue, numToString}
-import com.udsl.processor6502.assembler.version1.Assemble6502
 import com.udsl.processor6502.config.AppOptions.assmVersion
 import com.udsl.processor6502.config.DataCollector.writeConfigData
 import com.udsl.processor6502.config.{ConfigDatum, DataConsumer, DataProvider}

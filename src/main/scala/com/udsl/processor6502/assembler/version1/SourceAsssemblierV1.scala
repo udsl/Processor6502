@@ -32,6 +32,7 @@ object SourceAsssemblierV1:
     sourceIter
 
   private def sourceIter(sourceFile: File): Iterator[String] =
+    assemblerData.init()
     val source = Source.fromFile(sourceFile)
     val lines = try source.mkString finally source.close()
     sourceIter(lines)

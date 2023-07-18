@@ -13,7 +13,7 @@ object AppOptions extends DataProvider , DataConsumer , StrictLogging{
 
   registerDataSource(this)
 
-  private var _assmVersion: Int = 2
+  private var _assmVersion: Int = 1
   def assmVersion: Int = _assmVersion
   def assmVersion_=(newVal: Int): Unit = _assmVersion = newVal
 

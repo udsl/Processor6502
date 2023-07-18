@@ -1,7 +1,6 @@
 package com.udsl.processor6502.assembler
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.assembler.version1.Assemble6502.logger
 import com.udsl.processor6502.assembler.version1.{SourceAsssemblierV1, TokenisedLineV1}
 import com.udsl.processor6502.assembler.version2.{SourceAsssemblierV2, TokenisedLineV2}
 import com.udsl.processor6502.config.AppOptions.assmVersion
