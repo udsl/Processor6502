@@ -237,7 +237,7 @@ class ExecutionSpec extends AnyFlatSpec, should.Matchers, StrictLogging:
     runTestWithData(dataTyaInstructionTest)
   }
 
-  def runTestWithData(data: List[(String, InsSourceData, ResultData, ResultMemData)]): Unit =
+  def runTestWithData(data: Seq[(String, InsSourceData, ResultData, ResultMemData)]): Unit =
     val executionUnit = ExecutionUnit.forTest
     ExecutionSpec.initFixedValuesForTest()
     for ((title, insData, resData, memRes) <- data) {
