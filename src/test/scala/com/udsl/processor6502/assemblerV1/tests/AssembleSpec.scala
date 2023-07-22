@@ -32,16 +32,22 @@ object AddrBytWrdToken:
  * opcode is the HEX value the token should compile to
  * loByte & hiByte the optional bytes that follow the instruction in memory - depends on addressing mode. -1 = byte not valid.
  */
+// token, opcode, loByte, hiByte
+val dataValidTokensTest: List[(InstructionToken, Int, Option[Int], Option[Int])] = List(
+  (Token("LDA", Array[String]("#$20"), List(Immediate)), 0xA9, Some(32), None),
+  (Token("LDA", Array[String]("$10"), List(ZeroPage)), 0xA5, Some(16), None),
+  (Token("LDA", Array[String]("10,X"), List(ZeroPageX)), 0xB5, Some(10), None),
+  (Token("LDA", Array[String]("$1234"), List(Absolute)), 0xAD, Some(0x34), Some(0x12)),
+  (Token("LDA", Array[String]("$3456,X"), List(AbsoluteX)), 0xBD, Some(0x56), Some(0x34)),
+  (Token("LDA", Array[String]("$3456,Y"), List(AbsoluteY)), 0xB9, Some(0x56), Some(0x34)),
+  (Token("LDA", Array[String]("($34,X)"), List(IndirectX)), 0xA1, Some(0x34), None),
+  (Token("LDA", Array[String]("($56),Y"), List(IndirectY)), 0xB1, Some(0x56), None)
+)
 
-val dataValidTokensTest: List[(InstructionToken, Int, Int, Int)] = List(
-  (Token("LDA", Array[String]("#$20"), List(Immediate)), 0xA9, 32, -1),
-  (Token("LDA", Array[String]("$10"), List(ZeroPage)), 0xA5, 16, -1),
-  (Token("LDA", Array[String]("10,X"), List(ZeroPageX)), 0xB5, 10, -1),
-  (Token("LDA", Array[String]("$1234"), List(Absolute)), 0xAD, 0x34, 0x12),
-  (Token("LDA", Array[String]("$3456,X"), List(AbsoluteX)), 0xBD, 0x56, 0x34),
-  (Token("LDA", Array[String]("$3456,Y"), List(AbsoluteY)), 0xB9, 0x56, 0x34),
-  (Token("LDA", Array[String]("($34,X)"), List(IndirectX)), 0xA1, 0x34, -1),
-  (Token("LDA", Array[String]("($56),Y"), List(IndirectY)), 0xB1, 0x56, -1)
+// token, opcode, loByte, hiByte, lable, label value
+val dataValidLabelsAndTokensTestData: List[(InstructionToken, Int, Option[Int], Option[Int], String, Int)] = List(
+  (Token("LDX", Array[String]("#defined"), List(Immediate)), 0xA2, Some(0x20), None, "defined", 0x20),
+  (Token("BNE", Array[String]("reference2"), List(Relative)), 0xD0, Some(0xF9), None, "reference2", 1995)
 )
 
 val dataAddrBytWrdTokensTest: List[(AddrBytWrdToken, Int, Int)] = List(
@@ -55,7 +61,7 @@ Testing the DefToken is not straight forwards because the lable is defined durin
 does not update any memory, the value could be used do do that else where!
 */
 
-class AssembleSpec extends AnyFlatSpec, should.Matchers {
+class AssembleSpec extends AnyFlatSpec, should.Matchers:
   
   "Given a valid instruction token" should "should assemble to the correct opcode and value" in {
     for ((token, opcode, loByte, hiByte) <- dataValidTokensTest) {
@@ -69,14 +75,52 @@ class AssembleSpec extends AnyFlatSpec, should.Matchers {
         val memValue = AssembleLocation.getMemoryByte(srtLoc)
         assert(memValue == opcode, s"Expected opcode: 0x${opcode.toHexString.toUpperCase} was 0x${memValue.toHexString.toUpperCase}")
         written += 1
-      if loByte > -1 then
-        val lowByte = AssembleLocation.getMemoryByte(srtLoc+1)
-        assert(lowByte == loByte, s"Expected loByte: 0x${loByte.toHexString.toUpperCase} was 0x${lowByte.toHexString.toUpperCase}")
+      loByte match
+        case Some(v) =>
+          val lowByte = AssembleLocation.getMemoryByte(srtLoc + 1)
+          assert(lowByte == v, s"Expected loByte: 0x${v.toHexString.toUpperCase} was 0x${lowByte.toHexString.toUpperCase}")
+          written += 1
+          hiByte match
+            case Some(v) =>
+              val highByte = AssembleLocation.getMemoryByte(srtLoc + 2)
+              assert(highByte == v, s"Expected highByte: 0x${v.toHexString.toUpperCase} was 0x${highByte.toHexString.toUpperCase}")
+              written += 1
+            case None => // no hiByte
+        case None => // nether loByte or hiByte
+      assert(AssembleLocation.currentLocation - srtLoc == written, s"Expected $written written but was ${AssembleLocation.currentLocation - srtLoc}")
+    }
+  }
+
+  "Given a defined lable and valid instruction token referencing that lable" should "should assemble to the correct opcode and value" in {
+    for ((token, opcode, loByte, hiByte, label, labelValue) <- dataValidLabelsAndTokensTestData) {
+      // define the label
+      AssemblyData.clear()
+      AssemblyData.addLabel(label, labelValue)
+      AssembleLocation.setAssembleLoc(2000)
+      // get the current assembly location
+      val srtLoc = AssembleLocation.currentLocation
+      var written = 0
+      // assemble the token into memory
+      assembleInstructionToken(token, TokenisedLineV1(s"testing $token - $opcode"))
+      if opcode > -1 then
+        // get the values written to memory and verify correct
+        val memValue = AssembleLocation.getMemoryByte(srtLoc)
+        assert(memValue == opcode, s"Expected opcode: 0x${opcode.toHexString.toUpperCase} was 0x${memValue.toHexString.toUpperCase}")
         written += 1
-      if hiByte > -1 then
-        val highByte = AssembleLocation.getMemoryByte(srtLoc+2)
-        assert(highByte == hiByte, s"Expected highByte: 0x${hiByte.toHexString.toUpperCase} was 0x${highByte.toHexString.toUpperCase}")
-        written += 1
+      // if we have a loByte we may also have a hiByte can not have a hiByte only
+      loByte match
+        case Some(v) =>
+          val lowByte = AssembleLocation.getMemoryByte(srtLoc + 1)
+          assert(lowByte == v, s"Expected loByte: 0x${v.toHexString.toUpperCase} was 0x${lowByte.toHexString.toUpperCase}")
+          written += 1
+          hiByte match
+            case Some(v) =>
+              val highByte = AssembleLocation.getMemoryByte(srtLoc + 2)
+              assert(highByte == v, s"Expected highByte: 0x${v.toHexString.toUpperCase} was 0x${highByte.toHexString.toUpperCase}")
+              written += 1
+            case None => // no hiByte
+        case None => // nether loByte or hiByte
+
       assert(AssembleLocation.currentLocation - srtLoc == written, s"Expected $written written but was ${AssembleLocation.currentLocation - srtLoc}")
     }
   }
@@ -98,4 +142,3 @@ class AssembleSpec extends AnyFlatSpec, should.Matchers {
     }
   }
 
-}

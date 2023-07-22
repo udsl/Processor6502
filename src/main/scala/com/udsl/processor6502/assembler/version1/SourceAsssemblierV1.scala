@@ -13,7 +13,7 @@ class SourceAsssemblierV1(val source: Iterator[String] ) extends Assembler, Stri
   def startAssembly(): Unit =
     logger.info(s"SourceAsssemblierV1 starting assembly")
     for (line <- source)
-      val lineToTokenise = UntokenisedLine(assemblerData.currentLine, line)
+      val lineToTokenise = UntokenisedLine(assemblerData.currentLine, line.strip())
       val tokisedLine = TokeniserV1.tokeniseLine(lineToTokenise)
       assemblerData.tokenisedList += tokisedLine
       Assemble6502FirstPass.assemble(tokisedLine)

@@ -159,7 +159,7 @@ object TokeniserV1 extends StrictLogging :
             ParserV1.addSyntaxError(SyntaxErrorRecord("DEF should be label number", tokenisedLine))
           else
             val value = numericValue(parts(1))
-            if 0 to 65535 contains value then
+            if 0 to 65535 contains value.get then
               AssemblyData.addLabel(parts(0), value.get)
               val token = DefToken(parts(0), Array[String](parts(1)))
               token.value = parts(1)

@@ -69,6 +69,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
       case "BYT" => advanceAssemLocForBytes(t.fields)
       case "WRD" => advanceAssemLocForWords(t.fields)
       case "ADDR" => advanceAssemLocForAddresses(t.fields)
+      case "ORIG" =>
       case _ => logger.info(s"\tInvalid command $t ")
 
   def processClear(t: AssemblerToken, tl: TokenisedLineV1) : Unit =
@@ -99,10 +100,8 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
    */
   def processDefinition(t: AssemblerToken) : Unit =
     logger.info(s"\tDefinition of label ${t.fields.head} with value ${t.value}")
-    if AssemblyData.labelIsDefined(t.mnemonic) then
-      val v = AssemblyData.labelValue(t.mnemonic).get
-      if v != t.intValue then
-        throw new Exception(s"Definition value changed om 2nd pass was ${t.intValue} now $v")
+    if !AssemblyData.labelIsDefined(t.mnemonic) then
+      throw new Exception(s"Definition value not set!")
 
   def procesLabel(t: AssemblerToken) : Unit =
     logger.info(s"\tDefining label ${t.mnemonic} with value $currentLocation")

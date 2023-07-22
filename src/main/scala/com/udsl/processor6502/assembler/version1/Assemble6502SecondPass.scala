@@ -56,10 +56,15 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       case _ => logger.info(s"\tInvalid mnemonic ${t.value} ")
 
   def processOrigin(t: AssemblerToken): Unit =
-    logger.info("\tOrigin Token 2nd pass")
-    val value = Utilities.numericValue(t.mnemonic)
-    if 0 to 65535 contains value then
-      AssembleLocation.setAssembleLoc(value)
+    Utilities.numericValue(t.mnemonic) match
+      case Some(value) =>
+        if 0 to 65535 contains value then
+          AssembleLocation.setAssembleLoc(value)
+          logger.info(s"\tOrigin Token 2nd pass: $value")
+        else
+          throw new Exception(s"Invalid origin value $value")
+      case None =>
+        throw new Exception("Origin vale not given")
 
 
   def assembleInstructionToken(t: AssemblerToken, tl: TokenisedLineV1): AssemblerToken =
