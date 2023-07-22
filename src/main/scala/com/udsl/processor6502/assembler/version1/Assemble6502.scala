@@ -153,9 +153,9 @@ trait Assemble6502PassBase:
   def setMemoryAddress(v: String): Unit =
     AssembleLocation.setMemoryAddress( numericValue(v).get)
 
-  def setMemoryAddress(v: Int): Unit =
-    AssembleLocation.setMemoryAddress(v)
-    
+  def setMemoryAddress(v: Int, withDisassembly: Boolean = false): Unit =
+    AssembleLocation.setMemoryAddress(v, withDisassembly)
+
   def setMemoryByte(v: String): Unit =
     AssembleLocation.setMemoryByte(if v.charAt(0) == '$' then
       Integer.parseInt(v.substring(1), 16)

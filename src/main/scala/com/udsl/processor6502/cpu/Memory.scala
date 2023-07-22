@@ -20,33 +20,27 @@ import scala.collection.mutable.ListBuffer
 class Memory extends StrictLogging:
   logger.info("Memory access class created")
 
-  def setMemoryByte(location: Int, value: Int): Unit = {
+  def setMemoryByte(location: Int, value: Int): Unit = 
     Memory.setMemoryByte(location, value)
-  }
 
-  def setMemoryByte(location: Int, value: Int, disassembly: String): Unit = {
+  def setMemoryByte(location: Int, value: Int, disassembly: String): Unit = 
     Memory.setMemoryByte(location, value, disassembly)
-  }
 
-  def getMemoryByte(location: Int): Int = {
+  def getMemoryByte(location: Int): Int = 
     Memory.getMemoryByte(location)
-  }
 
-  def setMemoryToAddress(location: Int, address: Int): Unit =
-    Memory.setMemoryToAddress(location, address)
-
-  def getMemoryAsAddress(location: Int): Int = {
+  def setMemoryToAddress(location: Int, address: Int, withDisassebly: Boolean = false): Unit =
+    Memory.setMemoryToAddress(location, address, withDisassebly)
+    
+  def getMemoryAsAddress(location: Int): Int = 
     Memory.getMemoryAsAddress(location)
-  }
 
   // Memory words are in hi byte low byte order (reverse of addresses)
-  def getMemoryWrd(location: Int): Int = {
+  def getMemoryWrd(location: Int): Int = 
     Memory.getMemoryWord(location)
-  }
 
-  def setMemoryWrd(location: Int, value: Int): Unit = {
+  def setMemoryWrd(location: Int, value: Int): Unit = 
     Memory.setMemoryWord(location, value)
-  }
 
 
 trait VectorChangeListener:
@@ -107,9 +101,12 @@ object Memory extends StrictLogging:
   /**
    * Address is low byte hi byte order (little endian)
    */
-  private def setMemoryToAddress(location: Int, address: Int): Unit =
+  private def setMemoryToAddress(location: Int, address: Int, withDisassemble: Boolean = false): Unit =
     logger.info(s"Updating contents of $location to address value $address")
-    setMemoryByte(location, address & 0xFF, s"ADDR $address" )
+    if withDisassemble then
+      setMemoryByte(location, address & 0xFF, s"ADDR $address")
+    else
+      setMemoryByte(location, address & 0xFF)
     setMemoryByte(location + 1, (address >> 8) & 0xFF)
     location match
       case NMI_VECTOR => notifyVectorChangeListeners("NMI", address)

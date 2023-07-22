@@ -35,13 +35,13 @@ object AssembleLocation extends StrictLogging :
     setMemoryByte(v % 256)
 
 
-  def setMemoryAddress(adr: Int): Unit =
+  def setMemoryAddress(adr: Int, withDisassembly: Boolean = false): Unit =
     if adr > 65535 || adr < 0 then
       val errorMessage = s"Bad address value $adr"
       logger.debug(errorMessage)
       throw new Exception(errorMessage)
 
-    memoryAccess.setMemoryToAddress(currentLocation, adr)
+    memoryAccess.setMemoryToAddress(currentLocation, adr, withDisassembly)
     currentLocation += 2
 
   def setMemoryByte(v: Int, disassembly: String): Unit =

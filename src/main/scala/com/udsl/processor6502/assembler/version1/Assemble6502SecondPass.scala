@@ -95,8 +95,8 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
      * @return
      */
     def getIndirectOperandValue: Int =
-      val op1 = t.fields.head.toUpperCase.substring(1) // remove the leading '('
-      if op1.substring(op1.length() - 3) == "),Y"  || op1.substring(op1.length() - 3) == ",X)" then // (indirect),Y or (indirect,X)
+      val op1 = t.fields.head.substring(1) // remove the leading '('
+      if op1.toUpperCase.endsWith("),Y")  || op1.toUpperCase.endsWith(",X)") then // (indirect),Y or (indirect,X)
         getValue(op1.substring(0, op1.length() - 3))
       else
         getValue(op1.substring(0, op1.length() - 1)) // (indirect)
@@ -163,7 +163,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
                 res = Some( (IndirectY, operandValue))
 
           case Indirect =>
-            if !t.fields.head.contains(",") && CpuInstructions.isAddressingModeValid(t.mnemonic, Indirect) then // if it has a comma then its not Indirect
+            if t.fields.head.charAt(0) == '(' && t.fields.head.endsWith(")") && CpuInstructions.isAddressingModeValid(t.mnemonic, Indirect) then // if it has a comma then its not Indirect
               val operandValue = getIndirectOperandValue
               res = Some( (Indirect, operandValue))
 
@@ -212,20 +212,20 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
           //TODO
           // Need details of the instruction for the disassembly byte string
           // mnemonic, value and number bytes
-          val (opcode: Int, bytes:Int) = CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode)
-          setMemoryByte(opcode, constructSourceLine(t.mnemonic, addrMode, (value % 256, value / 256)))
-          // now we know how long the instruction shoud be
-          bytes match
-            case 1 =>
-              // implied or accumulator so nothing else to write.
-            case 2 =>
-              // Imeadiate, zeropage etc
-              setMemoryByte(value)
-            case 3 =>
-              // Absolute
-              setMemoryAddress(value)
-            case _ =>
-              throw new Exception(s"SYSTEM ERROR INVALID BYTES FOR INSTRUCTION - ${t.mnemonic}")
+          CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode).foreach((opcode, bytes) =>
+            setMemoryByte(opcode, constructSourceLine(t.mnemonic, addrMode, (value % 256, value / 256)))
+            // now we know how long the instruction should be
+            bytes match
+              case 1 =>
+                // implied or accumulator so nothing else to write.
+              case 2 =>
+                // Imeadiate, zeropage etc
+                setMemoryByte(value)
+              case 3 =>
+                // Absolute
+                setMemoryAddress(value)
+              case _ =>
+                throw new Exception(s"SYSTEM ERROR INVALID BYTES FOR INSTRUCTION - ${t.mnemonic}"))
     NoTokenToken("", Array[String]())
 
   def setBytes(fields: Array[String]): Unit =
@@ -254,4 +254,4 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       val value = v.trim
       setMemoryAddress(numericValue(value).getOrElse({
         AssemblyData.labelValue(value).getOrElse( throw new Exception(s"Invalid value address '$value'"))
-      }))
+      }), true)

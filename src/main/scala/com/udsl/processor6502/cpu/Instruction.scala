@@ -365,11 +365,8 @@ object CpuInstructions :
   def getInstruction(ins: String): Option[CpuInstruction] =
     validInstructions.find(a => a.name().equals(ins.toUpperCase()))
 
-  def getInstructionOpcodeBytes(ins: String, adrMode: AddressingMode): (Int, Int) =
-    val instruction = validInstructions.find(a => a.name().equals(ins.toUpperCase())).getOrElse(INVALID)
-    if instruction == INVALID then
-      return (-1, 0)
-    (instruction.opcode(adrMode).get, instruction.bytes(adrMode).get)
+  def getInstructionOpcodeBytes(ins: String, adrMode: AddressingMode): Option[(Int, Int)] =
+    validInstructions.find(a => a.name().equals(ins.toUpperCase())).map(instruction => (instruction.opcode(adrMode).get, instruction.bytes(adrMode).get))
 
   def isAddressingModeValid(ins: String, adrMode: AddressingMode): Boolean =
     val instruction = validInstructions.find(a => a.name().equals(ins.toUpperCase())).getOrElse(INVALID)
