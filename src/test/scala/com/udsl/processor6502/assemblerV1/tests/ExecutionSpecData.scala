@@ -1,4 +1,4 @@
-package com.udsl.processor6502.test
+package com.udsl.processor6502.assemblerV1.tests
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.assembler.AssembleLocation.logger
@@ -10,8 +10,8 @@ import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.StatusFlag.*
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusRegister}
-import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, asHexStr, logger, testLocation, testLocation2Ptr, zeroPageData}
-import com.udsl.processor6502.test.InsData.{checkValue, logger}
+import ExecutionSpec.{absTestLocation, absTestLocation2, asHexStr, logger, testLocation, testLocation2Ptr, zeroPageData}
+import InsData.{checkValue, logger}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 

@@ -1,4 +1,4 @@
-package com.udsl.processor6502.test
+package com.udsl.processor6502.assemblerV1.tests
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.assembler.AssembleLocation.logger
@@ -10,10 +10,10 @@ import com.udsl.processor6502.cpu.StatusRegister.*
 import com.udsl.processor6502.cpu.StatusFlag.Unused
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.{Processor, StatusFlag, StatusRegister}
-import com.udsl.processor6502.test.ExecutionSpec.{absTestLocation, absTestLocation2, logger, testLocation}
-import com.udsl.processor6502.test.ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest, dataLdaInstructionTest, dataLdxInstructionTest, dataLdyInstructionTest, dataLsrInstructionTest, dataOraInstructionTest, dataPhaInstructionTest, dataPhpInstructionTest, dataPlaInstructionTest, dataPlpInstructionTest, dataRolInstructionTest, dataRorInstructionTest, dataRtiInstructionTest, dataRtsInstructionTest, dataSbcInstructionTest, dataSecInstructionTest, dataSedInstructionTest, dataSeiInstructionTest, dataStaInstructionTest, dataStxInstructionTest, dataStyInstructionTest, dataTaxInstructionTest, dataTayInstructionTest, dataTsxInstructionTest, dataTxaInstructionTest, dataTxsInstructionTest, dataTyaInstructionTest}
-import com.udsl.processor6502.test.InsData.{checkValue, logger}
-import com.udsl.processor6502.test.Validation.{checkAcc, checkIx, checkIy, checkPc, checkSr}
+import ExecutionSpec.{absTestLocation, absTestLocation2, logger, testLocation}
+import ExecutionSpecData.{dataAdcInstructionTest, dataAndInstructionTest, dataAslInstructionTest, dataBccInstructionTest, dataBcsInstructionTest, dataBitInstructionTest, dataBmiInstructionTest, dataBneInstructionTest, dataBplInstructionTest, dataBrkInstructionTest, dataBvcInstructionTest, dataBvsInstructionTest, dataClcInstructionTest, dataCldInstructionTest, dataCliInstructionTest, dataClvInstructionTest, dataCmpInstructionTest, dataCpxInstructionTest, dataCpyInstructionTest, dataDecInstructionTest, dataDexInstructionTest, dataDeyInstructionTest, dataEorInstructionTest, dataIncInstructionTest, dataInxInstructionTest, dataInyInstructionTest, dataJmpInstructionTest, dataJsrInstructionTest, dataLdaInstructionTest, dataLdxInstructionTest, dataLdyInstructionTest, dataLsrInstructionTest, dataOraInstructionTest, dataPhaInstructionTest, dataPhpInstructionTest, dataPlaInstructionTest, dataPlpInstructionTest, dataRolInstructionTest, dataRorInstructionTest, dataRtiInstructionTest, dataRtsInstructionTest, dataSbcInstructionTest, dataSecInstructionTest, dataSedInstructionTest, dataSeiInstructionTest, dataStaInstructionTest, dataStxInstructionTest, dataStyInstructionTest, dataTaxInstructionTest, dataTayInstructionTest, dataTsxInstructionTest, dataTxaInstructionTest, dataTxsInstructionTest, dataTyaInstructionTest}
+import InsData.{checkValue, logger}
+import Validation.{checkAcc, checkIx, checkIy, checkPc, checkSr}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 

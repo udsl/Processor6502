@@ -1,5 +1,4 @@
-package com.udsl.processor6502.test
-
+package com.udsl.processor6502.assemblerV1.tests
 
 import com.udsl.processor6502.assembler
 import com.udsl.processor6502.cpu.execution.*

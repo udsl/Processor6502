@@ -1,6 +1,6 @@
-package com.udsl.processor6502.assemble2.test
+package com.udsl.processor6502.assembleV2.tests
 
-import com.udsl.processor6502.assemble2.test.TestUtilsV2.validateTokens
+import TestUtilsV2.validateTokens
 import com.udsl.processor6502.assembler.AssemblyData
 import com.udsl.processor6502.assembler.version2.{BlankLineTokenV2, CommandTokenV2, CommentLineTokenV2, InstructionTokenV2, LabelTokenV2, LineCommentTokenV2, TokenV2, TokenisedLineV2, TokeniserV2}
 import com.udsl.processor6502.cpu.*

@@ -1,4 +1,4 @@
-package com.udsl.processor6502.assemble2.test
+package com.udsl.processor6502.assembleV2.tests
 
 import com.udsl.processor6502.assembler.version2.{Assemble6502FirstPassV2, FirstPassResult, InstructionTokenV2, TokenisedLineV2, TokeniserV2}
 import com.udsl.processor6502.assembler.{AssembleLocation, AssemblyData}

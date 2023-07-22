@@ -1,5 +1,4 @@
-package com.udsl.processor6502.test
-
+package com.udsl.processor6502.assemblerV1.tests
 
 import com.udsl.processor6502.cpu.execution.{ADC, AND, Absolute, AbsoluteX, AbsoluteY, CMP, EOR, Illegal, Immediate, IndirectX, IndirectY, LDA, ORA, Opcode, SBC, STA, ZeroPage, ZeroPageX}
 import org.scalatest.flatspec.AnyFlatSpec
