@@ -2,7 +2,8 @@ package com.udsl.processor6502.ui.popups
 
 import com.udsl.processor6502.ui.popups.Executor
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.{Main, Observer}
+import com.udsl.processor6502.Observer
+import com.udsl.processor6502.application.Main
 import com.udsl.processor6502.cpu.execution.{ExecutionUnit, Opcode, NULL_Instruction}
 import com.udsl.processor6502.cpu.{Processor, StatusFlag}
 import com.udsl.processor6502.ui.popups.Executor.{executionUnit, executor}

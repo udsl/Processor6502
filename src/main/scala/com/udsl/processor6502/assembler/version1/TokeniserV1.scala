@@ -14,7 +14,7 @@ import scala.util.{Failure, Success, Try}
 object TokeniserV1 extends StrictLogging :
   val exceptionList: List[AssembleExceptionRecord] = List[AssembleExceptionRecord]()
 
-  def Tokenise(allLines: Array[UntokenisedLine]): List[TokenisedLineV1] =
+  def Tokenise(allLines: Array[SourceLine]): List[TokenisedLineV1] =
     logger.info(
       """
         |**************************
@@ -32,13 +32,13 @@ object TokeniserV1 extends StrictLogging :
         case Failure(ex) => exceptionList.appended(AssembleExceptionRecord(ex.getMessage, lineToTokenise))
     tokenisedLines.toList
 
-  def tokeniseLine(line: UntokenisedLine): TokenisedLineV1 =
+  def tokeniseLine(line: SourceLine): TokenisedLineV1 =
     logger.debug(s"\ntokeniseLine: $line")
     // determine basic line type
     val tokenisedLine = TokenisedLineV1(line)
-    val token: Option[AssemblerToken] = line.sourceText.trim match {
-      case "" => Some(BlankLineToken( "", Array[String]()))
-      case a if a.charAt(0) == ';' => Some(CommentLineToken(line.sourceText.trim, Array[String]()))
+    val token: Option[AssemblerToken] = line.text.trim match {
+      case "" => Some(BlankLineToken( "", Array[String](), line))
+      case a if a.charAt(0) == ';' => Some(CommentLineToken(line.text.trim, Array[String](), line))
       case _ => None
     }
 
@@ -50,16 +50,16 @@ object TokeniserV1 extends StrictLogging :
         //       nememic operand + optional comment
         //       or a command
         // lets deal with the potential comment first
-        val commentSplit = line.sourceText.trim.split(";")
+        val commentSplit = line.text.trim.split(";")
 
         // remove comment and split rest of line into fields using space though these this could also be seperated by ,
         val fields =
           if commentSplit.length > 1 then
             // we have split so must be a ; and therefore a comment which should be at the end of the line
-            tokenisedLine + LineComment(commentSplit.tail.mkString, commentSplit)
+            tokenisedLine + LineComment(commentSplit.tail.mkString, commentSplit, line)
             commentSplit.head.split("\\s+")
           else
-            line.sourceText.split("\\s+")
+            line.text.split("\\s+")
 
         // command | command value | command value[ ],[ ]value | Label |  Label instruction
         if !processCommand(fields, tokenisedLine) then
@@ -78,7 +78,7 @@ object TokeniserV1 extends StrictLogging :
     if head != "" && head.substring(head.length - 1) == ":" then
       val labelText = head.substring(0, head.length - 1)
       AssemblyData.addLabel(labelText)
-      val token = LabelToken(labelText, text.tail)
+      val token = LabelToken(labelText, text.tail, tokenisedLine.source)
       tokenisedLine + token
       logger.debug(s"token added: $token")
       text.tail
@@ -114,7 +114,7 @@ object TokeniserV1 extends StrictLogging :
           // the easy way join all back together (the previous split will have removed the spaces)
           // Now we have a value that wne split on , will be have no spaces.
           val values = data.mkString("")
-          val token = CommandToken(head, values.split(","))
+          val token = CommandToken(head, values.split(","), tokenisedLine.source)
           token.addPrediction(Unknown)
           tokenisedLine + token
           logger.debug(s"token added: $token")
@@ -125,26 +125,26 @@ object TokeniserV1 extends StrictLogging :
           if value.length == 1 then
             val str = value(0).trim
             if Utilities.isNumeric(str) then
-              val token = OriginToken(str, value)
+              val token = OriginToken(str, value, tokenisedLine.source)
               tokenisedLine + token
               logger.info(s"Origin added from numeric literal $str")
             else if Utilities.isLabel(str) && AssemblyData.labelIsDefined(str) then
               val labelValue = AssemblyData.labelValue(str).toString
-              val token = OriginToken(labelValue, value)
+              val token = OriginToken(labelValue, value, tokenisedLine.source)
               tokenisedLine + token
               logger.info(s"Origin added from defined label '$str")
             else
-              ParserV1.addSyntaxError(SyntaxErrorRecord("Value for ORIG not numeric or defined label", tokenisedLine))
+              ParserV1.addSyntaxError(SyntaxErrorRecord("Value for ORIG not numeric or defined label", tokenisedLine.source))
           else
-            ParserV1.addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", tokenisedLine))
+            ParserV1.addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", tokenisedLine.source))
           return true
 
         // clr only valid on the first line
         case "CLR" =>
-          val token = ClearToken(head, text.tail)
+          val token = ClearToken(head, text.tail, tokenisedLine.source)
           tokenisedLine + token
-          if tokenisedLine.lineNumber > 1 then
-            ParserV1.addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", tokenisedLine))
+          if tokenisedLine.source.lineNum > 1 then
+            ParserV1.addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", tokenisedLine.source))
           AssemblyData.clear()
           logger.debug(s"token added: $token")
           return true
@@ -154,19 +154,19 @@ object TokeniserV1 extends StrictLogging :
           // fist part must be the label being defined
           // 2nd is the value which must not be a label
           if parts.length != 2  then
-            ParserV1.addSyntaxError(SyntaxErrorRecord("Bad DEF", tokenisedLine))
+            ParserV1.addSyntaxError(SyntaxErrorRecord("Bad DEF", tokenisedLine.source))
           else if !isLabel(parts(0)) || !isNumeric(parts(1)) then
-            ParserV1.addSyntaxError(SyntaxErrorRecord("DEF should be label number", tokenisedLine))
+            ParserV1.addSyntaxError(SyntaxErrorRecord("DEF should be label number", tokenisedLine.source))
           else
             val value = numericValue(parts(1))
             if 0 to 65535 contains value.get then
               AssemblyData.addLabel(parts(0), value.get)
-              val token = DefToken(parts(0), Array[String](parts(1)))
+              val token = DefToken(parts(0), Array[String](parts(1)), tokenisedLine.source)
               token.value = parts(1)
               tokenisedLine + token
               logger.debug(s"token added: $token")
             else
-              ParserV1.addSyntaxError( SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", tokenisedLine))
+              ParserV1.addSyntaxError( SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", tokenisedLine.source))
           return true
 
         case _ =>
@@ -186,13 +186,13 @@ object TokeniserV1 extends StrictLogging :
           Array[String](values.mkString)
         else
           values.tail
-        InstructionToken(instruction, fields)
+        InstructionToken(instruction, fields, tokenisedLine.source)
       else
-        InstructionToken(instruction, values)
+        InstructionToken(instruction, values, tokenisedLine.source)
 
     if !CpuInstructions.isValidInstruction(instruction) then
-      addSyntaxError(SyntaxErrorRecord(s"Invalid instruction: $instruction", tokenisedLine))
-      NoTokenToken(instruction, text.tail)
+      addSyntaxError(SyntaxErrorRecord(s"Invalid instruction: $instruction", tokenisedLine.source))
+      NoTokenToken(instruction, text.tail, tokenisedLine.source)
     else
       val token = getToken(text.tail)
       tokenisedLine + token

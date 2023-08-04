@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Dialogues.{errorAlert, getNumberSettingDialogue}
 import com.udsl.processor6502.FileIOUtilities.{readConfigFile, selectSourceFileToLoad, writeConfigFile}
 import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, numToString, numericValue, stringToNum, verifyNumberEntry}
+import com.udsl.processor6502.application
 import com.udsl.processor6502.assembler.Assembler
 import com.udsl.processor6502.config.DataSupplier.provideData
 import com.udsl.processor6502.config.{ConfigDatum, DataCollector, DataSupplier}
@@ -100,7 +101,7 @@ class FooterBox() extends GridPane, StrictLogging:
         for stv <- scrolToViewHanlers do
           stv.doScroll(loc)
 
-        com.udsl.processor6502.Main.memoryBox.get.memoryView.delegate.refresh()
+        application.Main.memoryBox.get.memoryView.delegate.refresh()
       }
     }
   }

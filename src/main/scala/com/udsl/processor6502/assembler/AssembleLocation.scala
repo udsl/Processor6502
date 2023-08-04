@@ -13,9 +13,12 @@ import com.udsl.processor6502.cpu.execution.InstructionSize
 object AssembleLocation extends StrictLogging :
   // The point in memery we are assembling to.
   val defaultLocation = 0x200 // Defaults to immediately after the stack
-  var currentLocation: Int = defaultLocation
+  var _currentLocation: Int = defaultLocation
   val memoryAccess: Memory = Memory.apply
 
+  def currentLocation: Int = _currentLocation
+  def currentLocation_= (newVal:Int): Unit = _currentLocation = newVal
+  
   def setAssembleLoc(l: Int): Unit =
     if l > 65535 || l < 0 then
       throw new Exception(s"Bad assembler Location $l ")

@@ -1,10 +1,11 @@
 package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
+import com.udsl.processor6502.assembler.SourceLine
 
 import scala.collection.mutable.ListBuffer
 
-class ParsedLine(val sourceText: String, val lineNumber: Int) extends StrictLogging :
+class ParsedLine(val source: SourceLine) extends StrictLogging :
   val tokens = new ListBuffer[AssemblerToken]()
 
   def +(other: AssemblerToken): tokens.type = {
@@ -12,7 +13,7 @@ class ParsedLine(val sourceText: String, val lineNumber: Int) extends StrictLogg
   }
   
   override def toString: String =
-    var str: String = s"Line number: $lineNumber has ${tokens.length} tokens,  Source: '$sourceText', Tokens: \n"
+    var str: String = s"${source.toString } has ${tokens.length} tokens: \n"
     for t <- tokens do
       str += s"\t$t - ${t.predictedAddressingModes}\n"
     str
@@ -20,5 +21,5 @@ class ParsedLine(val sourceText: String, val lineNumber: Int) extends StrictLogg
 
 
 object ParsedLine:
-  def apply(line: String, lineNumber: Int) : ParsedLine =
-    new ParsedLine(line, lineNumber)
+  def apply(sourceLine: SourceLine) : ParsedLine =
+    new ParsedLine(sourceLine)

@@ -2,17 +2,17 @@ package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.numericValue
+import com.udsl.processor6502.assembler.SourceLine
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.execution.AddressingMode
 
 import scala.collection.mutable.ListBuffer
 
-trait AssemblerToken(val mnemonic: String, val fields: Array[String] ):
+trait AssemblerToken(val mnemonic: String, val fields: Array[String], val sourceLine: SourceLine ):
   val predictedAddressingModes: ListBuffer[AddressingMode] = ListBuffer[AddressingMode]()
   var value: String = ""
-  var source: String = ""
-  
-  def intValue: Int = numericValue(value).getOrElse(-99)
+
+  def intValue: Option[Int] = numericValue(value)
 
   /**
    * Abstrct method must be implemented in classes
@@ -28,33 +28,33 @@ trait AssemblerToken(val mnemonic: String, val fields: Array[String] ):
     for p <- predictions do
       addPrediction(p)
 
-case class BlankLineToken(override val mnemonic: String, override val fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class BlankLineToken(override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine ) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "BlankLineToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
 
-case class CommentLineToken(override val mnemonic: String, override val fields: Array[String] ) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class CommentLineToken(override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine ) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "CommentLineToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class LineComment (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class LineComment (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "LineComment"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class LabelToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class LabelToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "LabelToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class CommandToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class CommandToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "CommandToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class InstructionToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ) with StrictLogging:
+case class InstructionToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ) with StrictLogging:
   override def toString: String =
     "InstructionToken"
   override def addPrediction(prediction: AddressingMode): Unit = {
@@ -64,32 +64,32 @@ case class InstructionToken (override val mnemonic: String, override val fields:
       predictedAddressingModes.addOne(prediction)
   }
 
-case class ClearToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class ClearToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "ClearToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class ReferenceToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class ReferenceToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "ReferenceToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class ValueToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class ValueToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "ValueToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class OriginToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class OriginToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "OriginToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class DefToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class DefToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "DefinitionToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
-case class NoTokenToken (override val mnemonic: String, override val fields: Array[String]) extends AssemblerToken(mnemonic: String, fields: Array[String] ):
+case class NoTokenToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
   override def toString: String =
     "NoTokenToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}

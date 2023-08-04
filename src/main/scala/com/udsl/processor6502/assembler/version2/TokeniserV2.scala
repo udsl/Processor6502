@@ -1,14 +1,14 @@
 package com.udsl.processor6502.assembler.version2
 
 import com.udsl.processor6502.Utilities.isLabel
-import com.udsl.processor6502.assembler.AssemblyData
+import com.udsl.processor6502.assembler.{AssemblyData, SourceLine}
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 
 object TokeniserV2 :
-  def tockenise(text: String, lineNum: Int) : TokenisedLineV2 =
-    val tokenisedLine = TokenisedLineV2.apply(text, lineNum)
+  def tockenise(line: SourceLine) : TokenisedLineV2 =
+    val tokenisedLine = TokenisedLineV2.apply(line)
 
-    val toTokenise = text.trim
+    val toTokenise = line.text.trim
     // Blank line
     if toTokenise == "" then
       tokenisedLine.add(BlankLineTokenV2.apply(Array("")))

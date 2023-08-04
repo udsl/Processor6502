@@ -2,7 +2,7 @@ package com.udsl.processor6502.ui:
 
   import com.typesafe.scalalogging.StrictLogging
   import com.udsl.processor6502.Dialogues.getNumberSettingDialogue
-  import com.udsl.processor6502.Main.stage
+  import com.udsl.processor6502.application.Main.stage
   import com.udsl.processor6502.ui.popups.Executor
   import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, stringToNum}
   import com.udsl.processor6502.config.DataAgentRegistration.registerDataSource

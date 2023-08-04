@@ -3,7 +3,7 @@ package com.udsl.processor6502.assembler.version2
 import com.udsl.processor6502.assembler.version2.{TokenV2, TokenisedLineV2}
 
 class FirstPassResult(val tokenisedLine : TokenisedLineV2) :
-  def lineNumber: Int = tokenisedLine.lineNumber
+  def lineNumber: Int = tokenisedLine.source.lineNum
   def tokens: Seq[TokenV2] = tokenisedLine.tokens
 
 

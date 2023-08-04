@@ -13,11 +13,12 @@ object ParserV1 extends StrictLogging :
 
   def parse(line: String, lineNumber: Int) : ParsedLine =
     logger.debug(s"\nparsing line: $line")
+    val sourceLine = SourceLine(line, lineNumber)
     // determine basic line type
-    val parsedLine = ParsedLine(line, lineNumber)
+    val parsedLine = ParsedLine(sourceLine)
     val token: Option[AssemblerToken] = line.trim match {
-      case "" => Some(BlankLineToken( "", Array[String]()))
-      case a if a.charAt(0) == ';' => Some(CommentLineToken(line.trim, Array[String]()))
+      case "" => Some(BlankLineToken( "", Array[String](), sourceLine))
+      case a if a.charAt(0) == ';' => Some(CommentLineToken(line.trim, Array[String](), sourceLine))
       case _ => None
     }
 
@@ -35,7 +36,7 @@ object ParserV1 extends StrictLogging :
         val fields =
           if commentSplit.length > 1 then
             // we have split so must be a ; and therefore a comment which should be at the end of the line
-            parsedLine + LineComment(commentSplit.tail.mkString, commentSplit)
+            parsedLine + LineComment(commentSplit.tail.mkString, commentSplit, sourceLine)
             commentSplit.head.split("\\s+")
           else
             line.split("\\s+")
@@ -56,7 +57,7 @@ object ParserV1 extends StrictLogging :
     if head != "" && head.substring(head.length - 1) == ":" then
       val labelText = head.substring(0, head.length - 1)
       AssemblyData.addLabel(labelText)
-      val token = LabelToken(labelText, text.tail)
+      val token = LabelToken(labelText, text.tail, parsedLine.source)
       parsedLine + token
       logger.debug(s"token added: $token")
       text.tail
@@ -78,7 +79,7 @@ object ParserV1 extends StrictLogging :
           // the easy way join all back together (the previous split will have removed the spaces)
           // Now we have a value that wne split on , will be have no spaces.
           val values = data.mkString("")
-          val token = CommandToken(head, values.split(","))
+          val token = CommandToken(head, values.split(","), parsedLine.source)
           token.addPrediction(Unknown)
           parsedLine + token
           logger.debug(s"token added: $token")
@@ -89,26 +90,26 @@ object ParserV1 extends StrictLogging :
           if value.length == 1 then
             val str = value(0).trim
             if Utilities.isNumeric(str) then
-              val token = CommandToken(str, value)
+              val token = CommandToken(str, value, parsedLine.source)
               parsedLine + token
               logger.info(s"Origin added from numeric literal $str")
             else if Utilities.isLabel(str) && AssemblyData.labelIsDefined(str) then
               val labelValue = AssemblyData.labelValue(str).toString
-              val token = CommandToken(labelValue, value)
+              val token = CommandToken(labelValue, value, parsedLine.source)
               parsedLine + token
               logger.info(s"Origin added from defined label '$str")
             else
-              addSyntaxError(SyntaxErrorRecord( "Value for ORIG not numeric or defined label", parsedLine))
+              addSyntaxError(SyntaxErrorRecord( "Value for ORIG not numeric or defined label", parsedLine.source))
           else
-            addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", parsedLine))
+            addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", parsedLine.source))
           return true
 
         // clr only valid on the first line
         case "CLR" =>
-          val token = CommandToken(head, text.tail)
+          val token = CommandToken(head, text.tail, parsedLine.source)
           parsedLine + token
-          if parsedLine.lineNumber > 1 then
-            addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", parsedLine))
+          if parsedLine.source.lineNum > 1 then
+            addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", parsedLine.source))
           AssemblyData.clear()
           logger.debug(s"token added: $token")
           return true
@@ -118,19 +119,19 @@ object ParserV1 extends StrictLogging :
           // fist part must be the label being defined
           // 2nd is the value which must not be a label
           if parts.length != 2  then
-            addSyntaxError(SyntaxErrorRecord("Bad DEF", parsedLine))
+            addSyntaxError(SyntaxErrorRecord("Bad DEF", parsedLine.source))
           else if !isLabel(parts(0)) || !isNumeric(parts(1)) then
-            addSyntaxError(SyntaxErrorRecord("DEF should be label number", parsedLine))
+            addSyntaxError(SyntaxErrorRecord("DEF should be label number", parsedLine.source))
           else
             val value = numericValue(parts(1))
             if 0 to 65535 contains value then
               AssemblyData.addLabel(parts(0), value.get)
-              val token = DefToken(parts(0), Array[String](parts(1)))
+              val token = DefToken(parts(0), Array[String](parts(1)), parsedLine.source)
               token.value = parts(1)
               parsedLine + token
               logger.debug(s"token added: $token")
             else
-              addSyntaxError(SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", parsedLine))
+              addSyntaxError(SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", parsedLine.source))
           return true
 
         case _ =>
@@ -149,13 +150,13 @@ object ParserV1 extends StrictLogging :
           Array[String](values.mkString)
         else
           values.tail
-        InstructionToken(instruction, fields)
+        InstructionToken(instruction, fields, parsedLine.source)
       else
-        InstructionToken(instruction, values.tail)
+        InstructionToken(instruction, values.tail, parsedLine.source)
 
     if !CpuInstructions.isValidInstruction(instruction) then
-      addSyntaxError(SyntaxErrorRecord(s"Invalid instruction: $instruction", parsedLine))
-      NoTokenToken(instruction, text.tail)
+      addSyntaxError(SyntaxErrorRecord(s"Invalid instruction: $instruction", parsedLine.source))
+      NoTokenToken(instruction, text.tail, parsedLine.source)
     else
       val token = getTocken(text.tail)
       parsedLine + token

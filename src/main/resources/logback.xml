@@ -8,6 +8,14 @@
         </encoder>
     </appender>
 
+    <appender name="ASSEMBLY-LOG" class="ch.qos.logback.core.FileAppender">
+        <file>assembly.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%date %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <appender name="TOKEN" class="ch.qos.logback.core.FileAppender" >
         <file>Processor6502-token.log</file>
         <append>false</append>
@@ -21,6 +29,10 @@
             <pattern>%msg%n</pattern>
         </encoder>
     </appender>
+
+    <logger name="com.udsl.processor6502.application" level="debug" additivity="true">
+        <appender-ref ref="ASSEMBLY-LOG" />
+    </logger>
 
     <logger name="com.udsl.processor6502.assembler.TokeniserV1" level="debug" additivity="false">
         <appender-ref ref="TOKEN" />

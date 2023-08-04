@@ -2,7 +2,8 @@ package com.udsl.processor6502.ui
 
 import com.udsl.processor6502.Dialogues.confirmation
 import com.udsl.processor6502.FileIOUtilities.{selectSourceFileToLoad, selectSourceFileToSave}
-import com.udsl.processor6502.{Main, Utilities}
+import com.udsl.processor6502.Utilities
+import com.udsl.processor6502.application.Main
 import scalafx.application.JFXApp
 import scalafx.event.EventHandler
 import scalafx.event.EventIncludes.eventClosureWrapperWithZeroParam

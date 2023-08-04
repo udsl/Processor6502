@@ -16,7 +16,8 @@ trait FirstPassV2:
 class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemble6502PassBaseV2 :
 
   override def assemble(tokenisedLine: TokenisedLineV2): FirstPassResult =
-    logger.info(s"Parsing line ${tokenisedLine.lineNumber} ")
+    logger.info(s"Parsing line ${tokenisedLine.source.lineNum} ")
+    logger.debug(tokenisedLine.source.text)
     for (token <- tokenisedLine.tokens)
       token match {
         case BlankLineTokenV2( _ ) => // extends AssemblerTokenType("BlankLineToken")
@@ -33,7 +34,7 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
           assembleInstruction(token.asInstanceOf[InstructionTokenV2])
         case _ => logger.error(s"unsupported case $token")
       }
-    logger.debug(tokenisedLine.sourceText)
+
 
     FirstPassResult(tokenisedLine)
 

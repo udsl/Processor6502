@@ -135,14 +135,9 @@ object Utilities:
       case None => false
     }
 
-  def getConfigValue(lines: List[ConfigDatum], configKey: String): Option[String] = {
+  def getConfigValue(lines: List[ConfigDatum], configKey: String): Option[String] = 
     val datum = lines.find(_.key == configKey)
-
-    datum match {
-      case Some(datum) => Option[String](datum.value)
-      case None => None
-    }
-  }
+    datum.flatMap(v => Option[String](v.value))
   
   def constructSourceLine(mnemonic: String, addrMode: AddressingMode, value: (Int, Int)): String =
     val adr = addrMode match

@@ -3,7 +3,7 @@ package com.udsl.processor6502.cpu
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Dialogues.theStage
 import com.udsl.processor6502.FileIOUtilities.{selectMemoryImageFileToLoad, selectMemoryImageFileToSave}
-import com.udsl.processor6502.Main.stage
+import com.udsl.processor6502.application.Main.stage
 import com.udsl.processor6502.Utilities.{currentFormat, isNumeric, stringToNum}
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation

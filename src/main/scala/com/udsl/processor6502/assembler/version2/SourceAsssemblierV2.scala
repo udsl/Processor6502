@@ -1,8 +1,7 @@
 package com.udsl.processor6502.assembler.version2
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.assembler.{Assembler, AssemblerDataStructureV2}
-
+import com.udsl.processor6502.assembler.{Assembler, AssemblerDataStructureV2, SourceLine}
 import java.io.File
 import scala.io.Source
 import scala.util.Using
@@ -14,7 +13,7 @@ class SourceAsssemblierV2(val source: Iterator[String]) extends Assembler, Stric
     logger.info(s"SourceAsssemblierV2 starting  assembly")
     var lineNum = 1
     for (line <- source)
-      val tokisedLine = TokeniserV2.tockenise(line, lineNum)
+      val tokisedLine = TokeniserV2.tockenise(SourceLine(line, lineNum))
       lineNum += 1
 //      assemblerData.tokenisedList += tokisedLine
 //      Assemble6502FirstPass.assemble(tokisedLine)

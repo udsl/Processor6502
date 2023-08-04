@@ -17,35 +17,35 @@ import com.udsl.processor6502.{NumericFormatType, Utilities}
  */
 object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
 
-  def assemble(tokenisedLine: TokenisedLineV1) : AssemblerToken =
-    logger.info(s"\n\n2nd Pass ${tokenisedLine.lineNumber} ")
-    var res: Option[AssemblerToken] = None
+  def assemble(tokenisedLine: TokenisedLineV1) : Unit =
+    logger.info(s"\n\n2nd Pass ${tokenisedLine.source.lineNum} ")
     for (token <- tokenisedLine.tokens)
-      token match {
-        case BlankLineToken( _, _ ) => // extends AssemblerTokenType("BlankLineToken")
+      token match
+        case BlankLineToken( _, _, _ ) => // extends AssemblerTokenType("BlankLineToken")
           logger.info("\tBlankLineToken ")
-        case CommentLineToken( _, _ ) => // extends AssemblerTokenType("CommentLineToken")
+        case CommentLineToken( _, _, _ ) => // extends AssemblerTokenType("CommentLineToken")
           logger.info("\tCommentLineToken ")
-        case LineComment( _, _ ) => // extends AssemblerTokenType("LineComment")
+        case LineComment( _, _, _ ) => // extends AssemblerTokenType("LineComment")
           logger.info("\tLineComment ")
-        case LabelToken( _, _ ) => // extends AssemblerTokenType("LabelToken")
+        case LabelToken( _, _, _ ) => // extends AssemblerTokenType("LabelToken")
           procesLabel(token)
-        case CommandToken( _, _ ) => // extends AssemblerTokenType("CommandToken")
+        case CommandToken( _, _, _ ) => // extends AssemblerTokenType("CommandToken")
           assembleCommandToken(token)
-        case InstructionToken( _, _ ) => // extends AssemblerTokenType("InstructionToken")
-          res = Some(assembleInstructionToken(token, tokenisedLine))
-        case ClearToken( _, _ ) =>
+        case InstructionToken( _, _, _ ) => // extends AssemblerTokenType("InstructionToken")
+          assembleInstructionToken(token, tokenisedLine)
+        case ClearToken( _, _, _ ) =>
           logger.info("\tClear Token - but we dont clear on 2nd pass!")
-        case OriginToken( _, _ ) =>
+        case OriginToken( _, _, _ ) =>
           processOrigin(token)
-
         case _ => logger.error(s"unsupported case $token")
-      }
-    res.getOrElse(NoTokenToken("", Array[String]()))
 
-  
   def procesLabel(token: AssemblerToken): Unit =
     logger.info("\tprocesLabel ")
+    AssemblyData.labels.get(token.mnemonic) match
+      case Some((v, bool)) =>
+        if bool then {}
+      case _ =>
+        throw new RuntimeException(s"Label not defined in second pass '${token.mnemonic}'")
 
   def assembleCommandToken(t: AssemblerToken): Unit =
     logger.info(s"\tassembleCommandToken '$t' - ")
@@ -53,7 +53,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       case "BYT" => setBytes(t.fields)
       case "WRD" => setWords(t.fields)
       case "ADDR" => setAddresses(t.fields)
-      case _ => logger.info(s"\tInvalid mnemonic ${t.value} ")
+      case _ => logger.info(s"\tInvalid mnemonic ${t.mnemonic} ")
 
   def processOrigin(t: AssemblerToken): Unit =
     Utilities.numericValue(t.mnemonic) match
@@ -74,7 +74,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
           case Some((v, bool)) =>
             v
           case None =>
-            addSyntaxError(SyntaxErrorRecord(s"Undefined label '$operand'", tl))
+            addSyntaxError(SyntaxErrorRecord(s"Undefined label '$operand'", tl.source))
             -1
       })
 
@@ -207,7 +207,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
       logger.info(s"validateAddressingMode - $addrMode")
       addrMode match
         case Invalid =>
-          addSyntaxError(SyntaxErrorRecord(s"Invalid addressing mode for '${t.mnemonic}'", tl))
+          addSyntaxError(SyntaxErrorRecord(s"Invalid addressing mode for '${t.mnemonic}'", tl.source))
         case _ =>
           //TODO
           // Need details of the instruction for the disassembly byte string
@@ -226,7 +226,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
                 setMemoryAddress(value)
               case _ =>
                 throw new Exception(s"SYSTEM ERROR INVALID BYTES FOR INSTRUCTION - ${t.mnemonic}"))
-    NoTokenToken("", Array[String]())
+    NoTokenToken("", Array[String](), SourceLine())
 
   def setBytes(fields: Array[String]): Unit =
     logger.debug("setBytes")

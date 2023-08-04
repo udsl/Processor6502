@@ -16,33 +16,34 @@ import com.udsl.processor6502.cpu.execution.*
 object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 
   def assemble(tokenisedLine: TokenisedLineV1) : Unit =
-    logger.info(s"Parsing line ${tokenisedLine.lineNumber} ")
+    logger.info(s"Parsing line ${tokenisedLine.source.lineNum} ")
+    logger.debug(tokenisedLine.source.text)
     for (token <- tokenisedLine.tokens)
       token match {
-        case BlankLineToken( _, _ ) => // extends AssemblerTokenType("BlankLineToken")
+        case BlankLineToken( _, _, _ ) => // extends AssemblerTokenType("BlankLineToken")
           logger.info("\tBlankLineToken ")
-        case CommentLineToken( _, _ ) => // extends AssemblerTokenType("CommentLineToken")
+        case CommentLineToken( _, _, _ ) => // extends AssemblerTokenType("CommentLineToken")
           assembleCommentLineToken(token)
-        case LineComment( _, _ ) => // extends AssemblerTokenType("LineComment")
+        case LineComment( _, _, _ ) => // extends AssemblerTokenType("LineComment")
           logger.info("\tLineComment ")
-        case LabelToken( _, _ ) => // extends AssemblerTokenType("LabelToken")
+        case LabelToken( _, _, _ ) => // extends AssemblerTokenType("LabelToken")
           procesLabel(token)
-        case CommandToken( _, _ ) => // extends AssemblerTokenType("CommandToken")
+        case CommandToken( _, _, _ ) => // extends AssemblerTokenType("CommandToken")
           assembleCommandToken(token)
-        case InstructionToken( _, _ ) => // extends AssemblerTokenType("InstructionToken")
+        case InstructionToken( _, _, _ ) => // extends AssemblerTokenType("InstructionToken")
           assembleInstructionToken(token)
-        case ClearToken( _, _ ) =>
+        case ClearToken( _, _, _ ) =>
           logger.info("\tClear Token")
           processClear(token, tokenisedLine)
-        case ValueToken( _, _ ) =>
+        case ValueToken( _, _, _ ) =>
           processValues(token)
-        case OriginToken( _, _ ) =>
+        case OriginToken( _, _, _ ) =>
           processOrigin(token)
-        case DefToken( _, _ ) =>
+        case DefToken( _, _, _ ) =>
           processDefinition(token)
         case _ => logger.error(s"unsupported case $token")
       }
-    logger.debug(tokenisedLine.sourceText)
+
 
   def processOrigin(t: AssemblerToken) : Unit =
     logger.info(s"\tOrigin Token '${t.mnemonic}'")
@@ -74,8 +75,8 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
 
   def processClear(t: AssemblerToken, tl: TokenisedLineV1) : Unit =
     logger.info("Processing CLR command")
-    if tl.lineNumber > 1 then
-      val errorText = s"CLR command on line ${tl.lineNumber} - only valid on first line"
+    if tl.source.lineNum > 1 then
+      val errorText = s"CLR command on line ${tl.source.lineNum} - only valid on first line"
       logger.error(errorText)
       throw new Exception(errorText)
 
