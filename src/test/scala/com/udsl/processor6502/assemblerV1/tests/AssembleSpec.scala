@@ -8,19 +8,19 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 
 
-class Token( override val mnemonic: String, override val fields: Array[String] ) extends InstructionToken(mnemonic: String, fields: Array[String] )
+class Token( override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine ) extends InstructionToken(mnemonic: String, fields: Array[String], sourceLine )
 
 object Token:
   def apply(mnemonic: String, fields: Array[String], predictions: List[AddressingMode] ): Token =
-    val ins = new Token(mnemonic, fields)
+    val ins = new Token(mnemonic, fields, SourceLine(s"Testing $mnemonic", 15))
     ins.addPredictions(predictions)
     ins
 
-class AddrBytWrdToken(override val mnemonic: String, override val fields: Array[String]) extends CommandToken( mnemonic: String, fields: Array[String])
+class AddrBytWrdToken(override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends CommandToken( mnemonic: String, fields: Array[String], sourceLine)
 
 object AddrBytWrdToken:
   def apply(mnemonic: String, fields: Array[String]): AddrBytWrdToken =
-    val cmd = new AddrBytWrdToken(mnemonic, fields)
+    val cmd = new AddrBytWrdToken(mnemonic, fields, SourceLine(s"Testing $mnemonic", 23))
     cmd
 
 /**
@@ -69,7 +69,7 @@ class AssembleSpec extends AnyFlatSpec, should.Matchers:
       val srtLoc = AssembleLocation.currentLocation
       var written = 0
       // assemble the token into memory
-      assembleInstructionToken(token, TokenisedLineV1(s"testing $token - $opcode"))
+      assembleInstructionToken(token, TokenisedLineV1(SourceLine(s"testing $token - $opcode", 72)))
       if opcode > -1 then
         // get the values written to memory and verify correct
         val memValue = AssembleLocation.getMemoryByte(srtLoc)
@@ -101,7 +101,7 @@ class AssembleSpec extends AnyFlatSpec, should.Matchers:
       val srtLoc = AssembleLocation.currentLocation
       var written = 0
       // assemble the token into memory
-      assembleInstructionToken(token, TokenisedLineV1(s"testing $token - $opcode"))
+      assembleInstructionToken(token, TokenisedLineV1(SourceLine(s"testing $token - $opcode", 104)))
       if opcode > -1 then
         // get the values written to memory and verify correct
         val memValue = AssembleLocation.getMemoryByte(srtLoc)

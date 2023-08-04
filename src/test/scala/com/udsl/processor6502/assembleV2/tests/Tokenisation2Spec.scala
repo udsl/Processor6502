@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assembleV2.tests
 
 import TestUtilsV2.validateTokens
-import com.udsl.processor6502.assembler.AssemblyData
+import com.udsl.processor6502.assembler.{AssemblyData, SourceLine}
 import com.udsl.processor6502.assembler.version2.{BlankLineTokenV2, CommandTokenV2, CommentLineTokenV2, InstructionTokenV2, LabelTokenV2, LineCommentTokenV2, TokenV2, TokenisedLineV2, TokeniserV2}
 import com.udsl.processor6502.cpu.*
 import org.scalatest.freespec.AnyFreeSpec
@@ -24,12 +24,12 @@ class Tokenisation2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with 
       , (4, "orig $200", 1, List(CommandTokenV2.apply("ORIG", Array("$200"))))
     )
     forAll(expectedResults) { (lineNum, line, tokenCount, tokens) =>
-      val res: TokenisedLineV2 = TokeniserV2.tockenise(line, lineNum)
+      val res: TokenisedLineV2 = TokeniserV2.tockenise(SourceLine(line, lineNum))
       assert(res.tokens.size == tokenCount)
       assert(tokens == res.tokens)
       validateTokens(res.tokens, line)
-      assert(res.sourceText == line)
-      assert(res.lineNumber == lineNum)
+      assert(res.source.text == line)
+      assert(res.source.lineNum == lineNum)
     }
   }
     

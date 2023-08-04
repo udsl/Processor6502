@@ -14,7 +14,15 @@ object TestUtilsV2 :
   def verifyTokens(expected: List[TokenV2], result: List[TokenV2]): Boolean =
     val exp: List[TokenV2] = expected.sortBy(f => f.name)
     val res: List[TokenV2] = result.sortBy(f => f.name)
-    expected.length == result.length && exp.equals(res)  //expected.sortBy(f => f.name) == result.sortBy(f => f.name)
+    //expected.sortBy(f => f.name) == result.sortBy(f => f.name)
+    assert(expected.length == result.length)
+    for (i <- expected.indices) {
+      if !exp(i).equals(res(i)) then
+        println(s"Unexpected result '${res(i)}' expected '${exp(i)}'")
+        return false
+    }
+    true
+
 
 
   def validateTokens(res: Seq[TokenV2], line: String): Unit =

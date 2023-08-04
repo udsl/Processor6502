@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assembleV2.tests
 
 import com.udsl.processor6502.assembler.version2.{Assemble6502FirstPassV2, FirstPassResult, InstructionTokenV2, TokenisedLineV2, TokeniserV2}
-import com.udsl.processor6502.assembler.{AssembleLocation, AssemblyData}
+import com.udsl.processor6502.assembler.{AssembleLocation, AssemblyData, SourceLine}
 import com.udsl.processor6502.cpu.{CpuInstruction, LDA, STA}
 import com.udsl.processor6502.cpu.execution.{Absolute, AddressingMode, Immediate, ZeroPage}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -11,7 +11,7 @@ import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor2, TableFor3}
 
 class Assemble6502FirstPassV2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matchers :
 
-  private def generateTokenData(lineNum: Int, text: String ): TokenisedLineV2 = TokeniserV2.tockenise(text, lineNum)
+  private def generateTokenData(lineNum: Int, text: String ): TokenisedLineV2 = TokeniserV2.tockenise(SourceLine(text, lineNum))
 
   val testData: TableFor3[TokenisedLineV2, CpuInstruction, AddressingMode] = Table(
     ("tokenisedLine", "instruction", "addressingMode")

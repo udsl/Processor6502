@@ -12,7 +12,7 @@ import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor2}
 
 class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matchers :
 
-  val sourceFile = "examples/quicktest2.asm"
+  val sourceFile = "examples/unitquicktest2.asm"
   val sourceLines: List[String] = List(
     "clr; clear all lthe existing data",
     "LDX    #$08",
@@ -21,7 +21,9 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
     "CpX     #$03",
     "bNE decrement",
     "STX $0201",
-    "BRK")
+    "JMP  (jumpto)",
+    "BRK",
+    "jumpto: ADDR 512")
 
   val emptyStringArray = Array.empty[String]
   val expectedResults: TableFor2[Int, List[TokenV2]] = Table(
@@ -33,12 +35,13 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
     , (5, List(InstructionTokenV2.apply("CPX", Array("#$03"))))
     , (6, List(InstructionTokenV2.apply("BNE", Array("decrement"))))
     , (7, List(InstructionTokenV2.apply("STX", Array("$0201"))))
-    , (8, List(InstructionTokenV2.apply("BRK", emptyStringArray)))
+    , (8, List(InstructionTokenV2.apply("JMP", Array("(jumpto)"))))
+    , (9, List(InstructionTokenV2.apply("BRK", emptyStringArray)))
   )
 
   "Given a file name" should "get an assemblier with source lines"  in {
     val asm = AssemblierV2.apply(sourceFile)
-    assert(asm.sourceLines.toList.length == 8)
+    assert(asm.sourceLines.toList.length == 9)
   }
 
   "Given a list of source lines" should 
@@ -55,7 +58,7 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
       val it = res.iterator
       forAll(expectedResults) { (lineNum, tokens:List[TokenV2]) =>
         val r: TokenisedLineV2 = it.next()
-        assert(r.lineNumber == lineNum)
+        assert(r.source.lineNum == lineNum)
         assert(verifyTokens(tokens, r.tokens.toList))
       }
   }
@@ -64,11 +67,11 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
     "return a list of TokenisedLine" in {
     val asm = AssemblierV2.apply(sourceFile)
     val res = asm.tokenisation
-    assert(res.length == 8)
+    assert(res.length == 10)
     val it = res.iterator
     forAll(expectedResults) { (lineNum, tokens: List[TokenV2]) =>
       val r: TokenisedLineV2 = it.next()
-      assert(r.lineNumber == lineNum)
+      assert(r.source.lineNum == lineNum)
       assert(verifyTokens(tokens, r.tokens.toList))
     }
   }
