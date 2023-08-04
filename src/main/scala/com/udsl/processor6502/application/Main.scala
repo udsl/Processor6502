@@ -61,7 +61,7 @@ object Main extends JFXApp3 with StrictLogging {
 
     val mainFocus = (o: javafx.beans.Observable, oldVal: java.lang.Boolean, newVal: java.lang.Boolean) => {
       def foo(o: javafx.beans.Observable, oldVal: java.lang.Boolean, newVal: java.lang.Boolean): Unit =
-        logger.info("Stage getting focus")
+        logger.debug("Stage getting focus")
 
       foo(o, oldVal, newVal)
     }

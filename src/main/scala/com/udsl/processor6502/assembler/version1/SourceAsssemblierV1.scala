@@ -14,7 +14,7 @@ class SourceAsssemblierV1(val source: Iterator[String] ) extends Assembler, Stri
   override def version = 1
 
   def startAssembly(): Unit =
-    logger.info(s"SourceAsssemblierV1 starting assembly")
+    logger.info(s"*** SourceAsssemblierV1 starting assembly ***")
     userLog("Assembly starting")
     // record current assembly location
     val strtloc = AssembleLocation.currentLocation
@@ -47,14 +47,14 @@ object SourceAsssemblierV1:
 
   def apply(source: String): SourceAsssemblierV1 =
     def verboseString =
-      if AppOptions.userLoggingVerbosity > 1 then s"\n$source"
+      if AppOptions.userLoggingVerbosity > 1 then s" with string '$source'"
       else ""
-    userLog(s"Initialising assembler V1 with string$verboseString")
+    userLog(s"Initialising assembler V1$verboseString")
     new SourceAsssemblierV1(sourceIter(source))
 
   def apply(sourceFile: File): SourceAsssemblierV1 =
     def verboseString =
-      if AppOptions.userLoggingVerbosity > 1 then s"\n${sourceFile.getName}"
+      if AppOptions.userLoggingVerbosity > 1 then s" with file '${sourceFile.getName}'"
       else ""
-    userLog(s"Initialising assembler V1 with string$verboseString")
+    userLog(s"Initialising assembler V1$verboseString")
     new SourceAsssemblierV1(sourceIter(sourceFile))

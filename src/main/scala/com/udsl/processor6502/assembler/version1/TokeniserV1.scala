@@ -35,7 +35,7 @@ object TokeniserV1 extends StrictLogging :
   def tokeniseLine(line: SourceLine): TokenisedLineV1 =
     logger.debug(s"\ntokeniseLine: $line")
     // determine basic line type
-    val tokenisedLine = TokenisedLineV1(line)
+    implicit val tokenisedLine: TokenisedLineV1 = TokenisedLineV1(line)
     val token: Option[AssemblerToken] = line.text.trim match {
       case "" => Some(BlankLineToken( "", Array[String](), line))
       case a if a.charAt(0) == ';' => Some(CommentLineToken(line.text.trim, Array[String](), line))
@@ -61,22 +61,17 @@ object TokeniserV1 extends StrictLogging :
           else
             line.text.split("\\s+")
 
-        // command | command value | command value[ ],[ ]value | Label |  Label instruction
-        if !processCommand(fields, tokenisedLine) then
-          val instruction = processLabel(fields, tokenisedLine)
-          if !instruction.isEmpty then
-            val tokenisedInstruction = processInstruction(instruction, tokenisedLine)
-            if tokenisedInstruction.isInstanceOf[InstructionToken] then
-              processValue(tokenisedLine, tokenisedInstruction)
+        // [LABEL:] command | command value | command value[ ],[ ]value | Label |  Label instruction
+        processValue( processInstruction( processCommand( processLabel(fields) ) ) )
 
     tokenisedLine
 
 
-  private def processLabel(text: Array[String], tokenisedLine: TokenisedLineV1 ) : Array[String] =
+  private def processLabel(text: Array[String])(using tokenisedLine: TokenisedLineV1) : Array[String] =
     logger.debug(s"processLabel: ${text.mkString(" ")}")
-    val head = text.head
-    if head != "" && head.substring(head.length - 1) == ":" then
-      val labelText = head.substring(0, head.length - 1)
+    val head: String = text.head
+    if head != "" && head.endsWith(":") then
+      val labelText = head.dropRight(1)
       AssemblyData.addLabel(labelText)
       val token = LabelToken(labelText, text.tail, tokenisedLine.source)
       tokenisedLine + token
@@ -86,23 +81,7 @@ object TokeniserV1 extends StrictLogging :
       text
 
 
-  private def processCommand(text: Array[String], tokenisedLine: TokenisedLineV1 ) : Boolean =
-
-//    def getReferenceToken( value: String ): AssemblerToken =
-//      logger.debug(s"value - $value")
-//      if value == null || value.isEmpty then
-//        SyntaxErrorToken( "Value not given")
-//      else
-//        if isLable(value) then
-//          // is a label so a reference value
-//          ReferenceToken( value)
-//        else
-//          if isNumeric(value) then
-//            ValueToken( value)
-//          else
-//            SyntaxErrorToken( value)
-
-
+  private def processCommand(text: Array[String])(using tokenisedLine: TokenisedLineV1) : Array[String]  =
     logger.debug(s"processCommand: ${text.mkString(" ")}")
     if !text.isEmpty then
       val head = text.head.toUpperCase
@@ -118,7 +97,7 @@ object TokeniserV1 extends StrictLogging :
           token.addPrediction(Unknown)
           tokenisedLine + token
           logger.debug(s"token added: $token")
-          return true
+          return text.tail
 
         case "ORIG" =>
           val value: Array[String] = text.tail
@@ -137,7 +116,7 @@ object TokeniserV1 extends StrictLogging :
               ParserV1.addSyntaxError(SyntaxErrorRecord("Value for ORIG not numeric or defined label", tokenisedLine.source))
           else
             ParserV1.addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", tokenisedLine.source))
-          return true
+          return text.tail
 
         // clr only valid on the first line
         case "CLR" =>
@@ -147,7 +126,7 @@ object TokeniserV1 extends StrictLogging :
             ParserV1.addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", tokenisedLine.source))
           AssemblyData.clear()
           logger.debug(s"token added: $token")
-          return true
+          return text.tail
 
         case "DEF" =>
           val parts: Array[String] = text.tail
@@ -167,15 +146,15 @@ object TokeniserV1 extends StrictLogging :
               logger.debug(s"token added: $token")
             else
               ParserV1.addSyntaxError( SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", tokenisedLine.source))
-          return true
+          return text.tail
 
         case _ =>
       }
-    false
+    text
 
 
 
-  def processInstruction(text: Array[String], tokenisedLine: TokenisedLineV1 ) : AssemblerToken =
+  def processInstruction(text: Array[String])(using tokenisedLine: TokenisedLineV1)  : AssemblerToken =
     logger.debug(s"processInstruction: ${text.mkString(" ")}")
     val instruction = text.head.toUpperCase()
 
@@ -198,33 +177,33 @@ object TokeniserV1 extends StrictLogging :
       tokenisedLine + token
       token
 
-  def processValue(tokenisedLine: TokenisedLineV1, token: AssemblerToken ): Unit = {
+  def processValue(token: AssemblerToken)(using tokenisedLine: TokenisedLineV1) : Unit = {
     logger.debug(s"processValue: ${token.fields.mkString("Array(", ", ", ")")}")
+    if token.isInstanceOf[InstructionToken] then
+      /*
+        Possible values and associated addressing mode:
+            missing - just the instruction them accumilator or implied
+            numeric - starts with a digit or $ for hex - absolute or zero page
+            label - starts with an alph but not ( absolute mode to label
+        imeadiate address mode starts with #
+        indirect addresing mode starts with ( some for of indexed addressing
+        nothing implied addressing
 
-    /*
-      Possible values and associated addressing mode:
-          missing - just the instruction them accumilator or implied
-          numeric - starts with a digit or $ for hex - absolute or zero page
-          label - starts with an alph but not ( absolute mode to label
-      imeadiate address mode starts with #
-      indirect addresing mode starts with ( some for of indexed addressing
-      nothing implied addressing
-
-      At this point we only need to tokenise the addressing mode not work out if its valid.
-    */
-    if token.fields.isEmpty then // Implied addressing mode
-      logger.debug(s"No operand for ${token.mnemonic} Implied?")
-      token.addPredictions(List(Implied))
-    else
-      token.fields.head match {
-        case l if l.toUpperCase == "A"=> token.addPrediction(Accumulator)
-        case a if a.charAt(0) == '#' => token.addPrediction(Immediate)
-        case b if b.charAt(0) == '$' => token.addPredictions(getPredictions(b.substring(1), 16))
-        case c if c.charAt(0).isDigit => token.addPredictions(getPredictions(c, 10))
-        case d if d.charAt(0).isLetter => token.addPredictions(getLabelPredictions(d))
-        case e if e.charAt(0) == '(' => token.addPredictions(getIndirectPredictions(e))
-        case _ => token.addPrediction(Unknown)
-      }
+        At this point we only need to tokenise the addressing mode not work out if its valid.
+      */
+      if token.fields.isEmpty then // Implied addressing mode
+        logger.debug(s"No operand for ${token.mnemonic} Implied?")
+        token.addPredictions(List(Implied))
+      else
+        token.fields.head match {
+          case l if l.toUpperCase == "A"=> token.addPrediction(Accumulator)
+          case a if a.charAt(0) == '#' => token.addPrediction(Immediate)
+          case b if b.charAt(0) == '$' => token.addPredictions(getPredictions(b.substring(1), 16))
+          case c if c.charAt(0).isDigit => token.addPredictions(getPredictions(c, 10))
+          case d if d.charAt(0).isLetter => token.addPredictions(getLabelPredictions(d))
+          case e if e.charAt(0) == '(' => token.addPredictions(getIndirectPredictions(e))
+          case _ => token.addPrediction(Unknown)
+        }
   }
 
   /**

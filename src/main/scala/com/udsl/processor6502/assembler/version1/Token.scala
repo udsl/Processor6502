@@ -10,8 +10,11 @@ import scala.collection.mutable.ListBuffer
 
 trait AssemblerToken(val mnemonic: String, val fields: Array[String], val sourceLine: SourceLine ):
   val predictedAddressingModes: ListBuffer[AddressingMode] = ListBuffer[AddressingMode]()
-  var value: String = ""
+  var _value: String = ""
 
+  def value: String = _value
+  def value_=(newValue: String): Unit = _value = newValue
+  
   def intValue: Option[Int] = numericValue(value)
 
   /**

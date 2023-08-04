@@ -30,7 +30,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.udsl.processor6502.application" level="debug" additivity="true">
+    <logger name="com.udsl.processor6502.application.Main" level="info" additivity="true">
         <appender-ref ref="ASSEMBLY-LOG" />
     </logger>
 

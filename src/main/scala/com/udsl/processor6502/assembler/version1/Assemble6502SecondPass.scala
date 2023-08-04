@@ -43,7 +43,7 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502PassBase :
     logger.info("\tprocesLabel ")
     AssemblyData.labels.get(token.mnemonic) match
       case Some((v, bool)) =>
-        if bool then {}
+        if bool then token.value = v.toString
       case _ =>
         throw new RuntimeException(s"Label not defined in second pass '${token.mnemonic}'")
 
