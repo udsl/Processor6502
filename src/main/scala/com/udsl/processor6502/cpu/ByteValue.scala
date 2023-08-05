@@ -7,14 +7,8 @@ import com.udsl.processor6502.Utilities.{numToByteString, numToString}
 import com.udsl.processor6502.cpu.execution.NotApplicable
 import scalafx.beans.property.IntegerProperty
 
-class ByteValue {
-    val _byte: IntegerProperty = IntegerProperty(0)
+class ByteValue(val value: Option[Int]) {
     private var disassembly: String = ""
-
-    def byte_= (b: Int): Unit = {
-        validate( b )
-        _byte.value = b
-    }
 
     def setDisassembly(theDisassembly: String): Unit =
         disassembly = theDisassembly.trim
@@ -23,18 +17,19 @@ class ByteValue {
         disassembly
 
     def asSignedValue:Int =
-        ByteValue.asSignedValue(_byte.value)
+        ByteValue.asSignedValue(byte)
           
-    def byte: Int = _byte.value
+    def byte: Int = value.getOrElse(throw Exception("Byte not set"))
 
     override def toString: String =
-        numToString( _byte.value)
+        numToString(byte)
 
     def toDisplayString(format: NumericFormatType): String =
-      numToByteString(byte, format)
+      value.map( f => numToByteString(f, format) ).getOrElse("UNSET")
+
 
     def asSerilisedString: String =
-       s"${_byte.value}:$disassembly"
+       s"$byte:$disassembly"
 
 }
 
@@ -42,22 +37,18 @@ object ByteValue {
     val MAX_BYTE_VALUE: Int = 255
     val MIN_BYTE_VALUE: Int = -127
 
-    def apply: ByteValue = {
-        val b_ = new ByteValue
-        b_.byte = 0
-        b_
-    }
+    def apply: ByteValue =
+        new ByteValue(None)
 
     // Byte values are signed or unsigned but always stored as unsigned
-    def apply(b: Int): ByteValue = {
-        val b_ = new ByteValue
-        b_.byte = if b < 0 then b & 255 else b
-        b_
-    }
+    def apply(b: Int): ByteValue =
+        validate(b)
+        new ByteValue( if b < 0 then Some(b & 255) else Some(b) )
+
 
     def apply(b: Int, theDisassembly: String): ByteValue = {
-        val b_ = new ByteValue
-        b_.byte = if b < 0 then b & 255 else b
+        validate(b)
+        val b_ = new ByteValue( if b < 0 then Some(b & 255) else Some(b) )
         b_.setDisassembly(theDisassembly)
         b_
     }

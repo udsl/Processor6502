@@ -221,7 +221,7 @@ class MemoryCell(private val location: Address, private var value: ByteValue = B
     s"$location:$value"
 
   def getValue: Int =
-    value._byte.value
+    value.byte
 
   def getLocation: Int =
     location.addr
