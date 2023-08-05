@@ -360,7 +360,7 @@ object CpuInstructions :
   private def isEmpty(str: String) = str == null || str.trim.isEmpty
   private def isNotEmpty(str: String) = !isEmpty(str)
   def isValidInstruction(ins: String): Boolean =
-    isNotEmpty(ins) && validInstructions.exists(a => a.name().equalsIgnoreCase(ins))
+    isNotEmpty(ins) && validInstructions.exists(a => a.name().equalsIgnoreCase(ins.toUpperCase()))
 
   def getInstruction(ins: String): Option[CpuInstruction] =
     validInstructions.find(a => a.name().equals(ins.toUpperCase()))

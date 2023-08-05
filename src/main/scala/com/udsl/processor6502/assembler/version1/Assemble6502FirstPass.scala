@@ -13,7 +13,7 @@ import com.udsl.processor6502.cpu.execution.*
 /**
  * Fisrt pass object - as one would expect does the first pass which resolves any forward references.
  */
-object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
+object Assemble6502FirstPass extends StrictLogging, Assemble6502BasePass :
 
   def assemble(tokenisedLine: TokenisedLineV1) : Unit =
     logger.info(s"Parsing line ${tokenisedLine.source.lineNum} ")
@@ -90,7 +90,7 @@ object Assemble6502FirstPass extends StrictLogging, Assemble6502PassBase :
       if t.predictedAddressingModes.length == 1 then
         // only 1 predicted mode so lets assume it right :)
         // Now we can move the program counter along by the instruction size.
-        AssembleLocation.addInstructionSize(t.predictedAddressingModes.head.size)
+        AssembleLocation.addInstructionSize(t.predictedAddressingModes.head.size.bytes)
 
 
   /**

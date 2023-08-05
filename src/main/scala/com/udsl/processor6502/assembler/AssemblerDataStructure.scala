@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 
 trait AssemblerDataStructure extends StrictLogging :
   var _currentLine: Int = 1
-  
+
   def currentLine: Int =
     val cl = _currentLine
     _currentLine += 1

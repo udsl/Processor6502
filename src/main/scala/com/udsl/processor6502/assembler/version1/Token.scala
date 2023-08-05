@@ -6,8 +6,10 @@ import com.udsl.processor6502.assembler.SourceLine
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.execution.AddressingMode
 
+import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.mutable.ListBuffer
 
+@uncheckedVariance
 trait AssemblerToken(val mnemonic: String, val fields: Array[String], val sourceLine: SourceLine ):
   val predictedAddressingModes: ListBuffer[AddressingMode] = ListBuffer[AddressingMode]()
   var _value: String = ""

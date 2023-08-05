@@ -31,7 +31,7 @@ case object Immediate extends AddressingMode("Immediate", InstructionSize(2))
 
 case object Implied extends AddressingMode("Implied", InstructionSize(1))
 
-case object Indirect extends AddressingMode("Indirect", InstructionSize(2))
+case object Indirect extends AddressingMode("Indirect", InstructionSize(3))
 
 case object IndirectX extends AddressingMode("Indirect,X", InstructionSize(2))
 

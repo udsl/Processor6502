@@ -3,8 +3,8 @@ package com.udsl.processor6502.assembler.version1
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
-import com.udsl.processor6502.assembler.*
-import ParserV1.addSyntaxError
+import com.udsl.processor6502.assembler.{AssemblyData, *}
+import com.udsl.processor6502.assembler.AssemblyData.*
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.execution.*
 
@@ -72,7 +72,7 @@ object TokeniserV1 extends StrictLogging :
     val head: String = text.head
     if head != "" && head.endsWith(":") then
       val labelText = head.dropRight(1)
-      AssemblyData.addLabel(labelText)
+      addLabel(labelText)
       val token = LabelToken(labelText, text.tail, tokenisedLine.source)
       tokenisedLine + token
       logger.debug(s"token added: $token")
@@ -107,15 +107,15 @@ object TokeniserV1 extends StrictLogging :
               val token = OriginToken(str, value, tokenisedLine.source)
               tokenisedLine + token
               logger.info(s"Origin added from numeric literal $str")
-            else if Utilities.isLabel(str) && AssemblyData.labelIsDefined(str) then
+            else if Utilities.isLabel(str) && labelIsDefined(str) then
               val labelValue = AssemblyData.labelValue(str).toString
               val token = OriginToken(labelValue, value, tokenisedLine.source)
               tokenisedLine + token
               logger.info(s"Origin added from defined label '$str")
             else
-              ParserV1.addSyntaxError(SyntaxErrorRecord("Value for ORIG not numeric or defined label", tokenisedLine.source))
+              AssemblyData.addSyntaxError(SyntaxErrorRecord("Value for ORIG not numeric or defined label", tokenisedLine.source))
           else
-            ParserV1.addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", tokenisedLine.source))
+            AssemblyData.addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", tokenisedLine.source))
           return text.tail
 
         // clr only valid on the first line
@@ -123,8 +123,8 @@ object TokeniserV1 extends StrictLogging :
           val token = ClearToken(head, text.tail, tokenisedLine.source)
           tokenisedLine + token
           if tokenisedLine.source.lineNum > 1 then
-            ParserV1.addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", tokenisedLine.source))
-          AssemblyData.clear()
+            AssemblyData.addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", tokenisedLine.source))
+          clear()
           logger.debug(s"token added: $token")
           return text.tail
 
@@ -133,19 +133,19 @@ object TokeniserV1 extends StrictLogging :
           // fist part must be the label being defined
           // 2nd is the value which must not be a label
           if parts.length != 2  then
-            ParserV1.addSyntaxError(SyntaxErrorRecord("Bad DEF", tokenisedLine.source))
+            AssemblyData.addSyntaxError(SyntaxErrorRecord("Bad DEF", tokenisedLine.source))
           else if !isLabel(parts(0)) || !isNumeric(parts(1)) then
-            ParserV1.addSyntaxError(SyntaxErrorRecord("DEF should be label number", tokenisedLine.source))
+            addSyntaxError(SyntaxErrorRecord("DEF should be label number", tokenisedLine.source))
           else
             val value = numericValue(parts(1))
             if 0 to 65535 contains value.get then
-              AssemblyData.addLabel(parts(0), value.get)
+              addLabel(parts(0), value.get)
               val token = DefToken(parts(0), Array[String](parts(1)), tokenisedLine.source)
               token.value = parts(1)
               tokenisedLine + token
               logger.debug(s"token added: $token")
             else
-              ParserV1.addSyntaxError( SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", tokenisedLine.source))
+              addSyntaxError( SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", tokenisedLine.source))
           return text.tail
 
         case _ =>

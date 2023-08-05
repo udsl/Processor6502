@@ -12,11 +12,16 @@ object AssemblyData extends StrictLogging:
   // labels defined in a base object so they common others
   // this enables multi file assembly
   val labels = new mutable.HashMap[String, (Int, Boolean)]()
-  var references = new ListBuffer[Reference]()
+  val references = new ListBuffer[Reference]()
+  val sytaxErrorList: ListBuffer[SyntaxErrorRecord] = new ListBuffer[SyntaxErrorRecord]()
 
+  def addSyntaxError(syn: SyntaxErrorRecord): Unit =
+    sytaxErrorList.appended(syn)
+    
   def clear(): Unit =
     labels.clear()
     references.clear()
+    sytaxErrorList.clear()
 
   def isValid: (Boolean, List[String]) =
     if AssemblyData.labels.isEmpty && AssemblyData.references.nonEmpty then
