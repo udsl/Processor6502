@@ -504,7 +504,7 @@ object ExecutionSpecData:
     ("LSR 1.2 Accumulator", InsSourceData(0x4A, InsData(0x7F, AccValueWithCarry(0x3F))), AccSrResData(0x1F, Carry.mask), memVoidResult()),
     ("LSR 1.3 Accumulator", InsSourceData(0x4A, InsData(0x7F, AccValueWithCarry(0x3E))), AccResData(0x1F), memVoidResult()),
     ("LSR 2.0 ZeroPage 0x66 -> 0x3F", InsSourceData(0x46, InsData(0x66, ZeroValues())), SrResData(Carry.mask), memByteResult(0x66, 0x1F)),
-    ("LSR 3.0 ZeroPageX 100 + IX = 9 contains 0", InsSourceData(0x56, InsData(0x64, IxValue(9))), IxSrResData(9, Zero.mask), memByteResult(0x109, 0)),
+    ("LSR 3.0 ZeroPageX 100 + IX = 9 contains 0", InsSourceData(0x56, InsData(0x64, IxValue(9))), IxSrResData(9, Zero.mask), memByteResult(0x6D, 0)),
     ("LSR 4.0 Absolute absTestLocation2 contains 0xF0", InsSourceData(0x4E, InsData(absTestLocation2, ZeroValues())), ZeroResData(), memByteResult(absTestLocation2, 0x78)),
     ("LSR 5.0 AbsoluteX absTestLocation2 IX = 1 contains 0x3F", InsSourceData(0x5E, InsData(absTestLocation2, IxValue(1))), IxSrResData(1, Carry.mask), memByteResult(absTestLocation2 + 1, 0x1F))
   )

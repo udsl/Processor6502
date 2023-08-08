@@ -212,8 +212,9 @@ object Assemble6502SecondPass extends StrictLogging, Assemble6502BasePass :
           //TODO
           // Need details of the instruction for the disassembly byte string
           // mnemonic, value and number bytes
+          
           CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode).foreach((opcode, bytes) =>
-            setMemoryByte(opcode, constructSourceLine(t.mnemonic, addrMode, Operand(value / 256, value % 256)))
+            setMemoryByte(opcode, constructSourceLine(t.mnemonic, addrMode, value))
             // now we know how long the instruction should be
             bytes match
               case 1 =>

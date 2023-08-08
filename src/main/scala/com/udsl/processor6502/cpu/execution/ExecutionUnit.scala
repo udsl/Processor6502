@@ -29,7 +29,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
 
   Processor.pc._addr.onChange {
     (_, oldValue, newValue) => {
-      if !isTesting() then
+      if !isTesting then
         logger.debug(s"PC subscription fired - $oldValue, $newValue")
         loadInstructionAtPc()
         notifyObservers()
@@ -156,7 +156,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     opcode match
       case NULL_Instruction => "NULL instruction"
       case _ =>
-        constructSourceLine(opcode.mnemonic, opcode.addressingMode, operand)
+        constructSourceLine(opcode.mnemonic, opcode.addressingMode, operand.asAddressValue)
 
   def valueFromAddressOrOperand(): Int =
     val effectiveAddr = ExecutionUnit.getEffectiveAddress(opcode, operand)

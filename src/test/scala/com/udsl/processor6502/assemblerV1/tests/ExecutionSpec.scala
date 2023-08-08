@@ -303,12 +303,13 @@ object ExecutionSpec extends StrictLogging:
     AssembleLocation.setMemoryByte(0xF0) // 104 (0x68) = 240
     AssembleLocation.setMemoryByte(0x40) // 105 (0x69) = 64
     AssembleLocation.setMemoryByte(0xC0) // 106 (0x6A) = 192
-    AssembleLocation.setMemoryAddress(absTestLocation2) // 107 (0x6B) pointer to absTestLocation2
-    // 109 (0x6D) onwards
+    AssembleLocation.setMemoryAddress(absTestLocation2) // [107 (0x6B) + 108 (0x6C)] pointer to absTestLocation2
+    // 109 (0x6D) = 0, 110 (0x6E) = 1, 111 (0x6F) = 2, 112 (0x70) = 3, 113 (0x71) = 4
     for x <- List(0,1,2,3,4) do
       AssembleLocation.setMemoryByte(x)
 
     AssembleLocation.setAssembleLoc(0x638) // set current location to 0x638
+    // 1592 (0x638) = 1, 1593 (0x639) = 2, 1594 (0x63A) = 3, 1595 (0x63B) = 4
     for x <- List(1,2,3,4, 0x80) do
       AssembleLocation.setMemoryByte(x)
 

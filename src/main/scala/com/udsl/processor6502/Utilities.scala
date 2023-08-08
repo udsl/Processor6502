@@ -139,17 +139,17 @@ object Utilities:
     val datum = lines.find(_.key == configKey)
     datum.flatMap(v => Option[String](v.value))
   
-  def constructSourceLine(mnemonic: String, addrMode: AddressingMode, value: Operand): String =
+  def constructSourceLine(mnemonic: String, addrMode: AddressingMode, value: Int): String =
     val adr = addrMode match
       case Accumulator => "A"
       case Implied  => " "
-      case Immediate => s"#${numToByteString(value.asByte, NumericFormatType.HEX) }"
+      case Immediate => s"#${numToByteString(value, NumericFormatType.HEX) }"
       case ZeroPage
-           | Relative => s"${numToByteString(value.asByte, NumericFormatType.HEX) }"
-      case ZeroPageX => s"${numToByteString(value.asByte, NumericFormatType.HEX)}, X"
-      case ZeroPageY => s"${numToByteString(value.asByte, NumericFormatType.HEX)}, Y"
-      case IndirectX => s"(${numToByteString(value.asByte, NumericFormatType.HEX)}, X)"
-      case IndirectY => s"(${numToByteString(value.asByte, NumericFormatType.HEX)}), Y)"
+           | Relative => s"${numToByteString(value, NumericFormatType.HEX) }"
+      case ZeroPageX => s"${numToByteString(value, NumericFormatType.HEX)}, X"
+      case ZeroPageY => s"${numToByteString(value, NumericFormatType.HEX)}, Y"
+      case IndirectX => s"(${numToByteString(value, NumericFormatType.HEX)}, X)"
+      case IndirectY => s"(${numToByteString(value, NumericFormatType.HEX)}), Y)"
       case Absolute => s"${numToWordString(value, NumericFormatType.HEX)}"
       case Indirect => s"(${numToWordString(value, NumericFormatType.HEX)})"
       case AbsoluteX => s"${numToWordString(value, NumericFormatType.HEX)}, X"

@@ -18,7 +18,7 @@ package com.udsl.processor6502.cpu:
     }
 
     def update(): Unit =
-      if isTesting() then
+      if isTesting then
           performUpdate()
       else
         Platform.runLater(() -> {
