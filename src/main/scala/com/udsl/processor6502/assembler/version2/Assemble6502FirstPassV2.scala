@@ -3,7 +3,7 @@ package com.udsl.processor6502.assembler.version2
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
-import com.udsl.processor6502.assembler.{AssembleLocation, AssemblyData}
+import com.udsl.processor6502.assembler.{AssembleLocation, AssemblePass, AssemblyData}
 import com.udsl.processor6502.cpu.CpuInstruction
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.CpuInstructions
@@ -13,7 +13,7 @@ import com.udsl.processor6502.cpu.CpuInstructions
 trait FirstPassV2:
   def assemble(TokenisedLineV2: TokenisedLineV2): FirstPassResult
 
-class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemble6502PassBaseV2 :
+class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with AssemblePass :
 
   override def assemble(tokenisedLine: TokenisedLineV2): FirstPassResult =
     logger.info(s"Parsing line ${tokenisedLine.source.lineNum} ")

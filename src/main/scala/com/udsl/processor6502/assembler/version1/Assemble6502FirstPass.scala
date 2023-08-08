@@ -13,7 +13,7 @@ import com.udsl.processor6502.cpu.execution.*
 /**
  * Fisrt pass object - as one would expect does the first pass which resolves any forward references.
  */
-object Assemble6502FirstPass extends StrictLogging, Assemble6502BasePass :
+object Assemble6502FirstPass extends StrictLogging, AssemblePass :
 
   def assemble(tokenisedLine: TokenisedLineV1) : Unit =
     logger.info(s"Parsing line ${tokenisedLine.source.lineNum} ")

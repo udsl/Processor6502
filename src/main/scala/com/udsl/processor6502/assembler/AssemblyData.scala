@@ -3,8 +3,6 @@ package com.udsl.processor6502.assembler
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import com.udsl.processor6502.assembler.AssemblyData.logger
-import com.udsl.processor6502.assembler.version1.Reference
-
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -12,7 +10,6 @@ object AssemblyData extends StrictLogging:
   // labels defined in a base object so they common others
   // this enables multi file assembly
   val labels = new mutable.HashMap[String, (Int, Boolean)]()
-  val references = new ListBuffer[Reference]()
   val sytaxErrorList: ListBuffer[SyntaxErrorRecord] = new ListBuffer[SyntaxErrorRecord]()
 
   def addSyntaxError(syn: SyntaxErrorRecord): Unit =
@@ -20,28 +17,13 @@ object AssemblyData extends StrictLogging:
     
   def clear(): Unit =
     labels.clear()
-    references.clear()
     sytaxErrorList.clear()
 
   def isValid: (Boolean, List[String]) =
-    if AssemblyData.labels.isEmpty && AssemblyData.references.nonEmpty then
-      val error = "No labels but have references!"
-      logger.debug(error)
-      return (false, List(error))
-    var result = true
     val errors = ListBuffer[String]()
-    for r <- AssemblyData.references do
-      if !AssemblyData.labels.contains(r.name) then
-        val error = s"Reference ${r.name} not found in labels."
-        logger.debug(error)
-        errors.addOne(error)
-        result = false
-    logger.debug(s"Have ${AssemblyData.labels.size} labels and ${AssemblyData.references.size} references")
-    (result, errors.toList)
+    logger.debug(s"Have ${AssemblyData.labels.size} labels")
+    (true, errors.toList)
 
-  def addReference(ref: String): Unit =
-    logger.debug(s"addReference to '$ref' @ $currentLocation")
-    references += Reference(ref);
 
   def addLabel(name: String): Unit =
     labels.get(name) match
@@ -80,23 +62,6 @@ object AssemblyData extends StrictLogging:
           labels.addOne(name, (value, true))
       case None =>
         labels.addOne(name, (value, true))
-
-  def printRefs(): Unit =
-    logger.info(
-      """
-        |*****************
-        |*               *
-        |*   References  *
-        |*               *
-        |*****************
-        |
-        |""".stripMargin )
-    if references.isEmpty then
-      logger.info("No references made")
-    else
-      for ref <- references do
-        logger.info(s"Have reference to ${ref.name} value ${ref.value}")
-
 
   def printLabels(): Unit =
     logger.info(
