@@ -221,7 +221,11 @@ class MemoryCell(private val location: Address, private var value: ByteValue = B
     s"$location:$value"
 
   def getValue: Int =
-    value.byte
+    try {
+      value.byte
+    }
+    catch
+      case e: Exception => throw RuntimeException(s"Memory access violation address ${location.addr} not initialised")
 
   def getLocation: Int =
     location.addr

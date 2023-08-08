@@ -155,7 +155,9 @@ object TokeniserV1 extends StrictLogging :
 
 
   def processInstruction(text: Array[String])(using tokenisedLine: TokenisedLineV1)  : AssemblerToken =
-    logger.debug(s"processInstruction: ${text.mkString(" ")}")
+    logger.debug(s"processInstruction: '${text.mkString(" ")}'")
+    if text.isEmpty then return NoTokenToken("", text, tokenisedLine.source)
+    
     val instruction = text.head.toUpperCase()
 
     def getToken(values: Array[String]): AssemblerToken =

@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 import com.udsl.processor6502.Utilities.numToString
 import com.udsl.processor6502.cpu.Memory.{INTERRUPT_VECTOR, NMI_VECTOR, RESET_VECTOR}
-import com.udsl.processor6502.cpu.execution.Opcode
+import com.udsl.processor6502.cpu.execution.{Opcode, Operand}
 import scalafx.collections.ObservableBuffer
 
 import java.io.{BufferedWriter, FileWriter}
@@ -54,8 +54,11 @@ object Processor extends StrictLogging:
   def getNextInstruction: Opcode =
     Opcode(memoryAccess.getMemoryByte(pc.addr))
 
-  def getNextInstructionOperand: (Int, Int) =
-    (memoryAccess.getMemoryByte(pc.addr + 1), memoryAccess.getMemoryByte(pc.addr + 2))
+  def getNextInstructionOperand(size: Int): Operand =
+    size match
+      case 0 => Operand()
+      case 1 => Operand(memoryAccess.getMemoryByte(pc.addr + 1))
+      case 2 => Operand(memoryAccess.getMemoryByte(pc.addr + 1), memoryAccess.getMemoryByte(pc.addr + 2))
 
   /**
    * Used to update executor on PC change

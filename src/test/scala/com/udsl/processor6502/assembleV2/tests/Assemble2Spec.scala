@@ -2,17 +2,17 @@ package com.udsl.processor6502.assembleV2.tests
 
 import TestUtilsV2.verifyTokens
 import com.udsl.processor6502.assembler.version1.CommandToken
-import com.udsl.processor6502.assembler.version2.{AssemblierV2, CommandTokenV2, InstructionTokenV2, LabelTokenV2, LineCommentTokenV2, TokenV2, TokenisedLineV2}
+import com.udsl.processor6502.assembler.version2.{SourceAssemblerV2, CommandTokenV2, InstructionTokenV2, LabelTokenV2, LineCommentTokenV2, TokenV2, TokenisedLineV2}
 import com.udsl.processor6502.cpu.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor2}
-
+import java.io.File
 
 class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matchers :
 
-  val sourceFile = "examples/unitquicktest2.asm"
+  val sourceFile: File = File("examples/test/unitquicktest2.asm")
   val sourceLines: List[String] = List(
     "clr; clear all lthe existing data",
     "LDX    #$08",
@@ -40,21 +40,21 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
   )
 
   "Given a file name" should "get an assemblier with source lines"  in {
-    val asm = AssemblierV2.apply(sourceFile)
-    assert(asm.sourceLines.toList.length == 9)
+    val asm = SourceAssemblerV2.apply(sourceFile)
+    assert(asm.sourceLines.toList.length == 10)
   }
 
   "Given a list of source lines" should 
     "get an assemblier with same source lines"  in {
-      val asm = AssemblierV2.apply(sourceLines)
-      assert(asm.sourceLines.toList.length == 8)
+      val asm = SourceAssemblerV2.apply(sourceLines)
+      assert(asm.sourceLines.toList.length == 10)
     }
 
   "With those lines tokenisation" should
     "return a list of TokenisedLine" in {
-      val asm = AssemblierV2.apply(sourceLines)
+      val asm = SourceAssemblerV2.apply(sourceLines)
       val res = asm.tokenisation
-      assert(res.length == 8)
+      assert(res.length == 10)
       val it = res.iterator
       forAll(expectedResults) { (lineNum, tokens:List[TokenV2]) =>
         val r: TokenisedLineV2 = it.next()
@@ -65,7 +65,7 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
 
   "With those lines read from file tokenisation" should
     "return a list of TokenisedLine" in {
-    val asm = AssemblierV2.apply(sourceFile)
+    val asm = SourceAssemblerV2.apply(sourceFile)
     val res = asm.tokenisation
     assert(res.length == 10)
     val it = res.iterator

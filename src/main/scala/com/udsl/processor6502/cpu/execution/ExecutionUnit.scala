@@ -24,7 +24,7 @@ import scalafx.event.subscriptions.Subscription
 
 class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
   var opcode: Opcode = NULL_Instruction
-  var operand: (Int, Int) = (0, 0)
+  var operand: Operand = Operand()
   var runMode: RunMode = RunMode.Stopped
 
   Processor.pc._addr.onChange {
@@ -50,7 +50,8 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
 
   def loadInstructionAtPc(): Unit =
     opcode = Processor.getNextInstruction
-    operand = getNextInstructionOperand
+    // get operand a byte or a word
+    operand = getNextInstructionOperand(opcode.addressingMode.size.bytes - 1)
 
   def startSlow(): Unit =
     runMode = RunMode.RunningSlow
@@ -84,7 +85,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     def notImplemented() : Unit =
       logger.info(s"${opcode.mnemonic} execution not implemented")
 
-    logger.info(s"Executing instruction ${opcode.mnemonic}, operand (${byteToHexString(operand._1)}, ${byteToHexString(operand._2)}) at ${Processor.pc.addr} Accumulator ${Processor.ac}")
+    logger.info(s"Executing instruction ${opcode.mnemonic}, operand (${operand.lowByteAsHexStr}, ${operand.hiByteAsHexStr} ) at ${Processor.pc.addr} Accumulator ${Processor.ac}")
     val execute: Unit =  opcode.mnemonic match {
       case "ADC" => executeADC()
       case "AND" => executeAND()
@@ -162,7 +163,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
 
   def updateZeroNegativeFlags(from: Int): Unit =
     Processor.sr.updateFlag(StatusFlag.Zero, from == 0)
@@ -185,7 +186,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
     val accVal = Processor.ac.value
     val carry = if Processor.sr.testFlag(Carry) then 1 else 0
     val writeBack = accVal + value + carry
@@ -214,7 +215,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
     val writeBack = Processor.ac.value & value
     updateZeroNegativeFlags(writeBack)
     Processor.ac.value = writeBack
@@ -286,7 +287,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
       Processor.pc.inc(opcode.addressingMode.size.bytes)
 
   def executeBRK(): Unit =
-      if (runMode == RunMode.Running || runMode == RunMode.RunningSlow) && operand._1 == 0 then
+      if (runMode == RunMode.Running || runMode == RunMode.RunningSlow) && operand.asByte == 0 then
         runMode = RunMode.SingleStepping
         // This is a break to single step, need to step over to the next instruction
         Processor.pc.inc(2)
@@ -345,7 +346,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
     doTheCompare(value, Processor.ac.value)
     Processor.pc.inc(opcode.addressingMode.size.bytes)
 
@@ -354,7 +355,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
     doTheCompare(value, Processor.ix.value)
     Processor.pc.inc(opcode.addressingMode.size.bytes)
 
@@ -363,7 +364,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
     doTheCompare(value, Processor.iy.value)
     Processor.pc.inc(opcode.addressingMode.size.bytes)
 
@@ -405,7 +406,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
     val res =  Processor.ac.value ^ value
     updateZeroNegativeFlags(res)
     Processor.ac.value = res
@@ -460,7 +461,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
     updateZeroNegativeFlags(value)
     Processor.ix.ebr = value
     Processor.pc.inc(opcode.addressingMode.size.bytes)
@@ -470,7 +471,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
     Processor.sr.updateFlag(StatusFlag.Negative, (value & 0x80)  > 0)
     Processor.sr.updateFlag(StatusFlag.Zero, value == 0)
     Processor.iy.ebr = value
@@ -500,7 +501,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
       memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-      operand._1
+      operand.asByte
     val writeBack = Processor.ac.value | value
     updateZeroNegativeFlags(writeBack)
     Processor.ac.value = writeBack
@@ -582,7 +583,7 @@ class ExecutionUnit() extends StrictLogging, Subject[ExecutionUnit]:
     val value = if effectiveAddr.hasValue then
        memoryAccess.getMemoryByte(effectiveAddr.address)
     else // has no effective address so it must be immediate
-       operand._1
+       operand.asByte
     val accVal = Processor.ac.value
     val borrow = if Processor.sr.testFlag(Carry) then 0 else 1
     val writeBack = accVal - value - borrow
@@ -664,10 +665,10 @@ object ExecutionUnit:
     testing = true
     new ExecutionUnit()
     
-  def isTesting(): Boolean =
+  def isTesting: Boolean =
     testing
 
-  def getEffectiveAddress(opcode: Opcode, operand: (Int, Int)): EffectiveAddress =
+  def getEffectiveAddress(opcode: Opcode, operand: Operand): EffectiveAddress =
     def readEffectiveAddress(addr: Int): Int =
       memoryAccess.getMemoryByte(addr) + (memoryAccess.getMemoryByte(addr + 1) * 256)
 
@@ -675,36 +676,35 @@ object ExecutionUnit:
     case Accumulator | Implied | Immediate =>
       EffectiveAddress()
     case ZeroPage =>
-      EffectiveAddress(operand._1, true)
+      EffectiveAddress(operand.asByte, true)
     case Relative =>
       // Relative addressing is used in branch instructions
       // In a real 6502 the PC is incremented on each memory fetch
       // so the PC will be pointing to the instruction following
       // As we dont inc the PC till the instruction is completed we get..
       // convert offset to signed byte value
-      val offset = ByteValue.asSignedValue(operand._1.toByte)
+      val offset = ByteValue.asSignedValue(operand.asSignedByte)
       // then add 2 that the real 6502 would have added on each fetch
       EffectiveAddress(Processor.pc.addr + offset + 2)
     case ZeroPageX =>
       //TODO verify what happens when $LL + index exceeds 255
-      EffectiveAddress(operand._1 + Processor.ix.ebr)
+      EffectiveAddress(operand.asByte + Processor.ix.ebr)
     case ZeroPageY =>
       //TODO verify what happens when $LL + index exceeds 255
-      EffectiveAddress(operand._1 + Processor.iy.ebr)
+      EffectiveAddress(operand.asByte + Processor.iy.ebr)
     case IndirectX =>
-      val zeroPageAddr = operand._1 + Processor.ix.ebr
+      val zeroPageAddr = operand.asByte + Processor.ix.ebr
       EffectiveAddress(readEffectiveAddress(zeroPageAddr))
     case IndirectY =>
-      EffectiveAddress(readEffectiveAddress(operand._1) + Processor.iy.ebr)
+      EffectiveAddress(readEffectiveAddress(operand.asByte) + Processor.iy.ebr)
     case Indirect =>
-      val indirectAddr = operand._1 + (operand._2 * 256)
-      EffectiveAddress(readEffectiveAddress(indirectAddr))
+      EffectiveAddress(readEffectiveAddress(operand.asAddressValue))
     case Absolute =>
-      EffectiveAddress(operand._1 + (operand._2 * 256), true)
+      EffectiveAddress(operand.asAddressValue, true)
     case AbsoluteX =>
-      EffectiveAddress(operand._1 + (operand._2 * 256) + Processor.ix.ebr)
+      EffectiveAddress(operand.asAddressValue + Processor.ix.ebr)
     case AbsoluteY =>
-      EffectiveAddress(operand._1 + (operand._2 * 256) + Processor.iy.ebr)
+      EffectiveAddress(operand.asAddressValue + Processor.iy.ebr)
     case _ =>
       EffectiveAddress()
 

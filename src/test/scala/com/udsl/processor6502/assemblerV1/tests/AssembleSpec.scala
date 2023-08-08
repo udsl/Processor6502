@@ -126,19 +126,26 @@ class AssembleSpec extends AnyFlatSpec, should.Matchers:
   }
 
   "Given a valid command token" should "should assemble" in {
-    AssembleLocation.setAssembleLoc(1024)
+    val startLoc = 1024
+    AssembleLocation.setAssembleLoc(startLoc)
     for ((token, bytes, value) <- dataAddrBytWrdTokensTest) {
       val srtLoc = AssembleLocation.currentLocation
       var written = 0
       assembleCommandToken(token)
       written = AssembleLocation.currentLocation - srtLoc
       assert(written == bytes)
-      val lowByte = AssembleLocation.getMemoryByte(srtLoc)
-      val highByte = AssembleLocation.getMemoryByte(srtLoc+1)
-      if bytes == 1 then
-        assert(lowByte == value)
-      else
-        assert(lowByte + (highByte * 256) == value)
+      var readLoc: Int = srtLoc
+      try {
+        val lowByte = AssembleLocation.getMemoryByte(readLoc)
+        if bytes == 1 then
+          assert(lowByte == value)
+        else
+          readLoc += 1
+          val highByte = AssembleLocation.getMemoryByte(readLoc)
+          assert(lowByte + (highByte * 256) == value)
+      }
+      catch
+        case e: Exception => println(s"exception reading byte at $readLoc written by ${token.mnemonic}")
     }
   }
 

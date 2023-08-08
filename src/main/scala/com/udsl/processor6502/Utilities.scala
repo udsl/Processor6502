@@ -3,16 +3,16 @@ package com.udsl.processor6502
 import com.udsl.processor6502.*
 import com.udsl.processor6502.Dialogues.theStage
 import com.udsl.processor6502.assembler.TokenisedLine
-import com.udsl.processor6502.cpu.*
-import com.udsl.processor6502.ui.NumericFormatSelector.numericFormatProperty
 import com.udsl.processor6502.config.ConfigDatum
-import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Invalid, NotApplicable, Relative, Unknown, ZeroPage, ZeroPageX, ZeroPageY}
+import com.udsl.processor6502.cpu.*
+import com.udsl.processor6502.cpu.execution.{Accumulator, *}
+import com.udsl.processor6502.ui.NumericFormatSelector.numericFormatProperty
 import scalafx.application.Platform
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType, TextInputDialog}
 import scalafx.scene.input.{KeyEvent, MouseEvent}
 import scalafx.stage.FileChooser
-
+import com.udsl.processor6502.cpu.execution.Operand
 import java.io.*
 import scala.annotation.tailrec
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -75,8 +75,8 @@ object Utilities:
         s"${v.substring(v.length - 3)}"
     }
 
-  def numToWordString(value: (Int, Int), format: NumericFormatType): String =
-    numToWordString(value._1 + (value._2 * 256), format)
+  def numToWordString(value: Operand, format: NumericFormatType): String =
+    numToWordString(value.asAddressValue, format)
     
   def numToWordString(value: Int, format: NumericFormatType): String =
     format match {
@@ -139,17 +139,17 @@ object Utilities:
     val datum = lines.find(_.key == configKey)
     datum.flatMap(v => Option[String](v.value))
   
-  def constructSourceLine(mnemonic: String, addrMode: AddressingMode, value: (Int, Int)): String =
+  def constructSourceLine(mnemonic: String, addrMode: AddressingMode, value: Operand): String =
     val adr = addrMode match
       case Accumulator => "A"
       case Implied  => " "
-      case Immediate => s"#${numToByteString(value._1, NumericFormatType.HEX) }"
+      case Immediate => s"#${numToByteString(value.asByte, NumericFormatType.HEX) }"
       case ZeroPage
-           | Relative => s"${numToByteString(value._1, NumericFormatType.HEX) }"
-      case ZeroPageX => s"${numToByteString(value._1, NumericFormatType.HEX)}, X"
-      case ZeroPageY => s"${numToByteString(value._1, NumericFormatType.HEX)}, Y"
-      case IndirectX => s"(${numToByteString(value._1, NumericFormatType.HEX)}, X)"
-      case IndirectY => s"(${numToByteString(value._1, NumericFormatType.HEX)}), Y)"
+           | Relative => s"${numToByteString(value.asByte, NumericFormatType.HEX) }"
+      case ZeroPageX => s"${numToByteString(value.asByte, NumericFormatType.HEX)}, X"
+      case ZeroPageY => s"${numToByteString(value.asByte, NumericFormatType.HEX)}, Y"
+      case IndirectX => s"(${numToByteString(value.asByte, NumericFormatType.HEX)}, X)"
+      case IndirectY => s"(${numToByteString(value.asByte, NumericFormatType.HEX)}), Y)"
       case Absolute => s"${numToWordString(value, NumericFormatType.HEX)}"
       case Indirect => s"(${numToWordString(value, NumericFormatType.HEX)})"
       case AbsoluteX => s"${numToWordString(value, NumericFormatType.HEX)}, X"

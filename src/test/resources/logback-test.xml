@@ -22,13 +22,13 @@
         </encoder>
     </appender>
 
-    <logger name="com.udsl.processor6502.assembler.TokeniserV1$" level="info">
+    <logger name="com.udsl.processor6502.assembler.TokeniserV1$" level="debug">
         <appender-ref ref="TOKEN" />
     </logger>
 
     <logger name="com.udsl.processor6502.assembler.AssembleLocation$" level="info"/>
 
-    <root level="info">
+    <root level="DEBUG">
         <appender-ref ref="FILE" />
         <appender-ref ref="STDOUT" />
     </root>
