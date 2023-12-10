@@ -11,6 +11,7 @@ import com.udsl.processor6502.config.{ConfigDatum, DataCollector, DataSupplier}
 import com.udsl.processor6502.disassembler.Disassembler
 import com.udsl.processor6502.ui.NumericFormatSelector.updateDisplay
 import com.udsl.processor6502.ui.popups.OptionEditor
+import com.udsl.processor6502.ui.popups.OptionEditor.optionEditor
 import scalafx.application.Platform
 import scalafx.geometry.{Insets, Pos}
 import scalafx.print.PaperSource.Main
@@ -48,7 +49,7 @@ class FooterBox() extends GridPane, StrictLogging:
 
   val optionItem: MenuItem = new MenuItem("Edit Options") {
     onAction = _ => {
-      logger.info(s"Options Button pressed")
+      logger.info(s"Options Button pressed {}", optionEditor)
       OptionEditor.showOptionEditor()
     }
   }

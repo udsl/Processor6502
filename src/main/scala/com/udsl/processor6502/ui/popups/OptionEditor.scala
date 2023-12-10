@@ -9,7 +9,7 @@ import com.udsl.processor6502.ui.popups.OptionEditor.isCurrent
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
 import scalafx.scene.control.{Button, Label, RadioButton, TextArea, ToggleGroup}
-import scalafx.scene.layout.{BorderPane, HBox}
+import scalafx.scene.layout.{BorderPane, HBox, StackPane, VBox}
 import scalafx.stage.{Modality, Stage}
 
 import scala.collection.mutable.ListBuffer
@@ -33,13 +33,14 @@ class OptionEditor extends Stage {
 
       val sourceProcessorVersionGroup = new ToggleGroup()
 
-      val optionsBox: HBox = new HBox {
+      val optionsBox: HBox = new HBox:
+        padding = Insets(0, 0, 0, 20)
         children = List(
           new RadioButton {
             minWidth = 100
             maxWidth = 200
             maxHeight = 50
-            text = "Original"
+            text = "Original Assm"
             id = "Original"
             toggleGroup = sourceProcessorVersionGroup
             selected = isCurrent(id.get())
@@ -48,29 +49,44 @@ class OptionEditor extends Stage {
             minWidth = 100
             maxWidth = 200
             maxHeight = 50
-            text = "New"
+            text = "New Assm"
             id = "New"
             toggleGroup = sourceProcessorVersionGroup
             selected = isCurrent(id.get())
           })
-      }
+
+      val assmVersionSel: StackPane = new StackPane:
+        maxHeight(200)
+        minHeight(200)
+        padding = Insets(20, 0, 20, 0)
+        val titleBox: HBox = new HBox {
+          val title: Label = new Label {
+            text = "  Choose Assemblier Version  "
+            style = "-fx-font-weight:bold; -fx-content-display: top; -fx-background-color: white; -fx-translate-y: -10; -fx-translate-x: 8;"
+          }
+          prefWidth = title.prefWidth.value
+          children = List(title)
+        }
+
+        val bg: VBox = new VBox {
+          style = "-fx-content-display: top; -fx-border-insets: -2 -2 -2 -2; -fx-background-color: white; -fx-border-color: grey; -fx-border-width: 2;"
+        }
+
+        children = List(bg, titleBox, optionsBox)
+
 
       def update(id: String): Unit =
         id match
           case "New" => assmVersion = 2
           case "Original" => assmVersion = 1
 
-      sourceProcessorVersionGroup.selectedToggle.onChange {
-        val rb = sourceProcessorVersionGroup.selectedToggle.get.asInstanceOf[javafx.scene.control.ToggleButton]
-        if (rb != null) update(rb.getId)
-      }
-
       val buttons: HBox = new HBox {
         val saveButton: Button = new Button {
-          text = "Save"
+          text = "Update"
           onAction = _ => {
-            if writeConfigData() then
-              close()
+            val rb = sourceProcessorVersionGroup.selectedToggle.get.asInstanceOf[javafx.scene.control.ToggleButton]
+            if (rb != null) update(rb.getId)
+            close()
           }
         }
 
@@ -85,10 +101,10 @@ class OptionEditor extends Stage {
 
       new BorderPane {
         maxWidth = 400
-        maxHeight = 300
+        maxHeight = 400
         padding = Insets(20)
         top = titleBox
-        center = optionsBox
+        center = assmVersionSel
         bottom = buttons
       }
     }
