@@ -25,7 +25,7 @@ object Assembler extends StrictLogging :
     assmVersion match
       case 1 => SourceAsssemblierV1.apply(sourceFile)
       case 2 => SourceAssemblerV2.apply(sourceFile)
-      case _ => throw new NotImplementedError(s"Invadid assemblier version $assmVersion")
+      case _ => throw new NotImplementedError(s"Invadid assembler version $assmVersion")
 
   private def sourceList(source: String): List[String] =
     Using(Source.fromString(source)) { reader =>
@@ -38,5 +38,5 @@ object Assembler extends StrictLogging :
     assmVersion match
       case 1 => SourceAsssemblierV1.apply(source)
       case 2 => SourceAssemblerV2.apply(sourceList(source))
-      case _ => throw new NotImplementedError(s"Invadid assemblier version $assmVersion")
+      case _ => throw new NotImplementedError(s"Invadid assembler version $assmVersion")
 

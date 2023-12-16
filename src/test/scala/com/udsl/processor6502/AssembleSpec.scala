@@ -13,13 +13,13 @@ class AssembleSpec extends AnyFlatSpec, should.Matchers {
 
   val fileToTestAgainst = "C:\\Users\\iango\\IdeaProjects\\Processor6502\\examples\\test\\unitquicktest.asm"
 
-  "Given a configuration for V1 " should " start the V1 assemblier" in {
+  "Given a configuration for V1 " should " start the V1 assembler" in {
     AppOptions.assmVersion = 1
     val assem = Assembler.apply(File(fileToTestAgainst))
     assert(assem.version == 1)
   }
 
-  "Given a configuration for V2 " should " start the V2 assemblier" in {
+  "Given a configuration for V2 " should " start the V2 assembler" in {
     AppOptions.assmVersion = 2
     val assem = Assembler.apply(File(fileToTestAgainst))
     assert(assem.version == 2)

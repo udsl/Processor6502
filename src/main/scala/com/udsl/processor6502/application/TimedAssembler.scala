@@ -2,17 +2,20 @@ package com.udsl.processor6502.application
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.FileIOUtilities.selectSourceFileToLoad
-import com.udsl.processor6502.application.Main.{memoryBox, stage}
-import com.udsl.processor6502.assembler.Assembler
+import com.udsl.processor6502.application.Main.stage
+import com.udsl.processor6502.application.TimedAssembler.textArea
+import com.udsl.processor6502.assembler.{Assembler, AssemblyData, SyntaxErrorListener, SyntaxErrorRecord}
 import com.udsl.processor6502.config.AppOptions.assmVersion
-import com.udsl.processor6502.ui.NumericFormatSelector
 import scalafx.application.JFXApp3
 import scalafx.geometry.Insets
 import scalafx.scene.Scene
 import scalafx.scene.control.{Button, Label, RadioButton, TextArea, ToggleGroup}
 import scalafx.scene.layout.{BorderPane, HBox, VBox}
 
-object TimedAssemblier  extends JFXApp3 with StrictLogging {
+import scala.io.Source
+import scala.language.postfixOps
+
+object TimedAssembler extends JFXApp3 with StrictLogging{
 
   def currentVersion: Int = assmVersion
 
@@ -25,7 +28,7 @@ object TimedAssemblier  extends JFXApp3 with StrictLogging {
   def setCurrentVersion(): Unit =
     assmVersion = currentVersion
 
-  var textArea: TextArea = null
+  var textArea: TextArea = _
 
   def logProgress(message: String): Unit =
     logger.info(message)
@@ -34,7 +37,7 @@ object TimedAssemblier  extends JFXApp3 with StrictLogging {
 
   def start(): Unit = {
     stage = new JFXApp3.PrimaryStage {
-      title.value = "Timed 6502 Assemblier"
+      title.value = "Timed 6502 assembler"
       width = 500
       height = 400
       resizable = false
@@ -42,9 +45,10 @@ object TimedAssemblier  extends JFXApp3 with StrictLogging {
       scene = new Scene {
         root = {
           val titleBox: VBox = new VBox {
-            val label: Label = new Label("Assemblier version")
+            val label: Label = new Label("Assembler Version")
 
             val selBox: HBox = new HBox {
+              padding = Insets(8, 0, 0,8)
               val sourceProcessorVersionGroup = new ToggleGroup()
 
               val v1Assm: RadioButton = new RadioButton {
@@ -73,22 +77,32 @@ object TimedAssemblier  extends JFXApp3 with StrictLogging {
             children = List(label, selBox)
           }
 
-          val output: HBox = new HBox {
-            padding = Insets(20, 20, 20, 20)
-            textArea = new TextArea()
-            children = List(textArea)
+          val sourceBox: VBox = new VBox {
+            padding = Insets(20,0, 20, 0)
+            val label: Label = new Label("Results")
+
+            val output: HBox = new HBox {
+              padding = Insets(20)
+              textArea = new TextArea()
+              children = List(textArea)
+            }
+
+            children = List(label, output)
           }
 
+          AssemblyData.addSyntaxErrorListener(new Listener(textArea))
+
           val buttons: HBox = new HBox {
-            val saveButton: Button = new Button {
+            val assembleButton: Button = new Button {
               text = "Assemble"
               onAction = _ => {
                 // Do assemble using selected version
                 setCurrentVersion()
                 selectSourceFileToLoad match
                   case Some(file) =>
+                    textArea.text = ""
                     logProgress(s"Assembling file\n$file")
-                    logProgress(s"Using assemblier version $currentVersion")
+                    logProgress(s"Using assembler version $currentVersion")
                     val startTime = System.currentTimeMillis()
                     val sfa: Assembler = Assembler.apply(file)
                     val fileLoaded = System.currentTimeMillis()
@@ -107,7 +121,7 @@ object TimedAssemblier  extends JFXApp3 with StrictLogging {
                 close()
               }
             }
-            children = List(saveButton, cancelButton)
+            children = List(assembleButton, cancelButton)
           }
 
           new BorderPane {
@@ -115,7 +129,7 @@ object TimedAssemblier  extends JFXApp3 with StrictLogging {
             maxHeight = 400
             padding = Insets(20)
             top = titleBox
-            center = output
+            center = sourceBox
             bottom = buttons
           }
         }
@@ -123,3 +137,10 @@ object TimedAssemblier  extends JFXApp3 with StrictLogging {
     }
   }
 }
+
+class Listener(val textArea: TextArea) extends SyntaxErrorListener:
+  def doNotify(syn: SyntaxErrorRecord): Unit =
+    val txt = textArea.text.value + "\n" + syn.errorMessage +" line " + syn.lineNumber
+    textArea.text.value = txt
+
+

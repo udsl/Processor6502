@@ -47,6 +47,8 @@ case object ZeroPageY extends AddressingMode("ZeroPage,Y", InstructionSize(2))
 
 case object Invalid extends AddressingMode("Invalid", InstructionSize())
 
+case object BadOperand extends AddressingMode("BadOperand", InstructionSize())
+
 case object Unknown extends AddressingMode("Unknown", InstructionSize(1))
 
 case class NotApplicable(errorText: String) extends AddressingMode("NotApplicable", InstructionSize(0)) with HasErrorText():

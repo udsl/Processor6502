@@ -61,7 +61,7 @@ class OptionEditor extends Stage {
         padding = Insets(20, 0, 20, 0)
         val titleBox: HBox = new HBox {
           val title: Label = new Label {
-            text = "  Choose Assemblier Version  "
+            text = "  Choose assembler Version  "
             style = "-fx-font-weight:bold; -fx-content-display: top; -fx-background-color: white; -fx-translate-y: -10; -fx-translate-x: 8;"
           }
           prefWidth = title.prefWidth.value

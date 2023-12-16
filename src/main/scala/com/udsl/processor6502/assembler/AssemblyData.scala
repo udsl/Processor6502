@@ -11,10 +11,17 @@ object AssemblyData extends StrictLogging:
   // this enables multi file assembly
   val labels = new mutable.HashMap[String, (Int, Boolean)]()
   val sytaxErrorList: ListBuffer[SyntaxErrorRecord] = new ListBuffer[SyntaxErrorRecord]()
+  var syntaxErrorListeners: List[SyntaxErrorListener] = List()
 
   def addSyntaxError(syn: SyntaxErrorRecord): Unit =
+    for(listener: SyntaxErrorListener <- syntaxErrorListeners)
+      listener.doNotify(syn)
     sytaxErrorList.appended(syn)
-    
+
+  def addSyntaxErrorListener(listener: SyntaxErrorListener): Unit =
+    if !syntaxErrorListeners.contains(listener) then
+      syntaxErrorListeners = syntaxErrorListeners.appended(listener)
+
   def clear(): Unit =
     labels.clear()
     sytaxErrorList.clear()

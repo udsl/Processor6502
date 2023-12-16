@@ -38,7 +38,12 @@ object TokeniserV1 extends StrictLogging :
     implicit val tokenisedLine: TokenisedLineV1 = TokenisedLineV1(line)
     val token: Option[AssemblerToken] = line.text.trim match {
       case "" => Some(BlankLineToken( "", Array[String](), line))
-      case a if a.charAt(0) == ';' => Some(CommentLineToken(line.text.trim, Array[String](), line))
+      case a if a.charAt(0) == ';' =>
+        line.removeComment()
+        Some(CommentLineToken(line.text.trim, Array[String](), line))
+      case b if b.contains(";")  =>
+        line.removeComment()
+        Some(LineComment(line.text.trim, Array[String](), line))
       case _ => None
     }
 
@@ -46,20 +51,11 @@ object TokeniserV1 extends StrictLogging :
       case Some(_) =>
         tokenisedLine + token.get
       case _ =>
-        // if we have a NoneCommentLine then must be either
-        //       nememic operand + optional comment
-        //       or a command
-        // lets deal with the potential comment first
-        val commentSplit = line.text.trim.split(";")
-
-        // remove comment and split rest of line into fields using space though these this could also be seperated by ,
-        val fields =
-          if commentSplit.length > 1 then
-            // we have split so must be a ; and therefore a comment which should be at the end of the line
-            tokenisedLine + LineComment(commentSplit.tail.mkString, commentSplit, line)
-            commentSplit.head.split("\\s+")
-          else
-            line.text.split("\\s+")
+        // if we have a NoneCommentLine (a line without a comment) then must be one of these formats where [is optional]
+        //       [label:] nenemic operand
+        //       command [command params]
+        // split line into fields using space though these could also be seperated by ,
+        val fields = line.text.split("\\s+")
 
         // [LABEL:] command | command value | command value[ ],[ ]value | Label |  Label instruction
         processValue( processInstruction( processCommand( processLabel(fields) ) ) )
@@ -81,6 +77,12 @@ object TokeniserV1 extends StrictLogging :
       text
 
 
+  /**
+   * Method to process commands into tokens
+   * @param text fields of the line
+   * @param tokenisedLine we add additional tokens to this
+   * @return returns the list of fields left to process otherwise empty list
+   */
   private def processCommand(text: Array[String])(using tokenisedLine: TokenisedLineV1) : Array[String]  =
     logger.debug(s"processCommand: ${text.mkString(" ")}")
     if !text.isEmpty then
@@ -97,7 +99,7 @@ object TokeniserV1 extends StrictLogging :
           token.addPrediction(Unknown)
           tokenisedLine + token
           logger.debug(s"token added: $token")
-          return text.tail
+          return Array.empty
 
         case "ORIG" =>
           val value: Array[String] = text.tail
@@ -116,7 +118,7 @@ object TokeniserV1 extends StrictLogging :
               AssemblyData.addSyntaxError(SyntaxErrorRecord("Value for ORIG not numeric or defined label", tokenisedLine.source))
           else
             AssemblyData.addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", tokenisedLine.source))
-          return text.tail
+          return Array.empty
 
         // clr only valid on the first line
         case "CLR" =>
@@ -126,7 +128,7 @@ object TokeniserV1 extends StrictLogging :
             AssemblyData.addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", tokenisedLine.source))
           clear()
           logger.debug(s"token added: $token")
-          return text.tail
+          return Array.empty
 
         case "DEF" =>
           val parts: Array[String] = text.tail
@@ -146,7 +148,7 @@ object TokeniserV1 extends StrictLogging :
               logger.debug(s"token added: $token")
             else
               addSyntaxError( SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", tokenisedLine.source))
-          return text.tail
+          return Array.empty
 
         case _ =>
       }

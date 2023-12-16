@@ -69,21 +69,29 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
 
   def assembleInstructionToken(t: AssemblerToken, tl: TokenisedLineV1): AssemblerToken =
     def getValue(operand: String): Option[Int] =
-      numericValue(operand).orElse({
-        AssemblyData.labels.get(operand) match
+      val res = numericValue(operand)
+      // If not a numeric value check for a lable
+      if res.nonEmpty then
+        res
+      else
+        AssemblyData.labels.get(operand) match {
           case Some((v, bool)) =>
             Some(v)
           case None =>
             addSyntaxError(SyntaxErrorRecord(s"Undefined label '$operand'", tl.source))
             None
-      })
+        }
+
 
     def getOperandValue: Int =
       val operand = if t.fields.head.charAt(0) == '#' then
         t.fields.head.substring(1)
       else
         t.fields.head
-      getValue(operand).get
+      logger.info(s"operand: '$operand'")
+      val res = getValue(operand)
+      if res.isDefined then res.get
+      else throw new AssemblerException("BAD OPERAND", operand)
 
     def getIndexedOperandValue: Int =
       val operand = t.fields.head.substring(0, t.fields.head.length - 2)
@@ -97,9 +105,9 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
     def getIndirectOperandValue: Int =
       val op1 = t.fields.head.substring(1) // remove the leading '('
       if op1.toUpperCase.endsWith("),Y")  || op1.toUpperCase.endsWith(",X)") then // (indirect),Y or (indirect,X)
-        getValue(op1.substring(0, op1.length() - 3)).get
+        getValue(op1.substring(0, op1.length() - 3)).getOrElse(-99)
       else
-        getValue(op1.substring(0, op1.length() - 1)).get // (indirect)
+        getValue(op1.substring(0, op1.length() - 1)).getOrElse(-99) // (indirect)
 
     def validateAddressingMode: (AddressingMode, Int) =
       val sortedModes = t.predictedAddressingModes.sortBy(addrMode => addrMode.size.bytes)
@@ -115,11 +123,19 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
                 res = Some( (Immediate, operandValue) )
 
           case Absolute | ZeroPage =>
-            val operandValue = getOperandValue
-            if operandValue > 255 && CpuInstructions.isAddressingModeValid(t.mnemonic, Absolute) then
-              res = Some(  (Absolute, operandValue) )
-            else
-              res = Some(  (ZeroPage, operandValue) )
+            try {
+              val operandValue = getOperandValue
+
+              if operandValue > 255 && CpuInstructions.isAddressingModeValid(t.mnemonic, Absolute) then
+                res = Some((Absolute, operandValue))
+              else
+                res = Some((ZeroPage, operandValue))
+            }
+            catch
+              case ae: AssemblerException => 
+                res = Some((BadOperand, -99))
+                logger.info(s"assembler exception - ${ae.getMessage} - ${ae.getReason}")
+              
 
           case ZeroPageX =>
             if t.fields.head.toUpperCase.contains(",X") && CpuInstructions.isAddressingModeValid(t.mnemonic, ZeroPageX) then
@@ -212,21 +228,26 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
           //TODO
           // Need details of the instruction for the disassembly byte string
           // mnemonic, value and number bytes
-
-          CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode).foreach((opcode, bytes) =>
-            setMemoryByte(opcode, constructSourceLine(t.mnemonic, addrMode, value))
-            // now we know how long the instruction should be
-            bytes match
-              case 1 =>
+          try {
+            CpuInstructions.getInstructionOpcodeBytes(t.mnemonic, addrMode).foreach((opcode, bytes) =>
+              setMemoryByte(opcode, constructSourceLine(t.mnemonic, addrMode, value))
+              // now we know how long the instruction should be
+              bytes match
+                case 1 =>
                 // implied or accumulator so nothing else to write.
-              case 2 =>
-                // Imeadiate, zeropage etc
-                setMemoryByte(value)
-              case 3 =>
-                // Absolute
-                setMemoryAddress(value)
-              case _ =>
-                throw new Exception(s"SYSTEM ERROR INVALID BYTES FOR INSTRUCTION - ${t.mnemonic}"))
+                case 2 =>
+                  // Imeadiate, zeropage etc
+                  setMemoryByte(value)
+                case 3 =>
+                  // Absolute
+                  setMemoryAddress(value)
+                case _ =>
+                  throw new Exception(s"SYSTEM ERROR INVALID BYTES FOR INSTRUCTION - ${t.mnemonic}"))
+          }
+          catch
+            case ae: AssemblerException => 
+              logger.info(s"Assembler exception - ${ae.getMessage} - ${ae.getReason}")
+            
     NoTokenToken("", Array[String](), SourceLine())
 
   def setBytes(fields: Array[String]): Unit =

@@ -39,13 +39,13 @@ class Assemble2Spec extends AnyFlatSpec with TableDrivenPropertyChecks with Matc
     , (9, List(InstructionTokenV2.apply("BRK", emptyStringArray)))
   )
 
-  "Given a file name" should "get an assemblier with source lines"  in {
+  "Given a file name" should "get an assembler with source lines"  in {
     val asm = SourceAssemblerV2.apply(sourceFile)
     assert(asm.sourceLines.toList.length == 10)
   }
 
   "Given a list of source lines" should 
-    "get an assemblier with same source lines"  in {
+    "get an assembler with same source lines"  in {
       val asm = SourceAssemblerV2.apply(sourceLines)
       assert(asm.sourceLines.toList.length == 10)
     }

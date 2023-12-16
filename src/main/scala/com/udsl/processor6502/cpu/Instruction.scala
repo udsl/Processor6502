@@ -1,5 +1,6 @@
 package com.udsl.processor6502.cpu
 
+import com.udsl.processor6502.assembler.AssemblerException
 import com.udsl.processor6502.cpu.execution.{Absolute, AbsoluteX, AbsoluteY, Accumulator, AddressingMode, Immediate, Implied, Indirect, IndirectX, IndirectY, Invalid, Relative, ZeroPage, ZeroPageX, ZeroPageY}
 import com.udsl.processor6502.cpu.InsData
 
@@ -18,10 +19,11 @@ trait CpuInstruction(val code: Map[AddressingMode, InsData] ):
     
   def hasAddressingMode(addrMode: AddressingMode): Boolean =
     code.contains(addrMode)
+  
   def opcode(addrMode: AddressingMode): Option[Int] =
     code.get(addrMode) match {
       case Some(v) => Some(v.opcode)
-      case _ => None
+      case _ => throw new AssemblerException(s"Invalid addressing mode ${addrMode.mode}", s"Invalid for ${name()}")
     }
 
   def bytes(addrMode: AddressingMode): Option[Int] =

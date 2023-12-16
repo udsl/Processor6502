@@ -26,7 +26,7 @@ object AddrBytWrdToken:
 /**
  * List of tubles (token, opcode, loByte, hiByte) test data
  * where token is mnemonic, fields, predictions - produced by tokeniser
- *    mnemonic: the instruction or assemblier command text
+ *    mnemonic: the instruction or assembler command text
  *    fields: the space seperated 'parameters' to the instruction - that is the none comment part of an assembly source line
  *    predictions: the list of possible addressing modes
  * opcode is the HEX value the token should compile to
