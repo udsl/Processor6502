@@ -1,27 +1,24 @@
 package com.udsl.processor6502.assembleV2.tests
 
-import com.udsl.processor6502.assembler.AssemblyData
+import com.udsl.processor6502.assembler.{AssemblyData, LabelFactory}
 import com.udsl.processor6502.assembler.version2.{BlankLineTokenV2, CommandTokenV2, CommentLineTokenV2, InstructionTokenV2, LabelTokenV2, LineCommentTokenV2, TokenV2}
 import org.scalatest.Assertions.fail
 
 object TestUtilsV2 :
 
-  /**
-   * verify that the result list only contains the same tokens as the expected list
-   * irrespective of order.
-   */
+  def verifyTokens(expected: List[TokenV2], result: List[TokenV2]): Boolean = {
+    val sortedExpected: List[TokenV2] = expected.sortBy(_.name)
+    val sortedResult: List[TokenV2] = result.sortBy(_.name)
 
-  def verifyTokens(expected: List[TokenV2], result: List[TokenV2]): Boolean =
-    val exp: List[TokenV2] = expected.sortBy(f => f.name)
-    val res: List[TokenV2] = result.sortBy(f => f.name)
-    //expected.sortBy(f => f.name) == result.sortBy(f => f.name)
-    assert(expected.length == result.length)
-    for (i <- expected.indices) {
-      if !exp(i).equals(res(i)) then
-        println(s"Unexpected result '${res(i)}' expected '${exp(i)}'")
-        return false
+    val differences = sortedExpected.diff(sortedResult)
+
+    if (differences.nonEmpty) {
+      differences.foreach(token => println(s"Unexpected result '$token' found"))
+      return false
     }
+
     true
+  }
 
 
 
@@ -56,7 +53,7 @@ object TestUtilsV2 :
     if colonAt < 0 then fail("LabelToken text does not have a colon.")
     val lableText = line.substring(0, colonAt)
     if !token.tokenText.equals(lableText) then fail("LabelToken label text is incorrect.")
-    if !AssemblyData.labelIsDefined(lableText) then fail("LabelToken label is not defined.")
+    if !LabelFactory.labelIsDefined(lableText) then fail("LabelToken label is not defined.")
   
   def validateCommandToken(token: CommandTokenV2, line: String): Unit =
     if !line.toUpperCase().startsWith(token.command) then fail("CommandToken source does not start with this token's command.")

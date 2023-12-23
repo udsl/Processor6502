@@ -51,8 +51,8 @@ object Assemble6502FirstPass extends StrictLogging, AssemblePass :
       if isNumeric(t.mnemonic) then
         AssembleLocation.setAssembleLoc(Utilities.numericValue(t.mnemonic))
       else
-        if isLabel(t.mnemonic) && AssemblyData.labelIsDefined(t.mnemonic) then
-          val labelValue = AssemblyData.labelValue(t.mnemonic)
+        if isLabel(t.mnemonic) && LabelFactory.labelIsDefined(t.mnemonic) then
+          val labelValue = LabelFactory.labelValue(t.mnemonic)
           AssembleLocation.setAssembleLoc(labelValue.get)
         else
           throw new Exception("Label or ORIG not defined.")
@@ -101,12 +101,12 @@ object Assemble6502FirstPass extends StrictLogging, AssemblePass :
    */
   def processDefinition(t: AssemblerToken) : Unit =
     logger.info(s"\tDefinition of label ${t.fields.head} with value ${t.value}")
-    if !AssemblyData.labelIsDefined(t.mnemonic) then
+    if !LabelFactory.labelIsDefined(t.mnemonic) then
       throw new Exception(s"Definition value not set!")
 
   def procesLabel(t: AssemblerToken) : Unit =
     logger.info(s"\tDefining label ${t.mnemonic} with value $currentLocation")
-    AssemblyData.addLabel(t.mnemonic)
+    LabelFactory.addLabel(t.mnemonic, currentLocation)
 
   def advanceAssemLocForBytes(fields: Array[String]): Unit =
     logger.debug("advance current assembly location for each byte")

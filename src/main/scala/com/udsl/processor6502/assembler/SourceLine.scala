@@ -15,6 +15,7 @@ class SourceLine(var text: String, val lineNum: Int){
     text
 
   def currentText: String = text
+  def hasText: Boolean = text.nonEmpty
 }
 
 object SourceLine:

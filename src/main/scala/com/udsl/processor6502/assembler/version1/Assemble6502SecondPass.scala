@@ -41,9 +41,8 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
 
   def procesLabel(token: AssemblerToken): Unit =
     logger.info("\tprocesLabel ")
-    AssemblyData.labels.get(token.mnemonic) match
-      case Some((v, bool)) =>
-        if bool then token.value = v.toString
+    LabelFactory.labelValue(token.mnemonic) match
+      case v => token.value = v.toString
       case _ =>
         throw new RuntimeException(s"Label not defined in second pass '${token.mnemonic}'")
 
@@ -74,15 +73,8 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
       if res.nonEmpty then
         res
       else
-        AssemblyData.labels.get(operand) match {
-          case Some((v, bool)) =>
-            Some(v)
-          case None =>
-            addSyntaxError(SyntaxErrorRecord(s"Undefined label '$operand'", tl.source))
-            None
-        }
-
-
+        LabelFactory.labelValue(operand)
+    
     def getOperandValue: Int =
       val operand = if t.fields.head.charAt(0) == '#' then
         t.fields.head.substring(1)
@@ -203,9 +195,10 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
                 val offset = operandValue - AssembleLocation.currentLocation
                 if offset < 0 && (offset - 2 > -128) then
                   res = Some( (Relative, offset - 2))
-                if offset > 0 && offset > 130 then
+                else if offset >= 0 && offset < 130 then
                   res = Some( (Relative, offset + 2))
-                logger.info(s"Relative address out of range ${t.mnemonic}")
+                else
+                  logger.info(s"Relative address out of range ${t.mnemonic}")
               else
                 if operandValue > 0 && operandValue < 256 then
                   res = Some( (Relative, operandValue))
@@ -274,5 +267,5 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
     for (v <- fields)
       val value = v.trim
       setMemoryAddress(numericValue(value).getOrElse({
-        AssemblyData.labelValue(value).getOrElse( throw new Exception(s"Invalid value address '$value'"))
+        LabelFactory.labelValue(value).getOrElse( throw new Exception(s"Invalid value address '$value'"))
       }), true)

@@ -1,7 +1,7 @@
 package com.udsl.processor6502.assembler.version2
 
 import com.udsl.processor6502.Utilities.isLabel
-import com.udsl.processor6502.assembler.{AssemblyData, SourceLine}
+import com.udsl.processor6502.assembler.{AssemblyData, LabelFactory, SourceLine}
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 
 object TokeniserV2 :
@@ -42,7 +42,7 @@ object TokeniserV2 :
           if isLabel(labelText) then
             tokenisedLine.add(LabelTokenV2.apply(labelText,
               if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
-            AssemblyData.addLabel(labelText)
+            LabelFactory.addLabel(labelText, beforeCommentSplit.tail.mkString(" "))
           else
             tokenisedLine.add(SytaxErrorTokenV2.apply(s"Bad label test ${beforeCommentSplit.head}", beforeCommentSplit))
           beforeCommentSplit.tail.mkString(" ")

@@ -2,7 +2,7 @@ package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
-import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
+import com.udsl.processor6502.Utilities.{isExpression, isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.{AssemblyData, *}
 import com.udsl.processor6502.assembler.AssemblyData.*
 import com.udsl.processor6502.cpu.CpuInstructions
@@ -47,19 +47,20 @@ object TokeniserV1 extends StrictLogging :
       case _ => None
     }
 
-    token match
-      case Some(_) =>
-        tokenisedLine + token.get
-      case _ =>
-        // if we have a NoneCommentLine (a line without a comment) then must be one of these formats where [is optional]
-        //       [label:] nenemic operand
-        //       command [command params]
-        // split line into fields using space though these could also be seperated by ,
-        val fields = line.text.split("\\s+")
+    if token.nonEmpty then
+      tokenisedLine + token.get
 
-        // [LABEL:] command | command value | command value[ ],[ ]value | Label |  Label instruction
-        processValue( processInstruction( processCommand( processLabel(fields) ) ) )
-
+    // if we have a text then must be one of these formats where [is optional]
+    // if not then line must have been a comment and no more processing required.
+    //       [label:] nenemic operand
+    //       command [command params]
+    if line.hasText then
+      // split line into fields using space though these could also be seperated by ,
+      val fields = line.text.split("\\s+")
+  
+      // [LABEL:] command | command value | command value[ ],[ ]value | Label |  Label instruction
+      processValue( processInstruction( processCommand( processLabel(fields) ) ) )
+  
     tokenisedLine
 
 
@@ -68,7 +69,8 @@ object TokeniserV1 extends StrictLogging :
     val head: String = text.head
     if head != "" && head.endsWith(":") then
       val labelText = head.dropRight(1)
-      addLabel(labelText)
+      if !LabelFactory.addLabel(labelText, text.tail.toString) then
+        addSyntaxError(SyntaxErrorRecord(s"failed to add label ${labelText}", tokenisedLine.source))
       val token = LabelToken(labelText, text.tail, tokenisedLine.source)
       tokenisedLine + token
       logger.debug(s"token added: $token")
@@ -109,8 +111,8 @@ object TokeniserV1 extends StrictLogging :
               val token = OriginToken(str, value, tokenisedLine.source)
               tokenisedLine + token
               logger.info(s"Origin added from numeric literal $str")
-            else if Utilities.isLabel(str) && labelIsDefined(str) then
-              val labelValue = AssemblyData.labelValue(str).toString
+            else if Utilities.isLabel(str) && !LabelFactory.labelIsDefined(str) then
+              val labelValue = LabelFactory.labelValue(str).toString
               val token = OriginToken(labelValue, value, tokenisedLine.source)
               tokenisedLine + token
               logger.info(s"Origin added from defined label '$str")
@@ -133,21 +135,22 @@ object TokeniserV1 extends StrictLogging :
         case "DEF" =>
           val parts: Array[String] = text.tail
           // fist part must be the label being defined
-          // 2nd is the value which must not be a label
-          if parts.length != 2  then
-            AssemblyData.addSyntaxError(SyntaxErrorRecord("Bad DEF", tokenisedLine.source))
-          else if !isLabel(parts(0)) || !isNumeric(parts(1)) then
-            addSyntaxError(SyntaxErrorRecord("DEF should be label number", tokenisedLine.source))
+          // 2nd is the value which is an expression that can contain a label
+          if parts.tail.isEmpty then
+            AssemblyData.addSyntaxError(SyntaxErrorRecord("Bad DEF - no expression", tokenisedLine.source))
+          else if !isLabel(parts.head) then
+            addSyntaxError(SyntaxErrorRecord("DEF should define a label", tokenisedLine.source))
+          else if !isExpression(parts.tail.mkString(" ")) then
+            addSyntaxError(SyntaxErrorRecord("DEF label definition should be an expression", tokenisedLine.source))
           else
             val value = numericValue(parts(1))
             if 0 to 65535 contains value.get then
-              addLabel(parts(0), value.get)
+              if !LabelFactory.addLabel(parts(0), value.get) then
+                addSyntaxError(SyntaxErrorRecord(s"failed to add label ${parts(0)}", tokenisedLine.source))
               val token = DefToken(parts(0), Array[String](parts(1)), tokenisedLine.source)
               token.value = parts(1)
               tokenisedLine + token
               logger.debug(s"token added: $token")
-            else
-              addSyntaxError( SyntaxErrorRecord(s"Invalid defined value ${parts(0)} - ${parts(1)}", tokenisedLine.source))
           return Array.empty
 
         case _ =>
@@ -157,7 +160,7 @@ object TokeniserV1 extends StrictLogging :
 
 
   def processInstruction(text: Array[String])(using tokenisedLine: TokenisedLineV1)  : AssemblerToken =
-    logger.debug(s"processInstruction: '${text.mkString(" ")}'")
+    logger.debug(s"processInstruction: '${tokenisedLine.source}'")
     if text.isEmpty then return NoTokenToken("", text, tokenisedLine.source)
     
     val instruction = text.head.toUpperCase()

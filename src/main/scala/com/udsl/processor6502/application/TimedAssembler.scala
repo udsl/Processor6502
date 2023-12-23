@@ -103,6 +103,8 @@ object TimedAssembler extends JFXApp3 with StrictLogging{
                     textArea.text = ""
                     logProgress(s"Assembling file\n$file")
                     logProgress(s"Using assembler version $currentVersion")
+                    logProgress("initialising. . .")
+                    AssemblyData.clear()
                     val startTime = System.currentTimeMillis()
                     val sfa: Assembler = Assembler.apply(file)
                     val fileLoaded = System.currentTimeMillis()

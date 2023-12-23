@@ -2,7 +2,7 @@ package com.udsl.processor6502.assembler.version2
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.{isLabel, numericValue}
-import com.udsl.processor6502.assembler.AssemblyData
+import com.udsl.processor6502.assembler.{AssemblyData, LabelFactory}
 import com.udsl.processor6502.cpu.execution.AddressingMode
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 
@@ -15,16 +15,10 @@ trait CommandValueType:
 
 class CommandValueLabel(val label: String) extends CommandValueType:
   override def isDefined: Boolean =
-    AssemblyData.labelIsDefined(label)
-
-  override def isValid: Boolean =
-    AssemblyData.labelIsValid(label)
+    LabelFactory.labelIsDefined(label)
 
   override def value: Option[Int] =
-    if isValid then
-      AssemblyData.labelValue(label)
-    else
-      None
+    LabelFactory.labelValue(label)
 
 class CommandValueNumeric(val num: Int) extends CommandValueType:
   override def isDefined: Boolean = true

@@ -95,6 +95,37 @@ object Utilities:
     }
 
   /**
+   * A expression is a list of number and labels seperated by arithmetic operators +, -, / or *
+   * The problem is spaces we could have 'a+1' which is the same value as 'a + 1' and even 'a+ 1' and 'a +1'
+   * By deleting all the spaces we only have to deal with the first format.
+   * We then split it up to its component parts by scanning the string
+   * @param str the expression
+   * @return true if a valid expression false otherwise
+   */
+  def isExpression( theExpession: String): Boolean =
+    def getNumber(noWhiteSpaceExpession: String): Unit =
+      var y = 0
+      noWhiteSpaceExpession.charAt(0) match
+        case '$' => { // is hex
+          // find first +-*/ character
+
+//          y = noWhiteSpaceExpession.
+
+        }
+        case x =>  if x >= '0' && x <= '9' then { // start of a decimal number
+          y = noWhiteSpaceExpession.indexWhere(_.matches("\\W"))
+        }
+        case _ => y = 0
+      val number = noWhiteSpaceExpession.substring(0, y)
+      println(noWhiteSpaceExpession.substring(y))
+
+    // The first item must be a number or a label, first try a number wiah must either terminate with an operator or the ned of the string
+    getNumber(theExpession.filterNot(_.isWhitespace))
+
+    println(s"isExpression($theExpession)")
+    false
+
+  /**
    * Only positive HEX or DEC numbers accepted
    * @param str the string value
    */

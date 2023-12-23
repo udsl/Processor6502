@@ -3,7 +3,7 @@ package com.udsl.processor6502.assembler.version2
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
-import com.udsl.processor6502.assembler.{AssembleLocation, AssemblePass, AssemblyData}
+import com.udsl.processor6502.assembler.{AssembleLocation, AssemblePass, AssemblyData, LabelFactory}
 import com.udsl.processor6502.cpu.CpuInstruction
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.CpuInstructions
@@ -111,8 +111,8 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
             Absolute
           else
             ZeroPage
-          case d if d.isLetter => if AssemblyData.labelIsDefined(operandField) then // label or defined
-            AssemblyData.labelValue(operandField) match {
+          case d if d.isLetter => if LabelFactory.labelIsDefined(operandField) then // label or defined
+            LabelFactory.labelValue(operandField) match {
               case Some(v) => if v > 255 then Absolute else ZeroPage
               case _ => Unknown
             }
@@ -186,7 +186,7 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
 
   def procesLabel(t: TokenV2) : Unit =
     logger.info(s"\tDefining label ${t.tokenText} with value $currentLocation")
-    AssemblyData.addLabel(t.tokenText)
+    LabelFactory.addLabel(t.tokenText, currentLocation)
 
   //TODO modify how this works!
   def advanceAssemLocForBytes(fields: Array[String]): Unit =

@@ -2,7 +2,7 @@ package com.udsl.processor6502.assembler.version2
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.*
-import com.udsl.processor6502.assembler.{AssembleLocation, AssemblePass, AssemblyData}
+import com.udsl.processor6502.assembler.{AssembleLocation, AssemblePass, AssemblyData, LabelFactory}
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.CpuInstructions.{getInstruction, isValidInstruction}
 import com.udsl.processor6502.cpu.execution.{AddressingMode, Invalid, *}
@@ -69,9 +69,8 @@ class Assemble6502SecondPassV2 extends StrictLogging, AssemblePass :
       if isNumeric(operand) then
         numericValue(operand)
       else // only other possibility is a label
-        AssemblyData.labels.get(operand) match
-          case Some((v, _)) =>
-            Some(v)
+        LabelFactory.labelValue(operand) match
+          case Some(v) => Some(v)
           case _ =>
             //TODO report this error!
  //           addSyntaxError(SyntaxErrorRecord(s"Undefined label '$operand'", tl))
@@ -312,7 +311,7 @@ class Assemble6502SecondPassV2 extends StrictLogging, AssemblePass :
     for (v <- fields)
       val value = v.trim
       setMemoryAddress( numericValue(value).getOrElse({
-        AssemblyData.labelValue(value).getOrElse(throw new Exception(s"Invalid value address '$value'"))
+        LabelFactory.labelValue(value).getOrElse(throw new Exception(s"Invalid value address '$value'"))
       }) )
 
 object Assemble6502SecondPassV2:

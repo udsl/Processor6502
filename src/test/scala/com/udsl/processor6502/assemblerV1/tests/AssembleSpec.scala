@@ -95,7 +95,7 @@ class AssembleSpec extends AnyFlatSpec, should.Matchers:
     for ((token, opcode, loByte, hiByte, label, labelValue) <- dataValidLabelsAndTokensTestData) {
       // define the label
       AssemblyData.clear()
-      AssemblyData.addLabel(label, labelValue)
+      LabelFactory.addLabel(label, labelValue)
       AssembleLocation.setAssembleLoc(2000)
       // get the current assembly location
       val srtLoc = AssembleLocation.currentLocation
