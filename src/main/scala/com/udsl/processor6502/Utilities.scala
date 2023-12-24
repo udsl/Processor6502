@@ -23,7 +23,8 @@ import scala.util.matching.Regex
 
 object Utilities:
   var currentFormat: NumericFormatType = NumericFormatType.DEC
-
+  val operators = Seq("+", "-", "*", "/")
+  
   def verifyNumberEntry(text: String): (Boolean, String) =
     val pattern: Regex = currentFormat match {
       case NumericFormatType.HEX => "^\\$?[0-9a-fA-F]+$".r
@@ -152,7 +153,6 @@ object Utilities:
   }
   
   def isExpression( theExpession: String): Boolean =
-    val operators = Seq("+", "-", "*", "/")
     operators.exists(theExpession.contains)
 
   /**

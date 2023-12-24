@@ -3,6 +3,7 @@ package com.udsl.processor6502.assembler.version1
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.{getExpression, isExpression, isLabel, isNumeric, numericValue}
+import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
 import com.udsl.processor6502.assembler.{AssemblyData, *}
 import com.udsl.processor6502.assembler.AssemblyData.*
 import com.udsl.processor6502.cpu.CpuInstructions
@@ -69,7 +70,7 @@ object TokeniserV1 extends StrictLogging :
     val head: String = text.head
     if head != "" && head.endsWith(":") then
       val labelText = head.dropRight(1)
-      if !LabelFactory.addLabel(labelText) then
+      if !LabelFactory.addLabel(labelText, currentLocation) then
         addSyntaxError(SyntaxErrorRecord(s"failed to add label $labelText", tokenisedLine.source))
       val token = LabelToken(labelText, text.tail, tokenisedLine.source)
       tokenisedLine + token
@@ -150,7 +151,7 @@ object TokeniserV1 extends StrictLogging :
             
           else
             if isLabel(parts(1)) then
-              if !LabelFactory.addLabel(parts(0), parts.tail.mkString(" ")) then // add label as an expression because it could be a forward reference
+              if !LabelFactory.addLabel(parts(0), parts.tail) then // add label as an expression because it could be a forward reference
                 addSyntaxError(SyntaxErrorRecord(s"failed to add label DEF ${parts(0)}", tokenisedLine.source))
               // As this could be a fowards reference and could have already been defined by a previous forward ref no need to check if we are adding it
               LabelFactory.addLabel(parts(1))

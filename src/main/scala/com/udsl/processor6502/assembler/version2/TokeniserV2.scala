@@ -42,7 +42,7 @@ object TokeniserV2 :
           if isLabel(labelText) then
             tokenisedLine.add(LabelTokenV2.apply(labelText,
               if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
-            LabelFactory.addLabel(labelText, beforeCommentSplit.tail.mkString(" "))
+            LabelFactory.addLabel(labelText, beforeCommentSplit.tail)
           else
             tokenisedLine.add(SytaxErrorTokenV2.apply(s"Bad label test ${beforeCommentSplit.head}", beforeCommentSplit))
           beforeCommentSplit.tail.mkString(" ")
