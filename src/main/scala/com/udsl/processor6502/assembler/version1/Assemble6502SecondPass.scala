@@ -216,7 +216,7 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
       logger.info(s"validateAddressingMode - $addrMode")
       addrMode match
         case Invalid =>
-          addSyntaxError(SyntaxErrorRecord(s"Invalid addressing mode for '${t.mnemonic}'", tl.source))
+          addSyntaxError(SyntaxErrorRecord.apply(s"Invalid addressing mode for '${t.mnemonic}'", tl.source))
         case _ =>
           //TODO
           // Need details of the instruction for the disassembly byte string

@@ -13,7 +13,9 @@ import scalafx.scene.control.{Alert, ButtonType, TextInputDialog}
 import scalafx.scene.input.{KeyEvent, MouseEvent}
 import scalafx.stage.FileChooser
 import com.udsl.processor6502.cpu.execution.Operand
+
 import java.io.*
+import scala.::
 import scala.annotation.tailrec
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
@@ -102,28 +104,56 @@ object Utilities:
    * @param str the expression
    * @return true if a valid expression false otherwise
    */
-  def isExpression( theExpession: String): Boolean =
-    def getNumber(noWhiteSpaceExpession: String): Unit =
-      var y = 0
-      noWhiteSpaceExpession.charAt(0) match
-        case '$' => { // is hex
-          // find first +-*/ character
+  def getExpression( theExpession: String): List[String] = {
+    var expressionParts: List[String] = List()
 
-//          y = noWhiteSpaceExpession.
+    val HEX_PATTERN = "\\$[0-9A-Fa-f]+\\s*[\\+\\-\\*/]".r
+    val DECIMAL_PATTERN = "\\d+\\s*[\\+\\-\\*\\/]".r
+    val LABEL_PATTERN = "[a-zA-Z]\\w*\\s*[\\+\\-\\*\\/]".r
 
-        }
-        case x =>  if x >= '0' && x <= '9' then { // start of a decimal number
-          y = noWhiteSpaceExpession.indexWhere(_.matches("\\W"))
-        }
-        case _ => y = 0
-      val number = noWhiteSpaceExpession.substring(0, y)
-      println(noWhiteSpaceExpession.substring(y))
+    def parseForValue(noWhiteSpaceExpession: String): String = {
+
+      def getValues(expression: String, regx: Regex): Option[Int] =
+        regx.findFirstIn(noWhiteSpaceExpession) match
+          case Some(a) => Some(a.length)
+          case None => // No match so no operator must be th end of the expression so add this
+            expressionParts = expressionParts.appended(expression)
+            None
+
+      def getExpressionParts(index: Int): String = {
+        expressionParts = expressionParts.appended(noWhiteSpaceExpession.substring(0, index-1)).appended(noWhiteSpaceExpession.substring(index-1, index))
+        noWhiteSpaceExpession.substring(index)
+      }
+
+      val parseResult: Option[Int] = noWhiteSpaceExpession.charAt(0) match {
+        case '$' => // is hex
+          getValues(noWhiteSpaceExpession, HEX_PATTERN)
+        case x if x.isDigit => // start of a decimal number
+          getValues(noWhiteSpaceExpession, DECIMAL_PATTERN)
+        case x if x.isLetter => // start of a label
+          getValues(noWhiteSpaceExpession, LABEL_PATTERN) 
+        case _ => None
+      }
+
+      parseResult.map(getExpressionParts).getOrElse(noWhiteSpaceExpession)
+    }
 
     // The first item must be a number or a label, first try a number wiah must either terminate with an operator or the ned of the string
-    getNumber(theExpession.filterNot(_.isWhitespace))
+    var expressionToParse = theExpession.filterNot(_.isWhitespace)
+    var parsedExpression = ""
+    
+    while {
+      parsedExpression = parseForValue(expressionToParse)
+      !expressionToParse.equals(parsedExpression)
+    } do {expressionToParse = parsedExpression}
 
     println(s"isExpression($theExpession)")
-    false
+    expressionParts
+  }
+  
+  def isExpression( theExpession: String): Boolean =
+    val operators = Seq("+", "-", "*", "/")
+    operators.exists(theExpession.contains)
 
   /**
    * Only positive HEX or DEC numbers accepted

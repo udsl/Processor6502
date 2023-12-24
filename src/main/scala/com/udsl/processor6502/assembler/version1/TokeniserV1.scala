@@ -2,7 +2,7 @@ package com.udsl.processor6502.assembler.version1
 
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities
-import com.udsl.processor6502.Utilities.{isExpression, isLabel, isNumeric, numericValue}
+import com.udsl.processor6502.Utilities.{getExpression, isExpression, isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.{AssemblyData, *}
 import com.udsl.processor6502.assembler.AssemblyData.*
 import com.udsl.processor6502.cpu.CpuInstructions
@@ -69,8 +69,8 @@ object TokeniserV1 extends StrictLogging :
     val head: String = text.head
     if head != "" && head.endsWith(":") then
       val labelText = head.dropRight(1)
-      if !LabelFactory.addLabel(labelText, text.tail.toString) then
-        addSyntaxError(SyntaxErrorRecord(s"failed to add label ${labelText}", tokenisedLine.source))
+      if !LabelFactory.addLabel(labelText) then
+        addSyntaxError(SyntaxErrorRecord(s"failed to add label $labelText", tokenisedLine.source))
       val token = LabelToken(labelText, text.tail, tokenisedLine.source)
       tokenisedLine + token
       logger.debug(s"token added: $token")
@@ -117,9 +117,9 @@ object TokeniserV1 extends StrictLogging :
               tokenisedLine + token
               logger.info(s"Origin added from defined label '$str")
             else
-              AssemblyData.addSyntaxError(SyntaxErrorRecord("Value for ORIG not numeric or defined label", tokenisedLine.source))
+              AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("Value for ORIG not numeric or defined label", tokenisedLine.source))
           else
-            AssemblyData.addSyntaxError(SyntaxErrorRecord("Invalid ORIG command!", tokenisedLine.source))
+            AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("Invalid ORIG command!", tokenisedLine.source))
           return Array.empty
 
         // clr only valid on the first line
@@ -127,7 +127,7 @@ object TokeniserV1 extends StrictLogging :
           val token = ClearToken(head, text.tail, tokenisedLine.source)
           tokenisedLine + token
           if tokenisedLine.source.lineNum > 1 then
-            AssemblyData.addSyntaxError(SyntaxErrorRecord("clr only valid on the first line", tokenisedLine.source))
+            AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("clr only valid on the first line", tokenisedLine.source))
           clear()
           logger.debug(s"token added: $token")
           return Array.empty
@@ -137,20 +137,39 @@ object TokeniserV1 extends StrictLogging :
           // fist part must be the label being defined
           // 2nd is the value which is an expression that can contain a label
           if parts.tail.isEmpty then
-            AssemblyData.addSyntaxError(SyntaxErrorRecord("Bad DEF - no expression", tokenisedLine.source))
+            AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("Bad DEF - no expression", tokenisedLine.source))
           else if !isLabel(parts.head) then
             addSyntaxError(SyntaxErrorRecord("DEF should define a label", tokenisedLine.source))
-          else if !isExpression(parts.tail.mkString(" ")) then
-            addSyntaxError(SyntaxErrorRecord("DEF label definition should be an expression", tokenisedLine.source))
+          // if we have a tain greate than length 1 then it must be a expression with spaces  
+          else if parts.tail.length > 1 && !isExpression(parts.tail.mkString(" ")) then
+            addSyntaxError(SyntaxErrorRecord("DEF definition should be an expression, a label or a number", tokenisedLine.source))
+          // If its only length 1 it could be an expression without spaces
+          else if isExpression(parts.tail.mkString(" ")) then
+            // process the expression
+            getExpression(parts.tail.mkString(" "))
+            
           else
-            val value = numericValue(parts(1))
-            if 0 to 65535 contains value.get then
-              if !LabelFactory.addLabel(parts(0), value.get) then
-                addSyntaxError(SyntaxErrorRecord(s"failed to add label ${parts(0)}", tokenisedLine.source))
+            if isLabel(parts(1)) then
+              if !LabelFactory.addLabel(parts(0), parts.tail.mkString(" ")) then // add label as an expression because it could be a forward reference
+                addSyntaxError(SyntaxErrorRecord(s"failed to add label DEF ${parts(0)}", tokenisedLine.source))
+              // As this could be a fowards reference and could have already been defined by a previous forward ref no need to check if we are adding it
+              LabelFactory.addLabel(parts(1))
               val token = DefToken(parts(0), Array[String](parts(1)), tokenisedLine.source)
               token.value = parts(1)
               tokenisedLine + token
               logger.debug(s"token added: $token")
+            else
+              val value = numericValue(parts(1))
+              if 0 to 65535 contains value.get then
+                if !LabelFactory.addLabel(parts(0), value.get) then
+                  addSyntaxError(SyntaxErrorRecord(s"failed to add label DEF val${parts(0)}", tokenisedLine.source))
+                val token = DefToken(parts(0), Array[String](parts(1)), tokenisedLine.source)
+                token.value = parts(1)
+                tokenisedLine + token
+                logger.debug(s"token added: $token")
+              else
+                addSyntaxError(SyntaxErrorRecord(s"DEF defining ${parts(0)} with value $value", tokenisedLine.source))
+
           return Array.empty
 
         case _ =>

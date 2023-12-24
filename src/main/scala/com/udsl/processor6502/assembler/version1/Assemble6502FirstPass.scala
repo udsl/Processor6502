@@ -100,7 +100,7 @@ object Assemble6502FirstPass extends StrictLogging, AssemblePass :
    * @param t the AssemblerToken to process
    */
   def processDefinition(t: AssemblerToken) : Unit =
-    logger.info(s"\tDefinition of label ${t.fields.head} with value ${t.value}")
+    logger.info(s"\tDefinition of label ${t.mnemonic} with value ${t.value}")
     if !LabelFactory.labelIsDefined(t.mnemonic) then
       throw new Exception(s"Definition value not set!")
 
