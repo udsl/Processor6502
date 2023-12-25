@@ -9,6 +9,7 @@ import com.udsl.processor6502.assembler.AssemblyData.addSyntaxError
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.CpuInstructions.{getInstruction, isValidInstruction}
 import com.udsl.processor6502.cpu.execution.*
+import com.udsl.processor6502.ui.popups.OptionEditor.currentVersion
 import com.udsl.processor6502.{NumericFormatType, Utilities}
 
 
@@ -18,7 +19,7 @@ import com.udsl.processor6502.{NumericFormatType, Utilities}
 object Assemble6502SecondPass extends StrictLogging, AssemblePass :
 
   def assemble(tokenisedLine: TokenisedLineV1) : Unit =
-    logger.info(s"\n\n2nd Pass ${tokenisedLine.source.lineNum} ")
+    logger.info(s"\n\nVersion $currentVersion 2nd Pass ${tokenisedLine.source.lineNum} ")
     for (token <- tokenisedLine.tokens)
       token match
         case BlankLineToken( _, _, _ ) => // extends AssemblerTokenType("BlankLineToken")

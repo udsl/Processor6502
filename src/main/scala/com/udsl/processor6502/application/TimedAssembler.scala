@@ -17,7 +17,7 @@ import scala.language.postfixOps
 
 object TimedAssembler extends JFXApp3 with StrictLogging{
 
-  def currentVersion: Int = assmVersion
+  var currentVersion: Int = assmVersion
 
   def isCurrent(id: String): Boolean =
     id match {
@@ -25,7 +25,11 @@ object TimedAssembler extends JFXApp3 with StrictLogging{
       case _ => currentVersion == 2
     }
 
-  def setCurrentVersion(): Unit =
+  def setCurrentVersion(id: String): Unit =
+    id match {
+      case "Original" => currentVersion = 1
+      case _ => currentVersion = 2
+    }
     assmVersion = currentVersion
 
   var textArea: TextArea = _
@@ -44,13 +48,13 @@ object TimedAssembler extends JFXApp3 with StrictLogging{
 
       scene = new Scene {
         root = {
+          val sourceProcessorVersionGroup = new ToggleGroup()
           val titleBox: VBox = new VBox {
             val label: Label = new Label("Assembler Version")
 
             val selBox: HBox = new HBox {
               padding = Insets(8, 0, 0,8)
-              val sourceProcessorVersionGroup = new ToggleGroup()
-
+              
               val v1Assm: RadioButton = new RadioButton {
                   minWidth = 100
                   maxWidth = 200
@@ -77,6 +81,12 @@ object TimedAssembler extends JFXApp3 with StrictLogging{
             children = List(label, selBox)
           }
 
+          sourceProcessorVersionGroup.selectToggle(sourceProcessorVersionGroup.toggles.head)
+          sourceProcessorVersionGroup.selectedToggle.onChange {
+            val rb = sourceProcessorVersionGroup.selectedToggle.get.asInstanceOf[javafx.scene.control.ToggleButton]
+            if (rb != null) setCurrentVersion(rb.getId)
+          }
+
           val sourceBox: VBox = new VBox {
             padding = Insets(20,0, 20, 0)
             val label: Label = new Label("Results")
@@ -97,7 +107,6 @@ object TimedAssembler extends JFXApp3 with StrictLogging{
               text = "Assemble"
               onAction = _ => {
                 // Do assemble using selected version
-                setCurrentVersion()
                 selectSourceFileToLoad match
                   case Some(file) =>
                     textArea.text = ""
