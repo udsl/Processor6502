@@ -70,6 +70,7 @@ object Assemble6502FirstPass extends StrictLogging, AssemblePass :
       case "BYT" => advanceAssemLocForBytes(t.fields)
       case "WRD" => advanceAssemLocForWords(t.fields)
       case "ADDR" => advanceAssemLocForAddresses(t.fields)
+      case "TXT" => advanceAssemLocForTxt(t.fields)
       case "ORIG" =>
       case _ => logger.info(s"\tInvalid command $t ")
 
@@ -122,4 +123,9 @@ object Assemble6502FirstPass extends StrictLogging, AssemblePass :
     logger.debug("advance current assembly location by 2 for each address")
     for (v <- fields)
       AssembleLocation.addInstructionSize(InstructionSize(2))
+
+  def advanceAssemLocForTxt(fields: Array[String]): Unit =
+    logger.debug("advance current assembly location for each txt")
+      AssembleLocation.addBlockSize(fields(0).length)
+
 

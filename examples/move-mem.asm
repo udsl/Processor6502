@@ -126,3 +126,10 @@ MU4B:    LDA (FROM),Y ; move the remaining bytes
          DEX
          BNE MU4B
 MU5B:    RTS
+
+TEXTBLOCK:
+		 TXT 'A block of text so the move methods can be tested.'
+		 TXT 'NOTE new line of text but no CR'
+		 BYT 13
+		 TXT 'Above is a charage return you can also add CR/LF like this:'
+         BYT 13,10		 

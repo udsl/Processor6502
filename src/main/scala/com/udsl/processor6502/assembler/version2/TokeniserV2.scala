@@ -30,7 +30,7 @@ object TokeniserV2 :
       // is it a command
       val beforeCommentSplit = beforeComment.split("\\s+")
       if !(beforeCommentSplit.head.toUpperCase() match {
-        case "ADDR" | "BYT" | "WRD" | "ORIG" | "CLR" | "DEF" =>
+        case "ADDR" | "BYT" | "WRD" | "ORIG" | "CLR" | "DEF" | "TXT" =>
           tokenisedLine.add(CommandTokenV2.apply(beforeCommentSplit.head.toUpperCase(),
             if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
           true

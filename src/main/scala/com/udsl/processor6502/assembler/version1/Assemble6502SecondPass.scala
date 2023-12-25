@@ -52,6 +52,7 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
       case "BYT" => setBytes(t.fields)
       case "WRD" => setWords(t.fields)
       case "ADDR" => setAddresses(t.fields)
+      case "TXT" => setTxt(t.fields)
       case _ => logger.info(s"\tInvalid mnemonic ${t.mnemonic} ")
 
   def processOrigin(t: AssemblerToken): Unit =
@@ -247,6 +248,11 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
     logger.debug("setBytes")
     for (value <- fields)
       setMemoryByte(value.trim)
+
+  def setTxt(fields: Array[String]): Unit =
+    logger.debug("setTxt")
+    for (value <- fields(0))
+      setMemoryByte(value)
 
   def setWords(fields: Array[String]): Unit =
     logger.debug("setWords")

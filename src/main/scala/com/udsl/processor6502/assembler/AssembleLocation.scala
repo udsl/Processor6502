@@ -69,3 +69,10 @@ object AssembleLocation extends StrictLogging :
   def addInstructionSize(bytes: Int): Unit =
     currentLocation += bytes
 
+  /**
+   * Add the size of a block to the currentLocation
+   * Used to reserve space for TXT command
+   * @param size the lock size
+   */
+  def addBlockSize(size: Int): Unit =
+    currentLocation += size

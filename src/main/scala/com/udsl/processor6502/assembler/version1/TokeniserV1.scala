@@ -104,6 +104,16 @@ object TokeniserV1 extends StrictLogging :
           logger.debug(s"token added: $token")
           return Array.empty
 
+        case "TXT" =>
+          // remove the TXT and the ' from the source, result is the txt and the ending '
+          // we nned the ending ' incase we have a comment following
+          val textValue = tokenisedLine.source.OriginalText.substring(tokenisedLine.source.OriginalText.indexOf("'") + 1)
+          val token = CommandToken(head, Array(textValue.substring(0,textValue.length-1)), tokenisedLine.source)
+          token.addPrediction(Unknown)
+          tokenisedLine + token
+          logger.debug(s"TXT token added: $token")
+          return Array.empty
+
         case "ORIG" =>
           val value: Array[String] = text.tail
           if value.length == 1 then

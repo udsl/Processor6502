@@ -99,3 +99,7 @@ case class NoTokenToken (override val mnemonic: String, override val fields: Arr
     "NoTokenToken"
   override def addPrediction(prediction: AddressingMode): Unit = {}
 
+case class TxtToken (override val mnemonic: String, override val fields: Array[String], override val sourceLine: SourceLine) extends AssemblerToken(mnemonic: String, fields: Array[String], sourceLine: SourceLine ):
+  override def toString: String =
+    "TxtToken"
+  override def addPrediction(prediction: AddressingMode): Unit = {}
