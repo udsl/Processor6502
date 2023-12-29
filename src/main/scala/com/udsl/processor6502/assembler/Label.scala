@@ -1,23 +1,10 @@
 package com.udsl.processor6502.assembler
 
+import com.udsl.processor6502.Utilities
 import com.udsl.processor6502.Utilities.{isLabel, numericValue, operators}
 
 import scala.collection.mutable.ListBuffer
 import scala.compiletime.asMatchable
-
-enum Operation {
-  case +, -, *, /
-  def valueOf(s: String): Option[Operation] = Operation.values.find(_.toString == s)
-}
-
-case class Operator(a: Int, b: Int, operation: Operation) {
-  def compute: Int = operation match {
-    case Operation.+ => a + b
-    case Operation.- => a - b
-    case Operation.* => a * b
-    case Operation./ => a / b
-  }
-}
 
 trait Label(val name: String) :
   def evaluate: Int
@@ -29,58 +16,11 @@ trait Label(val name: String) :
  */
 trait LabelExpression(name: String) extends Label:
   protected def evaluateExpression(expression: Array[String]): Int =
-    var currentIndex = 0
-    var result: Int = 92
-
-    def getAndUpdate: Int =
-      val ret = currentIndex
-      currentIndex = currentIndex + 1
-      ret
-
-    // Extract the common code into a separate method
-    def getExpressionElement: Option[String] =
-      if expression != null && currentIndex < expression.length then
-        Some(expression(getAndUpdate))
-      else None
-
-    // Use the new method to retrieve the element and apply the operations
-    def getValue: Option[Int] =
-      getExpressionElement.flatMap { str =>
-        if str.length == 1 && operators.contains(str.charAt(0)) then // is an operator
-          None
-        else if isLabel(str) then
-          LabelFactory.labelValue(str)
-        else
-          numericValue(str)
-      }
-
     if expression == null || expression.isEmpty then
       throw new AssemblerException(s"BAD Label $name", "expression not set")
-
-    result = getValue.get
-    while{
-      val op = getOperation
-      if op.isEmpty then
-        return result
-      else
-        val operand = getValue
-        result = Operator(result, operand.get, op.get).compute
-        true
-    }do()
-
-    def isSingleCharOperator(str: String): Boolean =
-      str.length == 1 && operators.contains(str.charAt(0))
-
-    def getOperation: Option[Operation] =
-      getExpressionElement.flatMap { expressionElement =>
-        if isSingleCharOperator(expressionElement) then
-          Some(Operation.valueOf(expressionElement))
-        else
-          None
-      }
-
-    result
-
+    val res = Utilities.evaluateExpression(expression)
+    res.get
+    
 /**
  * as the value of a label can be dependent on the position it may forward reference and not know on the first pass
  * so we may need to update the value on the second pass

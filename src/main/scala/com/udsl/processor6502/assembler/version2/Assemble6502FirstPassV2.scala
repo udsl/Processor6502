@@ -1,9 +1,12 @@
 package com.udsl.processor6502.assembler.version2
 
 import com.typesafe.scalalogging.StrictLogging
-import com.udsl.processor6502.Utilities.{isLabel, isNumeric, numericValue}
+import com.udsl.processor6502.Utilities.{evaluateExpression, getExpression, isExpression, isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
-import com.udsl.processor6502.assembler.{AssembleLocation, AssemblePass, AssemblyData, LabelFactory}
+import com.udsl.processor6502.assembler.AssemblyData.{addSyntaxError, clear}
+import com.udsl.processor6502.assembler.version1.ClearToken
+import com.udsl.processor6502.assembler.version1.TokeniserV1.logger
+import com.udsl.processor6502.assembler.{AssembleLocation, AssemblePass, AssemblyData, LabelFactory, SyntaxErrorRecord}
 import com.udsl.processor6502.cpu.CpuInstruction
 import com.udsl.processor6502.cpu.execution.*
 import com.udsl.processor6502.cpu.CpuInstructions
@@ -67,9 +70,19 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
       case "BYT" => advanceAssemLocForBytes(t.fields)
       case "WRD" => advanceAssemLocForWords(t.fields)
       case "ADDR" => advanceAssemLocForAddresses(t.fields)
+      case "TXT" =>  advanceAssemLocForTxt(t.fields)
       case "ORIG" => processOrigin(t.asInstanceOf[CommandTokenV2])
       case "CLR" =>
+      // clr only valid on the first line
+//        val token = ClearToken(head, text.tail, tokenisedLine.source)
+//        tokenisedLine + token
+//        if tokenisedLine.source.lineNum > 1 then
+//          AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("clr only valid on the first line", tokenisedLine.source))
+//        clear()
+//        logger.debug(s"token added: $token")
+//        return Array.empty
       case "DEF" =>
+
       case _ => logger.info(s"\tInvalid command $t ")
 
 //  def processClear(t: TokenV2, tl: TokenisedLineV2) : Unit =
@@ -104,24 +117,30 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
           case 'A' => Accumulator
           case '#' => Immediate
           case '$' => if Integer.parseInt(operandField.substring(1), 16) > 255 then
-            Absolute
-          else
-            ZeroPage
+              Absolute
+            else
+              ZeroPage
           case c if c.isDigit => if Integer.parseInt(operandField, 10) > 255 then
-            Absolute
-          else
-            ZeroPage
-          case d if d.isLetter => if LabelFactory.labelIsDefined(operandField) then // label or defined
-            LabelFactory.labelValue(operandField) match {
-              case Some(v) => if v > 255 then Absolute else ZeroPage
-              case _ => Unknown
-            }
-          else Invalid
+              Absolute
+            else
+              ZeroPage
+          case d if d.isLetter =>
+            if LabelFactory.labelIsDefined(operandField) then // label or defined or expression
+              LabelFactory.labelValue(operandField) match {
+                case Some(v) => if v > 255 then Absolute else ZeroPage
+                case _ => Unknown
+              }
+            else if isExpression(token.fields.mkString("")) then
+              evaluateExpression(getExpression(token.fields.mkString(""))) match
+                case Some(v) => if v > 255 then Absolute else ZeroPage
+                case _ => Unknown
+            else
+              AddressingModeSyntaxError("Operand failed not a label or expression!")
 
           case '(' => if operandField.endsWith(",X)") then IndirectX
-          else if operandField.endsWith("),Y") then IndirectY
-          else if operandField.endsWith(")") then Indirect
-          else Invalid
+            else if operandField.endsWith("),Y") then IndirectY
+            else if operandField.endsWith(")") then Indirect
+            else Invalid
           case _ => Unknown
         }
       // is the addressingMode valid for this instruction? then can move the program counter along by the instruction size.
@@ -131,7 +150,7 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
           token.setAddressingMode(addressingMode)
           AssembleLocation.setMemoryByte(i.opcode) // write the opcode
           AssembleLocation.addInstructionSize(i.bytes - 1) // move on hte current locaion by instruction size -1 as setMemoryByte already moved on by 1.
-        case _ => throw new Exception(s"Addressing mode '$addressingMode' not applicable to instruction '${instruction.name()}''")
+        case _ => throw new Exception(s"Addressing mode '$addressingMode' not applicable to instruction '${instruction.name()}' with operand '${token.fields.head}'")
 
 
   /**
@@ -203,6 +222,10 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
     logger.debug("advance current assembly location by 2 for each address")
     for (v <- fields)
       AssembleLocation.addInstructionSize(InstructionSize(2))
+
+  def advanceAssemLocForTxt(fields: Array[String]): Unit =
+    logger.debug("advance current assembly location for each txt")
+    AssembleLocation.addBlockSize(fields(0).length)
 
 object Assemble6502FirstPassV2:
   def apply: Assemble6502FirstPassV2 =

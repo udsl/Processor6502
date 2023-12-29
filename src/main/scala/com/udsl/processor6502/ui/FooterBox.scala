@@ -6,6 +6,7 @@ import com.udsl.processor6502.FileIOUtilities.{readConfigFile, selectSourceFileT
 import com.udsl.processor6502.Utilities.{currentFormat, getConfigValue, numToString, numericValue, stringToNum, verifyNumberEntry}
 import com.udsl.processor6502.application
 import com.udsl.processor6502.assembler.Assembler
+import com.udsl.processor6502.config.AppOptions.assmVersion
 import com.udsl.processor6502.config.DataSupplier.provideData
 import com.udsl.processor6502.config.{ConfigDatum, DataCollector, DataSupplier}
 import com.udsl.processor6502.disassembler.Disassembler
@@ -72,6 +73,7 @@ class FooterBox() extends GridPane, StrictLogging:
 
   val assembleFile: MenuItem = new MenuItem("Assemble from file"){
     onAction = _ => {
+      logger.info(s"Assembling with version $assmVersion")
       selectSourceFileToLoad match
         case Some(file) =>
           logger.info(s"Assembling file $file")

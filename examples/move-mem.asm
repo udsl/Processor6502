@@ -7,6 +7,7 @@ FROM:	addr $2000
 TO:	addr	$3000
 
 SIZE: wrd 257 ; the word containing the number of bytes to move
+ ; the word containing the number of bytes to move
 def SIZEH SIZE; SIZEH = high byte of word bytes to move
 def SIZEL SIZE+1 ; SIZEL = low byte of word bytes to move
 

@@ -1,7 +1,9 @@
 package com.udsl.processor6502.assembler.version2
 
-import com.udsl.processor6502.Utilities.isLabel
-import com.udsl.processor6502.assembler.{AssemblyData, LabelFactory, SourceLine}
+import com.udsl.processor6502.Utilities.{getExpression, isExpression, isLabel}
+import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
+import com.udsl.processor6502.assembler.AssemblyData.addSyntaxError
+import com.udsl.processor6502.assembler.{AssemblyData, LabelFactory, SourceLine, SyntaxErrorRecord}
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 
 object TokeniserV2 :
@@ -30,9 +32,42 @@ object TokeniserV2 :
       // is it a command
       val beforeCommentSplit = beforeComment.split("\\s+")
       if !(beforeCommentSplit.head.toUpperCase() match {
-        case "ADDR" | "BYT" | "WRD" | "ORIG" | "CLR" | "DEF" | "TXT" =>
+        case "ADDR" | "BYT" | "WRD" | "ORIG" =>
           tokenisedLine.add(CommandTokenV2.apply(beforeCommentSplit.head.toUpperCase(),
             if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
+          true
+
+        case  "CLR" =>
+          // CLR only valid on first line
+          if line.lineNum > 1 then
+            addSyntaxError(SyntaxErrorRecord("CLR only valid on first line", line))
+          tokenisedLine.add(CommandTokenV2.apply(beforeCommentSplit.head.toUpperCase(),
+            if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
+          true
+
+        case "DEF" =>
+          val parts: Array[String] = beforeCommentSplit.tail
+          // fist part must be the label being defined
+          // 2nd is the value which is an expression that can contain a label
+          if parts.tail.isEmpty then
+            AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("Bad DEF - no expression", line))
+          else if !isLabel(parts.head) then
+            addSyntaxError(SyntaxErrorRecord("DEF should define a label", line))
+            // if we have a tain greate than length 1 then it must be a expression with spaces
+          else if parts.tail.length > 1 && !isExpression(parts.tail.mkString(" ")) then
+            addSyntaxError(SyntaxErrorRecord("DEF definition should be an expression, a label or a number", line))
+            // If its only length 1 it could be an expression without spaces
+          else if isExpression(parts.tail.mkString(" "))  || isLabel(parts.tail.mkString(" ")) then
+            // process the expression
+            val expression = parts.tail
+            LabelFactory.addLabel(parts.head, expression)
+            tokenisedLine.add(CommandTokenV2.apply(beforeCommentSplit.head.toUpperCase(), expression))
+          true
+
+        case "TXT" =>
+          val txt = toTokenise.substring(1, toTokenise.indexOf("'"))
+          tokenisedLine.add(CommandTokenV2.apply(beforeCommentSplit.head.toUpperCase(),
+            Array(txt.substring(0,txt.length-1))))
           true
         case _ => false
       }) then
@@ -40,9 +75,31 @@ object TokeniserV2 :
         val ins: String = if beforeCommentSplit.head.endsWith(":") then
           val labelText = beforeCommentSplit.head.dropRight(1)
           if isLabel(labelText) then
-            tokenisedLine.add(LabelTokenV2.apply(labelText,
-              if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
-            LabelFactory.addLabel(labelText, beforeCommentSplit.tail)
+            beforeCommentSplit.tail.length match
+              case 0 =>
+                // Just a label
+                tokenisedLine.add(LabelTokenV2.apply(labelText, Array()))
+                LabelFactory.addLabel(labelText, currentLocation)
+              case 1 =>
+                // instruction
+                tokenisedLine.add(LabelTokenV2.apply(labelText, Array()))
+                LabelFactory.addLabel(labelText, currentLocation)
+              case _ =>
+                // instruction  with operand or command, if it a command them dela with it
+                beforeCommentSplit.tail.head.toUpperCase() match
+                  case "ADDR" | "BYT" | "WRD" =>
+                    // we have a labeled value command, could be an expression
+                    val expressionString = beforeCommentSplit.tail.tail.mkString(" ")
+                    if isExpression(expressionString) then
+                      tokenisedLine.add(LabelTokenV2.apply(labelText,
+                        if beforeCommentSplit.tail.tail.length > 0 then beforeCommentSplit.tail.tail else Array()))
+                    else // need label token & command tocken
+                      tokenisedLine.add(LabelTokenV2.apply(labelText, Array()))
+                      tokenisedLine.add(CommandTokenV2.apply(beforeCommentSplit.tail.head.toUpperCase(),
+                        if beforeCommentSplit.tail.tail.length > 0 then Array(beforeCommentSplit.tail.tail.mkString(" ")) else Array()))
+
+                  case _ =>
+                    tokenisedLine.add(LabelTokenV2.apply(labelText, Array()))
           else
             tokenisedLine.add(SytaxErrorTokenV2.apply(s"Bad label test ${beforeCommentSplit.head}", beforeCommentSplit))
           beforeCommentSplit.tail.mkString(" ")

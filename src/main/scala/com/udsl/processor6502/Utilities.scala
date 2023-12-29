@@ -2,7 +2,7 @@ package com.udsl.processor6502
 
 import com.udsl.processor6502.*
 import com.udsl.processor6502.Dialogues.theStage
-import com.udsl.processor6502.assembler.TokenisedLine
+import com.udsl.processor6502.assembler.{AssemblerException, LabelFactory, TokenisedLine}
 import com.udsl.processor6502.config.ConfigDatum
 import com.udsl.processor6502.cpu.*
 import com.udsl.processor6502.cpu.execution.{Accumulator, *}
@@ -23,7 +23,7 @@ import scala.util.matching.Regex
 
 object Utilities:
   var currentFormat: NumericFormatType = NumericFormatType.DEC
-  val operators = Seq("+", "-", "*", "/")
+  val operators = Seq('+', '-', '*', '/')
   
   def verifyNumberEntry(text: String): (Boolean, String) =
     val pattern: Regex = currentFormat match {
@@ -97,6 +97,21 @@ object Utilities:
         s"${v.substring(v.length - 5)}"
     }
 
+  enum Operation {
+    case +, -, *, /
+
+    def valueOf(s: String): Option[Operation] = Operation.values.find(_.toString == s)
+  }
+
+  case class Operator(a: Int, b: Int, operation: Operation) {
+    def compute: Option[Int] = operation match {
+      case Operation.+ => Option(a + b)
+      case Operation.- => Option(a - b)
+      case Operation.* => Option(a * b)
+      case Operation./ => Option(a / b)
+    }
+  }
+
   /**
    * A expression is a list of number and labels seperated by arithmetic operators +, -, / or *
    * The problem is spaces we could have 'a+1' which is the same value as 'a + 1' and even 'a+ 1' and 'a +1'
@@ -154,6 +169,62 @@ object Utilities:
   
   def isExpression( theExpession: String): Boolean =
     operators.exists(theExpession.contains)
+
+  def evaluateExpression(expression: List[String]): Option[Int] =
+    evaluateExpression(expression.toArray)
+
+  def evaluateExpression(expression: Array[String]): Option[Int] =
+    var currentIndex = 0
+    var result: Option[Int] = None
+
+    def getAndUpdate: Int =
+      val ret = currentIndex
+      currentIndex = currentIndex + 1
+      ret
+
+    // Extract the common code into a separate method
+    def getExpressionElement: Option[String] =
+      if expression != null && currentIndex < expression.length then
+        Some(expression(getAndUpdate))
+      else None
+
+    // Use the new method to retrieve the element and apply the operations
+    def getValue: Option[Int] =
+      getExpressionElement.flatMap { str =>
+        if str.length == 1 && operators.contains(str.charAt(0)) then // is an operator
+          None
+        else if isLabel(str) then
+          LabelFactory.labelValue(str)
+        else
+          numericValue(str)
+      }
+
+    if expression == null || expression.isEmpty then
+      throw new AssemblerException("BAD Expression", "EMPTY")
+
+    result = getValue
+    while {
+      val op = getOperation
+      if op.isEmpty then
+        return result
+      else
+        val operand = getValue
+        result = Operator(result.get, operand.get, op.get).compute
+        true
+    } do ()
+
+    def isSingleCharOperator(str: String): Boolean =
+      str.length == 1 && operators.contains(str.charAt(0))
+
+    def getOperation: Option[Operation] =
+      getExpressionElement.flatMap { expressionElement =>
+        if isSingleCharOperator(expressionElement) then
+          Some(Operation.valueOf(expressionElement))
+        else
+          None
+      }
+
+    result
 
   /**
    * Only positive HEX or DEC numbers accepted

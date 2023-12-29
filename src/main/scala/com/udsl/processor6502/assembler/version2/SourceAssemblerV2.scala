@@ -8,7 +8,7 @@ import java.nio.file.{Files, Paths}
 import scala.io.{BufferedSource, Source}
 import scala.util.{Failure, Success, Try}
 
-class SourceAssemblerV2(val sourceLines: LazyList[SourceLine], val firstPass: Assemble6502FirstPassV2, val secondPass: Assemble6502SecondPassV2) extends Assembler with StrictLogging :
+class SourceAssemblerV2(val sourceLines: List[SourceLine], val firstPass: Assemble6502FirstPassV2, val secondPass: Assemble6502SecondPassV2) extends Assembler with StrictLogging :
   override def version: Int = 2
 
   import SourceAssemblerV2.*
@@ -20,7 +20,7 @@ class SourceAssemblerV2(val sourceLines: LazyList[SourceLine], val firstPass: As
     logger.info(s"complete $x")
 
 
-  def tokenisation: LazyList[TokenisedLineV2] =
+  def tokenisation: List[TokenisedLineV2] =
     sourceLines.map(tokonise)
 
   def parse(tokenisedLine: TokenisedLineV2): Unit =
@@ -33,10 +33,22 @@ class SourceAssemblerV2(val sourceLines: LazyList[SourceLine], val firstPass: As
 object SourceAssemblerV2 :
 
   def apply(sourceLines: List[String]) : SourceAssemblerV2 =
-    new SourceAssemblerV2(LazyList.from(sourceLines.zip(LazyList.from(1)).map(f => SourceLine(f._1, f._2))), Assemble6502FirstPassV2.apply, Assemble6502SecondPassV2.apply)
+    new SourceAssemblerV2(
+      List.from(sourceLines
+        .zip(LazyList.from(1))
+        .map(f => SourceLine(f._1, f._2))),
+      Assemble6502FirstPassV2.apply,
+      Assemble6502SecondPassV2.apply
+    )
 
   def apply(sourceFile: File) : SourceAssemblerV2 =
     val s = Source.fromFile(sourceFile)
-    new SourceAssemblerV2(LazyList.from(s.getLines().zip(LazyList.from(1)).map(f => SourceLine(f._1, f._2))), Assemble6502FirstPassV2.apply, Assemble6502SecondPassV2.apply)
+    new SourceAssemblerV2(
+      List.from(s.getLines().toList
+        .zip(LazyList.from(1))
+        .map(f => SourceLine(f._1, f._2))),
+      Assemble6502FirstPassV2.apply,
+      Assemble6502SecondPassV2.apply
+    )
 
 
