@@ -39,6 +39,7 @@ object Disassembler extends StrictLogging:
         case Invalid | Unknown =>  "INVALID"
         case NotApplicable( errorText ) => errorText
         case AddressingModeSyntaxError( errorText )=> errorText
+        case BadOperand => "BadOperand"
 
       memCell.getByte.setDisassembly(s"${opcode.mnemonic} $operand")
       disassemblyLocation += opcode.addressingMode.size.bytes -1

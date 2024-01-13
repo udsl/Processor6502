@@ -1,13 +1,13 @@
 package com.udsl.processor6502.assembler
 
 import com.udsl.processor6502.Utilities
-import com.udsl.processor6502.Utilities.{isLabel, numericValue, operators}
+import com.udsl.processor6502.Utilities.{isLabel, numericValue, operators, verifyNumberEntry}
 
 import scala.collection.mutable.ListBuffer
 import scala.compiletime.asMatchable
 
 trait Label(val name: String) :
-  def evaluate: Int
+  def evaluate: Option[Int]
   def hasValue: Boolean
 
 /**
@@ -15,11 +15,13 @@ trait Label(val name: String) :
  * Expression is a list of values and labels seperated by operators
  */
 trait LabelExpression(name: String) extends Label:
-  protected def evaluateExpression(expression: Array[String]): Int =
-    if expression == null || expression.isEmpty then
-      throw new AssemblerException(s"BAD Label $name", "expression not set")
-    val res = Utilities.evaluateExpression(expression)
-    res.get
+  protected def evaluateExpression(expression: Array[String]): Option[Int] =
+    Utilities.evaluateExpression(expression) match
+      case Right(v) => Option(v)
+      case Left(s) => AssemblyData.addError(ErrorRecord.apply(s"BAD expression for label '$name' -> $s"))
+        None
+
+
     
 /**
  * as the value of a label can be dependent on the position it may forward reference and not know on the first pass
@@ -28,8 +30,8 @@ trait LabelExpression(name: String) extends Label:
  * @param value the value associated with this label
  */
 class ValueLabel(name: String, var value: Int) extends Label(name):
-  override def evaluate: Int =
-    this.value
+  override def evaluate: Option[Int] =
+    Option(this.value)
 
   override def hasValue = true
   
@@ -39,7 +41,7 @@ class ValueLabel(name: String, var value: Int) extends Label(name):
  * @param expression the labels expression
  */
 class ExpressionLabel(name: String, val expression: Array[String]) extends Label(name) with LabelExpression(name):
-  override def evaluate: Int =
+  override def evaluate: Option[Int] =
     evaluateExpression(expression)
 
   override def hasValue: Boolean = Option(expression) match
@@ -48,7 +50,7 @@ class ExpressionLabel(name: String, val expression: Array[String]) extends Label
 
 class ForwardReferenceLabel(name: String) extends Label(name), LabelExpression(name):
   var expression: Array[String] = _
-  override def evaluate: Int =
+  override def evaluate: Option[Int] =
     evaluateExpression(expression)
 
   override def hasValue: Boolean = Option(expression) match
@@ -92,7 +94,7 @@ object LabelFactory:
   def labelValue(name: String): Option[Int] =
     val fiteredList = labels.filter(_.name.equals(name))
     if fiteredList.nonEmpty then
-      Some(fiteredList.last.evaluate)
+      fiteredList.last.evaluate
     else
       None
 

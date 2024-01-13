@@ -1,8 +1,9 @@
 package com.udsl.processor6502.assembler.version2
 
-import com.udsl.processor6502.Utilities.{getExpression, isExpression, isLabel}
+import com.udsl.processor6502.assembler.ErrorRecord
+import com.udsl.processor6502.Utilities.{getExpression, isExpression, isLabel, splitExpression}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
-import com.udsl.processor6502.assembler.AssemblyData.addSyntaxError
+import com.udsl.processor6502.assembler.AssemblyData.addError
 import com.udsl.processor6502.assembler.{AssemblyData, LabelFactory, SourceLine, SyntaxErrorRecord}
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 
@@ -40,7 +41,7 @@ object TokeniserV2 :
         case  "CLR" =>
           // CLR only valid on first line
           if line.lineNum > 1 then
-            addSyntaxError(SyntaxErrorRecord("CLR only valid on first line", line))
+            addError(ErrorRecord.apply("CLR only valid on first line", line))
           tokenisedLine.add(CommandTokenV2.apply(beforeCommentSplit.head.toUpperCase(),
             if beforeCommentSplit.tail.length > 0 then Array(beforeCommentSplit.tail.mkString(" ")) else Array()))
           true
@@ -50,18 +51,28 @@ object TokeniserV2 :
           // fist part must be the label being defined
           // 2nd is the value which is an expression that can contain a label
           if parts.tail.isEmpty then
-            AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("Bad DEF - no expression", line))
+            addError(ErrorRecord.apply("Bad DEF - no expression", line))
           else if !isLabel(parts.head) then
-            addSyntaxError(SyntaxErrorRecord("DEF should define a label", line))
+            addError(ErrorRecord("DEF should define a label", line))
             // if we have a tain greate than length 1 then it must be a expression with spaces
           else if parts.tail.length > 1 && !isExpression(parts.tail.mkString(" ")) then
-            addSyntaxError(SyntaxErrorRecord("DEF definition should be an expression, a label or a number", line))
+            addError(ErrorRecord("DEF definition should be an expression, a label or a number", line))
             // If its only length 1 it could be an expression without spaces
-          else if isExpression(parts.tail.mkString(" "))  || isLabel(parts.tail.mkString(" ")) then
+          else if isExpression(parts.tail.mkString(" ")) || isLabel(parts.tail.mkString(" ")) then
             // process the expression
             val expression = parts.tail
-            LabelFactory.addLabel(parts.head, expression)
-            tokenisedLine.add(CommandTokenV2.apply(beforeCommentSplit.head.toUpperCase(), expression))
+            // need to split the expression into parts
+            var expresionParts = List[String]()
+            for(exp: String <- expression)
+              if isExpression(exp) then
+                // its a sub expression that needs to be split up
+                expresionParts = expresionParts.appendedAll(splitExpression(exp))
+              else
+                expresionParts = expresionParts.appended(exp) 
+              
+            LabelFactory.addLabel(parts.head, expresionParts.toArray)
+            
+            tokenisedLine.add(CommandDefTokenV2(parts.head, expresionParts.toArray))
           true
 
         case "TXT" =>

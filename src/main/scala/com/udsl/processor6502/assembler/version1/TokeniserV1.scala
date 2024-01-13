@@ -13,7 +13,6 @@ import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
 
 object TokeniserV1 extends StrictLogging :
-  val exceptionList: List[AssembleExceptionRecord] = List[AssembleExceptionRecord]()
 
   def Tokenise(allLines: Array[SourceLine]): List[TokenisedLineV1] =
     logger.info(
@@ -27,10 +26,9 @@ object TokeniserV1 extends StrictLogging :
         |""".stripMargin)
     val tokenisedLines = new ListBuffer[TokenisedLineV1]()
     for lineToTokenise <- allLines do
-      val tokenisedLine = Try(tokeniseLine(lineToTokenise))
-      tokenisedLine match
+      Try(tokeniseLine(lineToTokenise)) match
         case Success(line) => tokenisedLines.addOne(line)
-        case Failure(ex) => exceptionList.appended(AssembleExceptionRecord(ex.getMessage, lineToTokenise))
+        case Failure(ex) => addError(ErrorRecord(ex.getMessage, lineToTokenise))
     tokenisedLines.toList
 
   def tokeniseLine(line: SourceLine): TokenisedLineV1 =
@@ -71,7 +69,7 @@ object TokeniserV1 extends StrictLogging :
     if head != "" && head.endsWith(":") then
       val labelText = head.dropRight(1)
       if !LabelFactory.addLabel(labelText, currentLocation) then
-        addSyntaxError(SyntaxErrorRecord(s"failed to add label $labelText", tokenisedLine.source))
+        addError(ErrorRecord(s"failed to add label $labelText", tokenisedLine.source))
       val token = LabelToken(labelText, text.tail, tokenisedLine.source)
       tokenisedLine + token
       logger.debug(s"token added: $token")
@@ -128,9 +126,9 @@ object TokeniserV1 extends StrictLogging :
               tokenisedLine + token
               logger.info(s"Origin added from defined label '$str")
             else
-              AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("Value for ORIG not numeric or defined label", tokenisedLine.source))
+              AssemblyData.addError(ErrorRecord.apply("Value for ORIG not numeric or defined label", tokenisedLine.source))
           else
-            AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("Invalid ORIG command!", tokenisedLine.source))
+            AssemblyData.addError(ErrorRecord.apply("Invalid ORIG command!", tokenisedLine.source))
           return Array.empty
 
         // clr only valid on the first line
@@ -138,7 +136,7 @@ object TokeniserV1 extends StrictLogging :
           val token = ClearToken(head, text.tail, tokenisedLine.source)
           tokenisedLine + token
           if tokenisedLine.source.lineNum > 1 then
-            AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("clr only valid on the first line", tokenisedLine.source))
+            AssemblyData.addError(ErrorRecord.apply("clr only valid on the first line", tokenisedLine.source))
           clear()
           logger.debug(s"token added: $token")
           return Array.empty
@@ -148,12 +146,12 @@ object TokeniserV1 extends StrictLogging :
           // fist part must be the label being defined
           // 2nd is the value which is an expression that can contain a label
           if parts.tail.isEmpty then
-            AssemblyData.addSyntaxError(SyntaxErrorRecord.apply("Bad DEF - no expression", tokenisedLine.source))
+            AssemblyData.addError(ErrorRecord.apply("Bad DEF - no expression", tokenisedLine.source))
           else if !isLabel(parts.head) then
-            addSyntaxError(SyntaxErrorRecord("DEF should define a label", tokenisedLine.source))
+            addError(ErrorRecord("DEF should define a label", tokenisedLine.source))
           // if we have a tain greate than length 1 then it must be a expression with spaces  
           else if parts.tail.length > 1 && !isExpression(parts.tail.mkString(" ")) then
-            addSyntaxError(SyntaxErrorRecord("DEF definition should be an expression, a label or a number", tokenisedLine.source))
+            addError(ErrorRecord("DEF definition should be an expression, a label or a number", tokenisedLine.source))
           // If its only length 1 it could be an expression without spaces
           else if isExpression(parts.tail.mkString(" ")) then
             // process the expression
@@ -162,7 +160,7 @@ object TokeniserV1 extends StrictLogging :
           else
             if isLabel(parts(1)) then
               if !LabelFactory.addLabel(parts(0), parts.tail) then // add label as an expression because it could be a forward reference
-                addSyntaxError(SyntaxErrorRecord(s"failed to add label DEF ${parts(0)}", tokenisedLine.source))
+                addError(ErrorRecord(s"failed to add label DEF ${parts(0)}", tokenisedLine.source))
               // As this could be a fowards reference and could have already been defined by a previous forward ref no need to check if we are adding it
               LabelFactory.addLabel(parts(1))
               val token = DefToken(parts(0), Array[String](parts(1)), tokenisedLine.source)
@@ -173,13 +171,13 @@ object TokeniserV1 extends StrictLogging :
               val value = numericValue(parts(1))
               if 0 to 65535 contains value.get then
                 if !LabelFactory.addLabel(parts(0), value.get) then
-                  addSyntaxError(SyntaxErrorRecord(s"failed to add label DEF val${parts(0)}", tokenisedLine.source))
+                  addError(ErrorRecord(s"failed to add label DEF val${parts(0)}", tokenisedLine.source))
                 val token = DefToken(parts(0), Array[String](parts(1)), tokenisedLine.source)
                 token.value = parts(1)
                 tokenisedLine + token
                 logger.debug(s"token added: $token")
               else
-                addSyntaxError(SyntaxErrorRecord(s"DEF defining ${parts(0)} with value $value", tokenisedLine.source))
+                addError(ErrorRecord(s"DEF defining ${parts(0)} with value $value", tokenisedLine.source))
 
           return Array.empty
 
@@ -207,7 +205,7 @@ object TokeniserV1 extends StrictLogging :
         InstructionToken(instruction, values, tokenisedLine.source)
 
     if !CpuInstructions.isValidInstruction(instruction) then
-      addSyntaxError(SyntaxErrorRecord(s"Invalid instruction: $instruction", tokenisedLine.source))
+      addError(ErrorRecord(s"Invalid instruction: $instruction", tokenisedLine.source))
       NoTokenToken(instruction, text.tail, tokenisedLine.source)
     else
       val token = getToken(text.tail)

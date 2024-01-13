@@ -8,19 +8,19 @@ import scala.collection.mutable.ListBuffer
 
 object AssemblyData extends StrictLogging:
   // labels defined in a base object so they common others
-  // this enables multi file assembly
+  // this enables multi file assemblyr
   
-  val sytaxErrorList: ListBuffer[SyntaxErrorRecord] = new ListBuffer[SyntaxErrorRecord]()
-  var syntaxErrorListeners: List[SyntaxErrorListener] = List()
+  val erorList: ListBuffer[ErrorRecord] = new ListBuffer[ErrorRecord]()
+  var errorListeners: List[ErrorListener] = List()
 
-  def addSyntaxError(syn: SyntaxErrorRecord): Unit =
-    for(listener: SyntaxErrorListener <- syntaxErrorListeners)
+  def addError(syn: ErrorRecord): Unit =
+    for(listener: ErrorListener <- errorListeners)
       listener.doNotify(syn)
-    sytaxErrorList.appended(syn)
+    erorList.appended(syn)
 
-  def addSyntaxErrorListener(listener: SyntaxErrorListener): Unit =
-    if !syntaxErrorListeners.contains(listener) then
-      syntaxErrorListeners = syntaxErrorListeners.appended(listener)
+  def addErrorListener(listener: ErrorListener): Unit =
+    if !errorListeners.contains(listener) then
+      errorListeners = errorListeners.appended(listener)
 
   def isValid: (Boolean, List[String]) =
     val errors = ListBuffer[String]()
@@ -42,4 +42,4 @@ object AssemblyData extends StrictLogging:
 
   def clear(): Unit =
     LabelFactory.clear()
-    sytaxErrorList.clear()
+    erorList.clear()

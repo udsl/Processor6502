@@ -1,12 +1,10 @@
 package com.udsl.processor6502.assembler.version2
 
-import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.{isLabel, numericValue}
 import com.udsl.processor6502.assembler.{AssemblyData, LabelFactory}
 import com.udsl.processor6502.cpu.execution.AddressingMode
 import com.udsl.processor6502.cpu.{CpuInstruction, CpuInstructions}
 
-import scala.collection.mutable.ListBuffer
 
 trait CommandValueType:
   def isValid: Boolean = false
@@ -71,6 +69,11 @@ case class LabelTokenV2 (label: String, override val fields: Array[String]) exte
   override def toString: String = s"$name -> '$label'"
   override def tokenText: String = label
 
+case class CommandDefTokenV2(defining: String, override val fields: Array[String]) extends TokenV2(fields: Array[String]):
+  override val name: String = "CommandDefToken"
+  override def toString: String = s"$name -> '$defining'"
+  override def tokenText: String = s"$defining -> ${fields.mkString(" ")}"
+  
 case class CommandTokenV2 (command: String, override val fields: Array[String]) extends TokenV2(fields: Array[String] ):
   override val name: String = "CommandToken"
   override def toString: String = s"$name -> '$command'"

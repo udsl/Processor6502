@@ -2,17 +2,17 @@ name := "Processor6502"
 
 version := "0.1.3"
 
-ThisBuild / scalaVersion := "3.3.0"
+ThisBuild / scalaVersion := "3.3.1"
 
 
 libraryDependencies ++= Seq(
   "org.scalafx" %% "scalafx" % "18.0.1-R28",
-  "org.scalacheck" %% "scalacheck" % "1.16.0" % Test,
-  "org.scalactic" %% "scalactic" % "3.2.12",
-  "org.scalatest" %% "scalatest" % "3.2.12" % Test,
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
-)
+  "org.scalacheck" %% "scalacheck" % "1.17.0" % Test,
+  "org.scalactic" %% "scalactic" % "3.2.16",
+  "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+  "ch.qos.logback" % "logback-classic" % "1.4.12",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+  "org.typelevel" %% "cats-core" % "2.10.0")
 
 libraryDependencies ++= {
   // Determine OS version of JavaFX binaries

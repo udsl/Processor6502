@@ -5,7 +5,7 @@ import com.udsl.processor6502.Utilities.*
 import com.udsl.processor6502.assembler.version1.Assemble6502FirstPass.*
 import com.udsl.processor6502.assembler.version1.Assemble6502SecondPass.logger
 import com.udsl.processor6502.assembler.*
-import com.udsl.processor6502.assembler.AssemblyData.addSyntaxError
+import com.udsl.processor6502.assembler.AssemblyData.addError
 import com.udsl.processor6502.cpu.CpuInstructions
 import com.udsl.processor6502.cpu.CpuInstructions.{getInstruction, isValidInstruction}
 import com.udsl.processor6502.cpu.execution.*
@@ -218,7 +218,7 @@ object Assemble6502SecondPass extends StrictLogging, AssemblePass :
       logger.info(s"validateAddressingMode - $addrMode")
       addrMode match
         case Invalid =>
-          addSyntaxError(SyntaxErrorRecord.apply(s"Invalid addressing mode for '${t.mnemonic}'", tl.source))
+          addError(ErrorRecord(s"Invalid addressing mode for '${t.mnemonic}'", tl.source))
         case _ =>
           //TODO
           // Need details of the instruction for the disassembly byte string

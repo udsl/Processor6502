@@ -1,5 +1,6 @@
 package com.udsl.processor6502
 
+import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.*
 import com.udsl.processor6502.Dialogues.theStage
 import com.udsl.processor6502.assembler.{AssemblerException, LabelFactory, TokenisedLine}
@@ -21,7 +22,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import scala.util.matching.Regex
 
-object Utilities:
+object Utilities extends StrictLogging :
   var currentFormat: NumericFormatType = NumericFormatType.DEC
   val operators = Seq('+', '-', '*', '/')
   
@@ -170,10 +171,32 @@ object Utilities:
   def isExpression( theExpession: String): Boolean =
     operators.exists(theExpession.contains)
 
-  def evaluateExpression(expression: List[String]): Option[Int] =
+  def splitExpression(theExpession: String): List[String] =
+    val operatorLength = 1
+    
+    def firstOcurance(exp: String) : Option[Int] =
+      val indices = for {
+        subStr <- operators
+        idx = exp.indexOf(subStr) if idx != -1
+      } yield idx
+      if (indices.isEmpty) None else Some(indices.min)
+
+    def loop(expression: String, results: List[String]): List[String] = {
+      firstOcurance(expression).map { fo =>
+        val firstPart = expression.substring(0, fo)
+        val operator = expression.substring(fo, fo + operatorLength)
+        val remainingExpression = expression.substring(fo + operatorLength)
+        loop(remainingExpression, results ::: List(firstPart, operator))
+      }.getOrElse(results :+ expression)
+    }
+
+    loop(theExpession, List.empty)
+  
+    
+  def evaluateExpression(expression: List[String]): Either[String, Int]  =
     evaluateExpression(expression.toArray)
 
-  def evaluateExpression(expression: Array[String]): Option[Int] =
+  def evaluateExpression(expression: Array[String]): Either[String, Int] =
     var currentIndex = 0
     var result: Option[Int] = None
 
@@ -192,26 +215,17 @@ object Utilities:
     def getValue: Option[Int] =
       getExpressionElement.flatMap { str =>
         if str.length == 1 && operators.contains(str.charAt(0)) then // is an operator
+          logger.info(s"Evaluating '$str' -> OPERATOR")
           None
         else if isLabel(str) then
-          LabelFactory.labelValue(str)
+          val labVal = LabelFactory.labelValue(str)
+          logger.info(s"Evaluating label '$str' -> $labVal")
+          labVal
         else
-          numericValue(str)
+          val numericVal = numericValue(str)
+          logger.info(s"Evaluating numeric value '$str' -> $numericVal")
+          numericVal
       }
-
-    if expression == null || expression.isEmpty then
-      throw new AssemblerException("BAD Expression", "EMPTY")
-
-    result = getValue
-    while {
-      val op = getOperation
-      if op.isEmpty then
-        return result
-      else
-        val operand = getValue
-        result = Operator(result.get, operand.get, op.get).compute
-        true
-    } do ()
 
     def isSingleCharOperator(str: String): Boolean =
       str.length == 1 && operators.contains(str.charAt(0))
@@ -224,7 +238,22 @@ object Utilities:
           None
       }
 
-    result
+    if expression == null || expression.isEmpty then
+      return Left("Expression is emprty")
+
+    result = getValue
+    while {
+      val op = getOperation
+      if op.isEmpty then
+        val x = result.getOrElse(-99)
+        return Right(result.get)
+      else
+        val operand = getValue
+        result = Operator(result.get, operand.get, op.get).compute
+        true
+    } do ()
+
+    Right(result.get)
 
   /**
    * Only positive HEX or DEC numbers accepted

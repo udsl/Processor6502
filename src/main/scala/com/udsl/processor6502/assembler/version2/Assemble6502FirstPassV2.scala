@@ -3,13 +3,10 @@ package com.udsl.processor6502.assembler.version2
 import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.Utilities.{evaluateExpression, getExpression, isExpression, isLabel, isNumeric, numericValue}
 import com.udsl.processor6502.assembler.AssembleLocation.currentLocation
-import com.udsl.processor6502.assembler.AssemblyData.{addSyntaxError, clear}
-import com.udsl.processor6502.assembler.version1.ClearToken
 import com.udsl.processor6502.assembler.version1.TokeniserV1.logger
 import com.udsl.processor6502.assembler.{AssembleLocation, AssemblePass, AssemblyData, LabelFactory, SyntaxErrorRecord}
 import com.udsl.processor6502.cpu.CpuInstruction
 import com.udsl.processor6502.cpu.execution.*
-import com.udsl.processor6502.cpu.CpuInstructions
 /**
  * First pass class - as one would expect does the first pass which resolves any forward references.
  */
@@ -33,6 +30,8 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
           procesLabel(token)
         case CommandTokenV2( _, _ ) => // extends AssemblerTokenType("CommandToken")
           assembleCommandToken(token)
+        case CommandDefTokenV2( _, _) =>
+          processDefinition(token.asInstanceOf[CommandDefTokenV2])
         case InstructionTokenV2( _, _ ) => // extends AssemblerTokenType("InstructionToken")
           assembleInstruction(token.asInstanceOf[InstructionTokenV2])
         case _ => logger.error(s"unsupported case $token")
@@ -81,9 +80,8 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
 //        clear()
 //        logger.debug(s"token added: $token")
 //        return Array.empty
-      case "DEF" =>
-
-      case _ => logger.info(s"\tInvalid command $t ")
+      case "DEF" => processDefinition(t.asInstanceOf[CommandDefTokenV2])
+      case _ => logger.info(s"\tInvalid command $t")
 
 //  def processClear(t: TokenV2, tl: TokenisedLineV2) : Unit =
 //    logger.info("Processing CLR command")
@@ -132,7 +130,7 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
               }
             else if isExpression(token.fields.mkString("")) then
               evaluateExpression(getExpression(token.fields.mkString(""))) match
-                case Some(v) => if v > 255 then Absolute else ZeroPage
+                case Right(v) => if v > 255 then Absolute else ZeroPage
                 case _ => Unknown
             else
               AddressingModeSyntaxError("Operand failed not a label or expression!")
@@ -191,20 +189,19 @@ class Assemble6502FirstPassV2 extends FirstPassV2 with StrictLogging with Assemb
         case _ => ZeroPage
 
   /**
-   * For 2nd pass we just need to verify that the label is defined and that if the value is set verify its the same
-   * other wise update it.
+   * For 1st pass we need to verify that the label is not defined and and crete it with the expression
    *
-   * @param t the TokenV2 to process
+   * @param token the DEF CommandTokenV2 to process
    */
-//  def processDefinition(t: TokenV2) : Unit =
-//    logger.info(s"\tDefinition of label ${t.tokenText} with value ${t.value}")
-//    if AssemblyData.labelIsDefined(t.mnemonic) then
+  def processDefinition(token: CommandDefTokenV2) : Unit =
+    logger.info(s"\tDefinition of label ${token.tokenText}")
+//    if AssemblyData.labelIsDefined(token) then
 //      val v = AssemblyData.labelValue(t.mnemonic)
 //      if v != t.intValue then
 //        throw new Exception(s"Definition value changed om 2nd pass was ${t.intValue} now $v")
 
   def procesLabel(t: TokenV2) : Unit =
-    logger.info(s"\tDefining label ${t.tokenText} with value $currentLocation")
+    logger.info(s"\tprocessing label ${t.tokenText} with value $currentLocation")
     LabelFactory.addLabel(t.tokenText, currentLocation)
 
   //TODO modify how this works!

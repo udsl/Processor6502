@@ -4,7 +4,8 @@ import com.typesafe.scalalogging.StrictLogging
 import com.udsl.processor6502.FileIOUtilities.selectSourceFileToLoad
 import com.udsl.processor6502.application.Main.stage
 import com.udsl.processor6502.application.TimedAssembler.textArea
-import com.udsl.processor6502.assembler.{Assembler, AssemblyData, SyntaxErrorListener, SyntaxErrorRecord}
+import com.udsl.processor6502.assembler.ErrType.{ASSEMBLE, PARSING, SYNTAX}
+import com.udsl.processor6502.assembler.{AssembleErrorRecord, Assembler, AssemblyData, ErrorListener, ErrorRecord, ParsingErrorRecord, SyntaxErrorRecord}
 import com.udsl.processor6502.config.AppOptions.assmVersion
 import scalafx.application.JFXApp3
 import scalafx.geometry.Insets
@@ -100,7 +101,7 @@ object TimedAssembler extends JFXApp3 with StrictLogging{
             children = List(label, output)
           }
 
-          AssemblyData.addSyntaxErrorListener(new Listener(textArea))
+          AssemblyData.addErrorListener(new Listener(textArea))
 
           val buttons: HBox = new HBox {
             val assembleButton: Button = new Button {
@@ -149,9 +150,23 @@ object TimedAssembler extends JFXApp3 with StrictLogging{
   }
 }
 
-class Listener(val textArea: TextArea) extends SyntaxErrorListener:
-  def doNotify(syn: SyntaxErrorRecord): Unit =
-    val txt = textArea.text.value + "\n" + syn.errorMessage +" line " + syn.lineNumber
-    textArea.text.value = txt
+class Listener(val textArea: TextArea) extends ErrorListener:
+  private def updateDisplay(txt: String): Unit =
+    textArea.text.value = textArea.text.value + txt
+    
+  def doNotify(err: ErrorRecord): Unit =
+    err.errType match
+      case SYNTAX => 
+        val syn = err.asInstanceOf[SyntaxErrorRecord]
+        updateDisplay( s"\n${syn.errorMessage} line ${syn.lineNumber} -> '${syn.sourceText}'")
+
+      case PARSING =>
+        val par = err.asInstanceOf[ParsingErrorRecord]
+        updateDisplay( s"\n${par.errorMessage} line text '${par.sourceText}'" )
+
+      case ASSEMBLE =>
+        val ass = err.asInstanceOf[AssembleErrorRecord]
+        updateDisplay(s"\nAssemble error text '${ass.errorMessage}'")
+     
 
 
